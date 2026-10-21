@@ -1,5 +1,13 @@
 # Work Log
 
+## 2026-10-21 - Edge-to-edge posters and flipping detail
+
+- Summary: Added a white/blue visual theme, edge-to-edge portrait poster grid, hover/focus title overlays and native title tooltip. Poster selection animates a front/back card from its source bounds into a centered dialog; the final view contains only festival name and description plus close control. Escape/backdrop dismissal and reduced-motion fallback are retained.
+- Registration: Header add action now enters map location selection (land click or existing region marker), then opens a single-image/name/description form. Coordinates are derived from the SVG map transform, not typed. Local storage and the existing records are preserved; no Supabase connection or shared edits are implemented.
+- Assets: Four clearly labeled FESTIVA concept/sample SVG posters replace illustrative photos in seed cards; not official festival artwork.
+- Verification: Browser verified blue globe, zero grid gap, text-only dialog with zero images/links after flip, map-marker click/keyboard filtering, location-first registration form, and 390px mobile dialog. Node syntax and static form/asset checks passed. Images after upload still use the existing JPEG compression implementation.
+- Notes: Server storage/login and collaborative editing require the future Supabase integration. Detail deliberately omits the previous local delete action to respect the name/description-only design. Existing stored records still load.
+
 ## 2026-10-21 - Korea-first minimal explorer
 
 - Summary: Replaced the globe.gl/WebGL UI with a Canvas orthographic globe using d3-geo; home has only branding, add button, search, globe. Korea selection animates into a left SVG map and right thumbnail/name grid. Added local festival registration, photo resizing, search, region selection, detail and deletion.
