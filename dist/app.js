@@ -1,68 +1,114 @@
-/* Coordinates refer to representative venues, not country or region centroids. */
-const photo = (id) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=700&q=85`;
-const festivals = [
- {id:'jinju',country:'KR',region:'진주',lat:35.185,lng:128.082,name:'진주 남강유등축제',en:'Jinju Namgang Lantern Festival',month:10,theme:'문화·전통',image:'photo-1518709268805-4e9042af9f23',venue:'진주성 · 남강 일원',desc:'남강 위로 수많은 유등이 빛을 밝히는 가을밤. 진주성과 강변을 따라 걸으며 물 위에 펼쳐진 빛의 풍경과 지역의 이야기를 만나보세요.',url:'https://yudeung.com/'},
- {id:'boryeong',country:'KR',region:'보령',lat:36.309,lng:126.515,name:'보령머드축제',en:'Boryeong Mud Festival',month:7,theme:'문화·전통',image:'photo-1507525428034-b723cf961d3e',venue:'대천해수욕장 일원',desc:'바다와 머드, 여름의 에너지가 만나는 축제. 대천해수욕장의 넓은 해변에서 머드 체험과 다양한 공연을 즐기는 특별한 여름 여행입니다.',url:'https://mudfestival.or.kr/'},
- {id:'jinhae',country:'KR',region:'창원',lat:35.159,lng:128.660,name:'진해군항제',en:'Jinhae Gunhangje',month:4,theme:'자연·계절',image:'photo-1493976040374-85c8e12f0c0e',venue:'진해 여좌천 · 경화역 일원',desc:'도시 전체가 벚꽃으로 물드는 계절. 여좌천과 경화역의 꽃길을 따라 봄의 풍경과 지역 문화를 만나는 대표적인 봄 축제입니다.',url:'https://www.changwon.go.kr/'},
- {id:'biff',country:'KR',region:'부산',lat:35.171,lng:129.127,name:'부산국제영화제',en:'Busan International Film Festival',month:10,theme:'음악·예술',image:'photo-1489599849927-2ee91cede3ba',venue:'영화의전당 일원',desc:'영화의전당을 중심으로 세계의 새로운 영화와 창작자들이 만납니다. 상영과 관객과의 대화 등 다양한 프로그램으로 영화의 도시를 경험하세요.',url:'https://www.biff.kr/'},
- {id:'gion',country:'JP',region:'교토',lat:35.004,lng:135.775,name:'기온 마쓰리',en:'Gion Matsuri',month:7,theme:'문화·전통',image:'photo-1493976040374-85c8e12f0c0e',venue:'야사카 신사 · 교토 시내',desc:'오랜 역사를 이어온 교토의 여름 축제. 장식 수레와 전통 음악, 등불이 켜진 골목을 따라 일본의 전통을 가까이에서 만나보세요.',url:'https://www.yasaka-jinja.or.jp/'},
- {id:'awa',country:'JP',region:'도쿠시마',lat:34.070,lng:134.555,name:'아와오도리',en:'Awa Odori',month:8,theme:'문화·전통',image:'photo-1518709268805-4e9042af9f23',venue:'도쿠시마 시내 연무장',desc:'리듬과 춤이 거리를 채우는 도쿠시마의 여름. 악기 소리와 무용수들의 행렬이 함께 만드는 활기찬 전통 무용 축제입니다.',url:'https://www.awaodorikaikan.jp/'},
- {id:'yi-peng',country:'TH',region:'치앙마이',lat:18.788,lng:98.985,name:'이펭 등불 축제',en:'Yi Peng Lantern Festival',month:11,theme:'문화·전통',image:'photo-1518709268805-4e9042af9f23',venue:'치앙마이 일원',desc:'북부 태국의 전통과 빛이 어우러지는 시간. 사원과 거리에 등불이 밝혀지고, 다양한 문화 행사로 한 해의 소망을 나눕니다. 행사는 장소별로 예약과 참여 규정이 다릅니다.',url:'https://www.tourismthailand.org/'},
- {id:'songkran',country:'TH',region:'방콕',lat:13.759,lng:100.497,name:'송끄란',en:'Songkran Festival',month:4,theme:'문화·전통',image:'photo-1508009603885-50cf7c579365',venue:'방콕 카오산 로드 일원',desc:'태국의 새해를 맞아 서로에게 축복을 전하는 축제. 전통 의식과 거리의 물놀이가 어우러져 도시를 생기로 채웁니다.',url:'https://www.tourismthailand.org/'},
- {id:'holi',country:'IN',region:'마투라',lat:27.505,lng:77.674,name:'홀리 페스티벌',en:'Holi Festival',month:3,theme:'문화·전통',image:'photo-1492684223066-81342ee5ff30',venue:'마투라 · 브린다반 일원',desc:'다채로운 색으로 봄을 맞이하는 인도의 전통 축제. 지역별 의식과 색가루 놀이가 이어지며, 각 공동체의 고유한 문화를 느낄 수 있습니다.',url:'https://www.incredibleindia.gov.in/'},
- {id:'diwali',country:'IN',region:'자이푸르',lat:26.924,lng:75.827,name:'디왈리',en:'Diwali · Festival of Lights',month:11,theme:'문화·전통',image:'photo-1470229722913-7c0e2dbbafd3',venue:'자이푸르 구시가지',desc:'집과 거리를 밝히는 작은 등불들이 어둠을 물리치는 빛의 축제. 화려하게 장식된 자이푸르의 시장과 거리를 걸으며 축제의 분위기를 만나보세요.',url:'https://www.incredibleindia.gov.in/'},
- {id:'tomatina',country:'ES',region:'부뇰',lat:39.420,lng:-0.791,name:'라 토마티나',en:'La Tomatina',month:8,theme:'문화·전통',image:'photo-1533174072545-7a4b6ad7a6c3',venue:'부뇰 시내',desc:'스페인의 작은 마을이 유쾌한 에너지로 가득 차는 날. 토마토를 던지는 독특한 지역 축제로, 참여 인원과 입장권 안내를 미리 확인하는 것이 좋습니다.',url:'https://latomatina.info/'},
- {id:'barcelona',country:'ES',region:'바르셀로나',lat:41.383,lng:2.177,name:'라 메르세',en:'La Mercè',month:9,theme:'음악·예술',image:'photo-1492684223066-81342ee5ff30',venue:'바르셀로나 시내 광장',desc:'바르셀로나의 거리와 광장을 무대로 펼쳐지는 도시 축제. 공연, 전통 행렬과 다양한 예술 프로그램이 시민과 여행객을 한데 모읍니다.',url:'https://www.barcelona.cat/lamerce/'},
- {id:'nice',country:'FR',region:'니스',lat:43.696,lng:7.271,name:'니스 카니발',en:'Nice Carnival',month:2,theme:'문화·전통',image:'photo-1514525253161-7a46d19cd819',venue:'마세나 광장 일원',desc:'지중해의 겨울을 화려하게 채우는 니스의 카니발. 커다란 퍼레이드 수레와 꽃 행렬이 도시의 거리를 축제의 무대로 바꿉니다.',url:'https://www.nicecarnaval.com/'},
- {id:'avignon',country:'FR',region:'아비뇽',lat:43.951,lng:4.807,name:'아비뇽 페스티벌',en:'Festival d’Avignon',month:7,theme:'음악·예술',image:'photo-1470229722913-7c0e2dbbafd3',venue:'교황청 안뜰 · 아비뇽 시내',desc:'역사적인 도시가 거대한 공연장으로 변하는 여름. 연극과 현대 공연예술을 통해 새로운 이야기와 시선을 발견하는 국제 예술 축제입니다.',url:'https://festival-avignon.com/'},
- {id:'rio',country:'BR',region:'리우데자네이루',lat:-22.913,lng:-43.197,name:'리우 카니발',en:'Rio Carnival',month:2,theme:'문화·전통',image:'photo-1514525253161-7a46d19cd819',venue:'삼바드로무 · 리우 시내',desc:'삼바의 리듬과 압도적인 퍼레이드가 만나는 카니발. 삼바 학교들의 공연과 도시 곳곳의 거리 행사가 리우의 열정을 전합니다.',url:'https://riotur.rio/'},
- {id:'parintins',country:'BR',region:'파린칭스',lat:-2.628,lng:-56.735,name:'파린칭스 민속 축제',en:'Parintins Folklore Festival',month:6,theme:'문화·전통',image:'photo-1533174072545-7a4b6ad7a6c3',venue:'붐보드로무',desc:'아마존의 전설과 민속이 음악, 춤, 무대 예술로 펼쳐집니다. 두 전통 공연단이 도시 전체를 파란색과 붉은색으로 물들이는 축제입니다.',url:'https://visitbrasil.com/'},
- {id:'albuquerque',country:'US',region:'앨버커키',lat:35.197,lng:-106.597,name:'앨버커키 국제 열기구 축제',en:'Albuquerque International Balloon Fiesta',month:10,theme:'자연·계절',image:'photo-1507608616759-54f48f0af0ee',venue:'벌룬 피에스타 파크',desc:'아침 하늘로 수백 개의 열기구가 떠오르는 장관. 뉴멕시코의 맑은 하늘 아래 다양한 모양과 색의 열기구가 만들어내는 풍경을 만나보세요.',url:'https://balloonfiesta.com/'},
- {id:'coachella',country:'US',region:'인디오',lat:33.680,lng:-116.237,name:'코첼라',en:'Coachella Valley Music and Arts Festival',month:4,theme:'음악·예술',image:'photo-1470229722913-7c0e2dbbafd3',venue:'엠파이어 폴로 클럽',desc:'캘리포니아 사막에서 만나는 음악과 예술. 다양한 장르의 공연과 대형 설치미술이 어우러지는 음악 축제로, 공식 예매와 현장 규정을 확인해주세요.',url:'https://www.coachella.com/'}
-];
-const centers={KR:[36,127.8,.65],JP:[36,138,.95],TH:[15,101,.9],IN:[23,79,1.3],ES:[40,-3,.9],FR:[46.6,2.2,.85],BR:[-12,-51,1.65],US:[38,-98,1.7]};
-const flags={KR:'🇰🇷',JP:'🇯🇵',TH:'🇹🇭',IN:'🇮🇳',ES:'🇪🇸',FR:'🇫🇷',BR:'🇧🇷',US:'🇺🇸'};
-const countryNames=new Intl.DisplayNames(['ko'],{type:'region'});
+'use strict';
 const $=id=>document.getElementById(id);
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let country='',region='',savedMode=false,globe,features=[],selectedFeature=null,hovered=null,rotation=false,toastTimer,lastFocus;
-let saved;try{saved=new Set(JSON.parse(localStorage.getItem('festiva-saved')||'[]'));}catch{saved=new Set();}
-const nameFor=code=>code.length===2?countryNames.of(code):code;
-const codeFor=f=>{const p=f.properties;return p.ISO_A2!=='-99'?p.ISO_A2:({'France':'FR','Norway':'NO'}[p.ADMIN]||p.ADMIN);};
-function notify(message){$('toast').textContent=message;$('toast').classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('visible'),2500);}
-function toggleSave(id){saved.has(id)?saved.delete(id):saved.add(id);try{localStorage.setItem('festiva-saved',JSON.stringify([...saved]));}catch{notify('브라우저 저장 공간을 사용할 수 없습니다.');}render();if($('detail').open)renderDetail(festivals.find(f=>f.id===id));}
-function filtered(){return festivals.filter(f=>(savedMode?saved.has(f.id):(!country||f.country===country)&&(!region||f.region===region))&&(!$('month').value||f.month===Number($('month').value))&&(!$('category').value||f.theme===$('category').value));}
-function render(){
- const list=filtered();$('saved-count').textContent=saved.size;$('result-count').textContent=`${list.length} FESTIVALS`;
- $('panel-title').textContent=savedMode?'나의 축제 컬렉션':region?`${region}의 특별한 순간`:country?`${nameFor(country)}의 축제`:'어디로 떠나볼까요?';
- $('panel-description').textContent=savedMode?'다음 여행을 위해 모아둔 특별한 순간들.':region?'사진을 눌러 축제 이야기를 만나보세요.':country?'지도 위 지역 핀을 눌러 더 가까이 만나보세요.':'세계 곳곳의 특별한 순간을 만나보세요.';
- $('country-crumb').textContent=country?` / ${nameFor(country)}${region?' / '+region:''}`:'';
- $('explore').classList.toggle('nav-active',!savedMode);$('saved').classList.toggle('nav-active',savedMode);
- $('cards').replaceChildren();
- if(!list.length){const e=document.createElement('div');e.className='empty';e.innerHTML=`<strong>✳</strong>${savedMode?'아직 저장된 축제가 없어요.':country&&!festivals.some(f=>f.country===country)?'이 국가의 축제를 준비하고 있어요.':'선택한 조건의 축제가 없어요.'}<br>${savedMode?'썸네일의 북마크를 눌러 모아보세요.':'다른 지역이나 조건을 탐색해보세요.'}`;const b=document.createElement('button');b.textContent='세계 축제 둘러보기';b.onclick=reset;$('cards').append(e);e.append(b);}
- list.forEach((f,i)=>{const card=document.createElement('article');card.className='card';card.style.animationDelay=`${Math.min(i,7)*40}ms`;card.innerHTML=`<button class="card-main" aria-label="${f.name} 상세 보기"><div class="card-photo"><img src="${photo(f.image)}" alt="${f.name} 분위기 참고 이미지" loading="lazy"><span class="card-tag">${f.theme}</span></div><div class="card-location">${nameFor(f.country)} · ${f.region}</div><h3>${f.name}</h3><div class="card-meta">${String(f.month).padStart(2,'0')}월 · ${f.en.split(' ').slice(0,3).join(' ')}</div></button><button class="save-card ${saved.has(f.id)?'is-saved':''}" aria-label="${f.name} ${saved.has(f.id)?'저장 취소':'저장'}" aria-pressed="${saved.has(f.id)}">${saved.has(f.id)?'▣':'♧'}</button>`;card.querySelector('.card-main').onclick=()=>openDetail(f);card.querySelector('.save-card').onclick=()=>toggleSave(f.id);$('cards').append(card);});
- $('regions').replaceChildren();if(country&&!savedMode){const regions=[...new Set(festivals.filter(f=>f.country===country).map(f=>f.region))];if(regions.length){['전체',...regions].forEach(r=>{const b=document.createElement('button');b.textContent=r;b.className=(r===region||r==='전체'&&!region)?'active':'';b.onclick=()=>{if(r==='전체'){region='';flyCountry(country);}else selectRegion(festivals.find(f=>f.country===country&&f.region===r));render();};$('regions').append(b);});}}
- if(globe)updatePins();
+const storageKey='festiva-korea-custom-v1';
+let records=[],custom=[],region='',entered=false,entering=false,loadPromise,mapProjection,world=[],koreaGeometry;
+let photoData='',photoBusy=false,toastTimer,lastDetailFocus,animation=0,renderRequest=0;
+const canvas=$('earth'),ctx=canvas.getContext('2d');
+let width=0,height=0,radius=0,rotation=[-112,-23,0],projection,drag=null;
+const escapeHTML=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeURL=value=>{try{const u=new URL(value);return ['http:','https:'].includes(u.protocol)?u.href:'';}catch{return '';}};
+const imageFor=f=>f.custom?(f.image||''):`assets/${f.id}.jpg`;
+const allFestivals=()=>[...custom,...records];
+function notify(message){$('toast').textContent=message;$('toast').classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('visible'),2600);}
+function loadLocal(){try{const value=JSON.parse(localStorage.getItem(storageKey)||'[]');custom=Array.isArray(value)?value.filter(f=>f&&f.custom&&typeof f.name==='string'&&typeof f.region==='string'&&Number.isFinite(f.lat)&&Number.isFinite(f.lng)&&f.lat>=33&&f.lat<=39&&f.lng>=124&&f.lng<=132&&(!f.image||/^data:image\/jpeg;base64,/.test(f.image))):[];}catch{custom=[];}}
+function persist(next){localStorage.setItem(storageKey,JSON.stringify(next));custom=next;}
+async function getJSON(url){const r=await fetch(url);if(!r.ok)throw Error(`불러오지 못했습니다: ${url}`);return r.json();}
+function paint(){
+ if(!ctx||!projection||entered||document.hidden)return;
+ const [cx,cy]=projection.translate();ctx.clearRect(0,0,width,height);
+ const scale=projection.scale();
+ ctx.save();ctx.beginPath();ctx.ellipse(cx,cy+scale+25,scale*.66,14,0,0,Math.PI*2);ctx.fillStyle='#6a80500b';ctx.filter='blur(12px)';ctx.fill();ctx.restore();
+ let ocean=ctx.createRadialGradient(cx-scale*.3,cy-scale*.4,scale*.05,cx,cy,scale);ocean.addColorStop(0,'#f5f7ee');ocean.addColorStop(.8,'#edf1e4');ocean.addColorStop(1,'#dfe6d2');
+ ctx.beginPath();ctx.arc(cx,cy,scale,0,2*Math.PI);ctx.fillStyle=ocean;ctx.fill();
+ const path=d3.geoPath(projection,ctx);
+ ctx.save();ctx.beginPath();ctx.arc(cx,cy,scale,0,2*Math.PI);ctx.clip();
+ ctx.beginPath();path(d3.geoGraticule10());ctx.strokeStyle='#9bac850f';ctx.lineWidth=.6;ctx.stroke();
+ for(const f of world){ctx.beginPath();path(f.geometry);ctx.fillStyle=f.k?'#8ca572':'#c5d3b3';ctx.fill();ctx.strokeStyle=f.k?'#7d9763':'#f3f6e8';ctx.lineWidth=f.k?.9:.55;ctx.stroke();}
+ const shade=ctx.createRadialGradient(cx-scale*.3,cy-scale*.35,scale*.25,cx,cy,scale*1.02);shade.addColorStop(0,'#ffffff00');shade.addColorStop(.78,'#ffffff00');shade.addColorStop(1,'#6c83442c');ctx.fillStyle=shade;ctx.fillRect(cx-scale,cy-scale,scale*2,scale*2);ctx.restore();
+ ctx.beginPath();ctx.arc(cx,cy,scale+.5,0,2*Math.PI);ctx.strokeStyle='#d3ddc5';ctx.lineWidth=1;ctx.stroke();
+ const distance=d3.geoDistance([127.8,36.2],[-rotation[0],-rotation[1]]);
+ const point=projection([127.8,36.2]);const visible=distance<1.45;
+ const entry=$('korea-entry');entry.style.left=`${visible?point[0]+48:cx}px`;entry.style.top=`${visible?point[1]-15:cy+scale+47}px`;entry.innerHTML=visible?'<span class="dot"></span> 대한민국 <span class="arrow">↗</span>':'대한민국으로 이동 ↗';
 }
-function renderDetail(f){$('detail-content').innerHTML=`<img class="detail-image" src="${photo(f.image)}" alt="${f.name} 분위기 참고 이미지"><div class="detail-body"><div class="eyebrow">${nameFor(f.country)} · ${f.region} / ${f.theme}</div><h2>${f.name}</h2><div class="detail-sub">${f.en}</div><p>${f.desc}</p><div class="detail-facts"><div><small>일반적인 개최 시기</small><span>${f.month}월 · 연도별 일정 확인 필요</span></div><div><small>대표 개최 장소</small><span>${f.venue}</span></div><div><small>위도 LATITUDE</small><span>${f.lat.toFixed(4)}°</span></div><div><small>경도 LONGITUDE</small><span>${f.lng.toFixed(4)}°</span></div></div><div class="detail-actions"><button id="detail-save">${saved.has(f.id)?'▣ 저장됨 · 취소하기':'＋ 여행 컬렉션에 저장'}</button><a href="${f.url}" target="_blank" rel="noopener noreferrer">공식 안내 ↗</a><button id="detail-map">지도에서 보기 ⌖</button></div><p class="demo-note">탐색용 예시 정보 · 사진은 분위기 참고용입니다. 정확한 일정과 장소는 공식 안내를 확인해주세요.</p></div>`;$('detail-save').onclick=()=>toggleSave(f.id);$('detail-map').onclick=()=>{$('detail').close();selectCountry(f.country);selectRegion(f);if(innerWidth<741)$('globe').scrollIntoView({behavior:reduced?'instant':'smooth',block:'center'});};}
-function openDetail(f){lastFocus=document.activeElement;renderDetail(f);$('detail').showModal();}
-function flyCountry(code){if(!globe)return;let center=centers[code];if(!center){const f=features.find(f=>codeFor(f)===code);if(f){let polygons=f.geometry.type==='Polygon'?[f.geometry.coordinates]:f.geometry.coordinates;const ring=polygons.map(p=>p[0]).sort((a,b)=>b.length-a.length)[0];const lats=ring.map(c=>c[1]),lngs=ring.map(c=>c[0]);let min=Math.min(...lngs),max=Math.max(...lngs);if(max-min>180){const normalized=lngs.map(x=>x<0?x+360:x);min=Math.min(...normalized);max=Math.max(...normalized);}center=[(Math.min(...lats)+Math.max(...lats))/2,(min+max)/2,Math.max(.48,Math.min(2.5,Math.max(max-min,Math.max(...lats)-Math.min(...lats))/45))];}}
- if(center)globe.pointOfView({lat:center[0],lng:center[1],altitude:center[2]},reduced?0:1600);
+function schedulePaint(){if(!renderRequest)renderRequest=requestAnimationFrame(()=>{renderRequest=0;paint();});}
+function resize(){const rect=$('globe-stage').getBoundingClientRect();width=rect.width;height=rect.height;const dpr=Math.min(devicePixelRatio||1,1.75);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx?.setTransform(dpr,0,0,dpr,0,0);radius=Math.min(width*.32,height*.34,310);if(projection)projection.translate([width/2,height*.51]).scale(radius).rotate(rotation);schedulePaint();}
+async function initGlobe(){
+ resize();try{
+ if(typeof d3==='undefined')throw Error('지도 모듈을 불러오지 못했습니다.');
+ projection=d3.geoOrthographic().rotate(rotation).precision(.55).translate([width/2,height*.51]).scale(radius);
+ // Paint the sphere before the geographic data arrives.
+ paint();world=(await getJSON('assets/world.json')).map(f=>({k:f.k,geometry:{type:f.t,coordinates:f.c}}));paint();
+ }catch(error){console.error(error);$('load-state').textContent='지구본을 불러오지 못했습니다. 한국 보기로 탐색할 수 있어요.';$('korea-entry').style.left='50%';$('korea-entry').style.top='50%';}
 }
-function stopRotation(){rotation=false;$('rotate').classList.remove('active');$('rotate').setAttribute('aria-label','자동 회전 켜기');if(globe)globe.controls().autoRotate=false;}
-function selectCountry(code){country=code;region='';savedMode=false;stopRotation();$('country').value=code;selectedFeature=features.find(f=>codeFor(f)===code);if(globe){globe.polygonCapColor(capColor);flyCountry(code);}$('map-caption').textContent=`${nameFor(code)}에서 새로운 순간을 발견하세요`;render();}
-function selectRegion(f){region=f.region;country=f.country;savedMode=false;stopRotation();$('country').value=country;if(globe)globe.pointOfView({lat:f.lat,lng:f.lng,altitude:.26},reduced?0:1200);render();}
-function capColor(f){return f===selectedFeature?'#a4bb8c':f===hovered?'#b8cba5':'#d0d9bf';}
-function updatePins(){let data=festivals.filter(f=>(!country||f.country===country)&&(!$('month').value||f.month===+$('month').value)&&(!$('category').value||f.theme===$('category').value));const unique=[...new Map(data.map(f=>[f.country+f.region,f])).values()];globe.htmlElementsData(unique).htmlElement(f=>{const el=document.createElement('button');el.className=`pin ${region===f.region?'selected':''}`;el.setAttribute('aria-label',`${nameFor(f.country)} ${f.region} 축제 보기`);if(country){const label=document.createElement('span');label.textContent=f.region;el.append(label);}el.onclick=e=>{e.stopPropagation();if(country!==f.country)selectCountry(f.country);selectRegion(f);};return el;});}
-function reset(){country='';region='';savedMode=false;selectedFeature=null;$('country').value='';$('month').value='';$('category').value='';stopRotation();if(globe){globe.polygonCapColor(capColor).pointOfView({lat:25,lng:110,altitude:2.25},reduced?0:1500);}$('map-caption').textContent='모든 순간이 여행이 되는 곳';render();}
-async function init(){try{const response=await fetch('assets/countries.geojson');if(!response.ok)throw Error('지도 데이터를 불러올 수 없습니다.');features=(await response.json()).features.filter(f=>f.properties.ADMIN!=='Antarctica');features.sort((a,b)=>nameFor(codeFor(a)).localeCompare(nameFor(codeFor(b)),'ko'));features.forEach(f=>{const opt=document.createElement('option');const code=codeFor(f);opt.value=code;opt.textContent=`${flags[code]||''} ${nameFor(code)}${festivals.some(x=>x.country===code)?' · 축제 보기':''}`;$('country').append(opt);});
- if(typeof Globe==='undefined')throw Error('지구본을 불러오지 못했습니다.');
- const area=$('globe');globe=Globe()(area).width(area.clientWidth).height(area.clientHeight).backgroundColor('#00000000').showAtmosphere(true).atmosphereColor('#bacba3').atmosphereAltitude(.13).polygonsData(features).polygonCapColor(capColor).polygonSideColor(()=>'#b4c59c').polygonStrokeColor(()=>'#f0f1e5').polygonAltitude(.0025).polygonsTransitionDuration(250).polygonLabel(f=>`<div style="font:12px sans-serif;padding:7px">${nameFor(codeFor(f))}</div>`).onPolygonHover(f=>{hovered=f;globe.polygonCapColor(capColor);}).onPolygonClick(f=>selectCountry(codeFor(f))).htmlLat('lat').htmlLng('lng').htmlAltitude(.018).htmlElement(()=>document.createElement('span'));
- const material=globe.globeMaterial();material.color.set('#e3e8d6');material.shininess=5;globe.controls().enableDamping=true;globe.controls().dampingFactor=.08;globe.controls().minDistance=115;globe.controls().maxDistance=650;globe.controls().autoRotateSpeed=.3;globe.pointOfView({lat:25,lng:110,altitude:2.25});globe.onZoom(p=>{$('coordinate').textContent=`${Math.abs(p.lat).toFixed(2)}° ${p.lat>=0?'N':'S'}   ${Math.abs(p.lng).toFixed(2)}° ${p.lng>=0?'E':'W'}`;});globe.controls().addEventListener('start',stopRotation);new ResizeObserver(()=>{globe.width(area.clientWidth).height(area.clientHeight);}).observe(area);$('map-status').hidden=true;updatePins();
- }catch(error){console.error(error);$('map-status').textContent='지구본을 표시할 수 없습니다. WebGL을 지원하는 브라우저에서 새로고침해주세요. 국가 메뉴와 축제 목록은 계속 사용할 수 있습니다.';}}
-$('country').onchange=e=>e.target.value?selectCountry(e.target.value):reset();$('month').onchange=render;$('category').onchange=render;$('clear-filters').onclick=()=>{$('month').value='';$('category').value='';render();};$('world').onclick=reset;$('reset').onclick=reset;$('explore').onclick=()=>{savedMode=false;render();};$('saved').onclick=()=>{savedMode=true;render();};$('rotate').onclick=()=>{if(!globe)return;rotation=!rotation;globe.controls().autoRotate=rotation;$('rotate').classList.toggle('active',rotation);$('rotate').setAttribute('aria-label',rotation?'자동 회전 끄기':'자동 회전 켜기');};
-for(const [id,factor]of[['zoom-in',.78],['zoom-out',1.28]])$(id).onclick=()=>{if(globe){const p=globe.pointOfView();globe.pointOfView({...p,altitude:Math.max(.16,Math.min(4.8,p.altitude*factor))},reduced?0:450);}};
-$('close-detail').onclick=()=>$('detail').close();$('detail').addEventListener('close',()=>lastFocus?.focus());$('about').onclick=()=>$('info').showModal();$('close-info').onclick=()=>$('info').close();for(const id of['detail','info'])$(id).addEventListener('click',e=>{if(e.target===$(id)){const r=$(id).getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)$(id).close();}});
-// Derive the month menu from the dataset so every festival remains discoverable.
-const monthSelect=$('month');[...new Set(festivals.map(f=>f.month))].sort((a,b)=>a-b).forEach(m=>{if(![...monthSelect.options].some(o=>o.value===String(m))){const o=document.createElement('option');o.value=m;o.textContent=`${m}월`;monthSelect.append(o);}});[...monthSelect.options].slice(1).sort((a,b)=>+a.value-+b.value).forEach(o=>monthSelect.append(o));
-render();init();
+function animateGlobe(){return new Promise(resolve=>{
+ if(!projection||reduced){resolve();return;}
+ cancelAnimationFrame(animation);const start=performance.now(),from=rotation.slice();const to=[-127.8,-36.2,0];to[0]=from[0]+((((to[0]-from[0])+180)%360+360)%360-180);const fromScale=projection.scale();
+ const frame=now=>{const t=Math.min(1,(now-start)/620),ease=1-Math.pow(1-t,3);rotation=from.map((v,i)=>v+(to[i]-v)*ease);projection.rotate(rotation).scale(fromScale*(1+.28*ease));paint();if(t<1)animation=requestAnimationFrame(frame);else{animation=0;resolve();}};animation=requestAnimationFrame(frame);
+ });}
+async function loadKorea(){if(!loadPromise)loadPromise=Promise.all([getJSON('assets/korea.json'),getJSON('assets/festivals.json')]).then(([geometry,data])=>{koreaGeometry=geometry;records=data;drawKorea();}).catch(error=>{loadPromise=null;throw error;});return loadPromise;}
+async function enterKorea(){
+ if(entered){renderList();return;}if(entering)return;entering=true;$('korea-entry').disabled=true;
+ try{const dataPromise=loadKorea();await Promise.all([animateGlobe(),dataPromise]);$('app').classList.add('entering');entered=true;$('korea-stage').hidden=false;$('festival-panel').hidden=false;$('app').classList.add('entered');renderList();setTimeout(()=>{if(entered)$('globe-stage').hidden=true;},reduced?0:500);$('load-state').textContent='';}
+ catch(error){console.error(error);$('load-state').replaceChildren();$('load-state').append('한국 정보를 불러오지 못했습니다. ');const retry=document.createElement('button');retry.textContent='다시 시도';retry.onclick=enterKorea;$('load-state').append(retry);}
+ finally{entering=false;$('korea-entry').disabled=false;}
+}
+function showHome(){entered=false;region='';$('search').value='';$('globe-stage').hidden=false;$('korea-stage').hidden=true;$('festival-panel').hidden=true;$('app').classList.remove('entering','entered');rotation=[-112,-23,0];if(projection)projection.rotate(rotation).scale(radius);resize();window.scrollTo({top:0,behavior:'instant'});}
+function svgElement(tag,attrs){const el=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const [k,v]of Object.entries(attrs))el.setAttribute(k,v);return el;}
+function drawKorea(){
+ // Planar Mercator avoids spherical winding assumptions in the source geometry.
+ const merc=lat=>Math.log(Math.tan(Math.PI/4+lat*Math.PI/360));
+ const minX=124.3,maxX=131.9,minY=merc(33),maxY=merc(38.8);
+ const scale=Math.min(390/((maxX-minX)*Math.PI/180),470/(maxY-minY));
+ mapProjection=([lng,lat])=>[230+(lng-128.1)*Math.PI/180*scale,325-((merc(lat)-(minY+maxY)/2)*scale)];
+ const polys=koreaGeometry.type==='Polygon'?[koreaGeometry.coordinates]:koreaGeometry.coordinates;
+ $('korea-land').replaceChildren();for(const poly of polys){const path=svgElement('path',{d:poly.map(ring=>ring.map((c,i)=>{const [x,y]=mapProjection(c);return`${i?'L':'M'}${x.toFixed(2)},${y.toFixed(2)}`;}).join(' ')+'Z').join(' '),'fill-rule':'evenodd'});$('korea-land').append(path);}
+}
+function queryRecords(){const q=$('search').value.trim().toLocaleLowerCase('ko');return allFestivals().filter(f=>(!region||f.region===region)&&(!q||`${f.name} ${f.region} ${f.venue}`.toLocaleLowerCase('ko').includes(q)));}
+function renderMarkers(list){if(!mapProjection)return;$('map-markers').replaceChildren();
+ const groups=[...new Map(list.map(f=>[f.region,f])).values()];
+ for(const f of groups){const [x,y]=mapProjection([f.lng,f.lat]);const group=svgElement('g',{class:`map-pin ${region===f.region?'active':''}`,transform:`translate(${x},${y})`,tabindex:'0',role:'button','aria-label':`${f.region} 축제 보기`});group.append(svgElement('rect',{x:f.region==='진주'?-45:f.region==='창원'?-15:-10,y:f.region==='창원'?-28:-10,width:f.region==='창원'?30:58,height:36,fill:'transparent','pointer-events':'all'}),svgElement('circle',{r:10,class:'pin-ring'}),svgElement('circle',{r:4.5,class:'pin-dot'}));const text=svgElement('text',{x:f.region==='진주'?-12:f.region==='창원'?0:13,y:f.region==='진주'?16:f.region==='창원'?-15:4,'text-anchor':f.region==='진주'?'end':f.region==='창원'?'middle':'start'});text.textContent=f.region;group.append(text);const choose=()=>{region=region===f.region?'':f.region;renderList();};group.onclick=choose;group.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose();}};$('map-markers').append(group);}
+}
+function renderList(){
+ const list=queryRecords();$('list-title').textContent=region?`${region}의 축제`:$('search').value.trim()?'검색 결과':'한국의 축제';$('list-count').textContent=`${list.length}개의 축제`;$('location-label').textContent=region||'전국의 축제';$('all-regions').hidden=!region;
+ const grid=$('festival-grid');grid.replaceChildren();
+ for(const f of list){const card=document.createElement('article');card.className='festival-card';const b=document.createElement('button');b.setAttribute('aria-label',`${f.name} 상세 보기`);const thumb=document.createElement('div');thumb.className='thumb';const src=imageFor(f);if(src){const img=new Image();img.src=src;img.alt=f.custom?f.name:`${f.name} 분위기 참고 이미지`;img.loading='lazy';img.decoding='async';img.width=650;img.height=485;img.onerror=()=>img.hidden=true;thumb.append(img);}const title=document.createElement('div');title.className='festival-name';title.textContent=f.name;b.append(thumb,title);b.onclick=()=>openDetail(f);card.append(b);grid.append(card);}
+ if(!list.length){const empty=document.createElement('div');empty.className='empty';empty.textContent='찾는 축제가 아직 없어요.';const clear=document.createElement('button');clear.textContent='전체 축제 보기';clear.onclick=()=>{region='';$('search').value='';renderList();};empty.append(clear);grid.append(empty);}
+ $('sample-note').hidden=!list.some(f=>!f.custom);
+ // Keep all search matches on the map when a single region is selected.
+ const selected=region;region='';renderMarkers(queryRecords());region=selected;
+ for(const el of $('map-markers').children)el.classList.toggle('active',el.getAttribute('aria-label')===`${region} 축제 보기`);
+}
+function openDetail(f){
+ lastDetailFocus=document.activeElement;const src=imageFor(f);const link=safeURL(f.url);$('detail-content').innerHTML=`${src?`<img class="detail-image" src="${escapeHTML(src)}" alt="${escapeHTML(f.name)}${f.custom?'':' 분위기 참고 이미지'}">`:''}<div class="detail-body"><div class="modal-eyebrow">대한민국 · ${escapeHTML(f.region)}</div><h2>${escapeHTML(f.name)}</h2>${f.desc?`<p>${escapeHTML(f.desc)}</p>`:''}<div class="facts"><div><small>개최 시기</small><span>${Number(f.month)}월${f.custom?'':' · 예년 기준'}</span></div><div><small>장소</small><span>${escapeHTML(f.venue)}</span></div><div><small>위도</small><span>${Number(f.lat).toFixed(4)}° N</span></div><div><small>경도</small><span>${Number(f.lng).toFixed(4)}° E</span></div></div><div class="detail-bottom">${link?`<a href="${escapeHTML(link)}" target="_blank" rel="noopener noreferrer">공식 안내 ↗</a>`:''}<button id="detail-location">위치 보기 ⌖</button>${f.custom?'<button class="delete" id="delete-festival">등록 삭제</button>':''}</div><p class="detail-note">${f.custom?'이 브라우저에 직접 등록한 축제입니다.':'예시 정보 · 사진은 분위기 참고용입니다. 방문 전 공식 일정과 장소를 확인해주세요.'}</p></div>`;
+ $('detail-location').onclick=()=>{$('detail').close();region=f.region;$('search').value='';renderList();$('korea-stage').scrollIntoView({behavior:reduced?'instant':'smooth',block:'center'});};
+ if(f.custom)$('delete-festival').onclick=()=>{try{persist(custom.filter(x=>x.id!==f.id));$('detail').close();region='';renderList();notify('등록한 축제를 삭제했습니다.');}catch{notify('저장 공간에 접근할 수 없습니다.');}};
+ $('detail').showModal();
+}
+function resetForm(){photoData='';photoBusy=false;$('register-form').reset();$('image-preview').hidden=true;$('image-preview').removeAttribute('src');$('upload-hint').hidden=false;$('form-error').textContent='';$('register-submit').disabled=false;}
+async function readPhoto(file){
+ if(!file)return;const valid=['image/jpeg','image/png','image/webp'];if(!valid.includes(file.type)||file.size>12*1024*1024)throw Error('JPG·PNG·WebP 사진을 12MB 이하로 올려주세요.');
+ const bitmap=await createImageBitmap(file);try{const c=document.createElement('canvas');const scale=Math.min(1,800/Math.max(bitmap.width,bitmap.height));c.width=Math.max(1,Math.round(bitmap.width*scale));c.height=Math.max(1,Math.round(bitmap.height*scale));const context=c.getContext('2d');context.fillStyle='#fff';context.fillRect(0,0,c.width,c.height);context.drawImage(bitmap,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.78);}finally{bitmap.close();}
+}
+$('image-file').onchange=async()=>{photoBusy=true;$('register-submit').disabled=true;$('form-error').textContent='';try{photoData=await readPhoto($('image-file').files[0])||'';$('image-preview').src=photoData;$('image-preview').hidden=!photoData;$('upload-hint').hidden=!!photoData;}catch(error){photoData='';$('image-preview').hidden=true;$('upload-hint').hidden=false;$('form-error').textContent=error.message;}finally{photoBusy=false;$('register-submit').disabled=false;}};
+$('register-form').onsubmit=async e=>{
+ e.preventDefault();if(photoBusy)return;const data=new FormData(e.target);const f={id:crypto.randomUUID(),custom:true,country:'KR',name:String(data.get('name')).trim(),region:String(data.get('region')).trim(),venue:String(data.get('venue')).trim(),lat:Number(data.get('lat')),lng:Number(data.get('lng')),month:Number(data.get('month')),desc:String(data.get('desc')).trim(),url:String(data.get('url')).trim(),image:photoData};
+ if(!f.name||!f.region||!f.venue){$('form-error').textContent='축제명·지역·장소를 입력해주세요.';return;}
+ if(!Number.isFinite(f.lat)||!Number.isFinite(f.lng)||f.lat<33||f.lat>39||f.lng<124||f.lng>132){$('form-error').textContent='한국의 좌표 범위를 확인해주세요. 위도 33–39, 경도 124–132';return;}
+ if(f.month<1||f.month>12){$('form-error').textContent='개최 월을 선택해주세요.';return;}
+ if(f.url&&!safeURL(f.url)){$('form-error').textContent='공식 링크는 http 또는 https 주소로 입력해주세요.';return;}
+ try{persist([f,...custom]);}catch{$('form-error').textContent='브라우저에 저장하지 못했습니다. 저장 공간을 확인하거나 사진 크기를 줄여주세요.';return;}
+ $('register').close();resetForm();region='';$('search').value='';await enterKorea();if(entered)renderList();notify('이 브라우저에 축제를 등록했습니다.');
+};
+for(let m=1;m<=12;m++){const o=document.createElement('option');o.value=m;o.textContent=`${m}월`;$('register-form').elements.month.append(o);}
+$('register-open').onclick=()=>{$('register').showModal();};$('register-close').onclick=()=>$('register').close();$('detail-close').onclick=()=>$('detail').close();$('detail').addEventListener('close',()=>{if(lastDetailFocus?.isConnected)lastDetailFocus.focus();});
+for(const id of['register','detail'])$(id).addEventListener('click',e=>{if(e.target!==$(id))return;const r=$(id).getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)$(id).close();});
+$('home').onclick=e=>{e.preventDefault();if(!entering)showHome();};$('back').onclick=showHome;$('korea-entry').onclick=enterKorea;$('all-regions').onclick=()=>{region='';renderList();};
+$('search-form').onsubmit=e=>{e.preventDefault();region='';enterKorea();};let searchTimer;$('search').oninput=()=>{region='';clearTimeout(searchTimer);searchTimer=setTimeout(()=>{if(entered)renderList();else if($('search').value.trim())enterKorea();},180);};
+document.addEventListener('keydown',e=>{if(e.key==='/'&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)&&!$('register').open&&!$('detail').open){e.preventDefault();$('search').focus();}});
+canvas.onpointerdown=e=>{if(entering||entered||!projection)return;canvas.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,rotation:rotation.slice(),moved:false};};
+canvas.onpointermove=e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>5)drag.moved=true;rotation=[drag.rotation[0]+dx*.3,Math.max(-80,Math.min(80,drag.rotation[1]-dy*.3)),0];projection.rotate(rotation);schedulePaint();};
+canvas.onpointerup=e=>{if(!drag)return;const wasMoved=drag.moved;drag=null;if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);if(wasMoved||!projection)return;const rect=canvas.getBoundingClientRect();const p=[e.clientX-rect.left,e.clientY-rect.top];const center=projection.translate();if(Math.hypot(p[0]-center[0],p[1]-center[1])>projection.scale())return;const coords=projection.invert(p);const korea=world.find(f=>f.k);if(coords&&korea&&d3.geoContains(korea.geometry,coords))enterKorea();};
+canvas.onpointercancel=()=>drag=null;
+canvas.onkeydown=e=>{if(entered||entering||!projection)return;if(e.key==='Enter'){e.preventDefault();enterKorea();return;}const changes={ArrowLeft:[-10,0],ArrowRight:[10,0],ArrowUp:[0,8],ArrowDown:[0,-8]};if(changes[e.key]){e.preventDefault();rotation[0]+=changes[e.key][0];rotation[1]=Math.max(-80,Math.min(80,rotation[1]+changes[e.key][1]));projection.rotate(rotation);schedulePaint();}};
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)schedulePaint();});new ResizeObserver(resize).observe($('globe-stage'));loadLocal();initGlobe();
