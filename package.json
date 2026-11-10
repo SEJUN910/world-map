@@ -1,0 +1,42 @@
+{
+  "name": "festiva",
+  "version": "0.2.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build",
+    "start": "next start --hostname 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test:smoke": "node scripts/smoke-test.mjs",
+    "check:supabase": "node scripts/check-supabase.mjs",
+    "test": "node --test scripts/drafts.test.mjs scripts/validation.test.mjs scripts/i18n.test.mjs scripts/analytics.test.mjs scripts/seo.test.mjs scripts/auth.test.mjs",
+    "test:integration": "node scripts/integration-test.mjs",
+    "import:festivals": "node scripts/import-festivals.mjs",
+    "import:tourapi": "node scripts/import-tourapi.mjs"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.118.0",
+    "@tiptap/pm": "^3.33.0",
+    "@tiptap/react": "^3.33.0",
+    "@tiptap/starter-kit": "^3.33.0",
+    "d3-geo": "3.1.1",
+    "maplibre-gl": "^6.17.0",
+    "next": "16.4.5",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@next/env": "^16.4.5",
+    "@types/d3-geo": "^3.1.0",
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}
