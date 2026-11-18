@@ -1,4 +1,7 @@
 /// <reference types="next" />
 /// <reference types="next/image-types/global" />
+import "./.next-deploy-check/types/routes.d.ts";
+import "./.next-deploy-check/types/root-params.d.ts";
 
-// Generated route declarations are added by next dev / next build.
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
