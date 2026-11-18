@@ -13,7 +13,7 @@ import { EventPosterDialog } from "./event-poster-dialog";
 
 export type EventMapPoint = { countryCode?: CountryCode; id: string; slug: string; title: string; latitude: number; longitude: number };
 type Coordinates = { latitude: number; longitude: number };
-type Props = ({ points: EventMapPoint[]; fitToPoints?: boolean; point?: never; onPick?: never } | { points?: never; fitToPoints?: never; point: Coordinates | null; onPick: (point: Coordinates) => void }) & { country?: CountryCode; overview?: boolean; onReady?: (focusCountry: (country: CountryCode) => void) => void; onCountryFocused?: () => void };
+type Props = ({ points: EventMapPoint[]; fitToPoints?: boolean; point?: never; onPick?: never } | { points?: never; fitToPoints?: never; point: Coordinates | null; onPick: (point: Coordinates) => void }) & { country?: CountryCode; overview?: boolean; onReady?: (focusCountry: (country: CountryCode) => void) => void; onCountryFocused?: () => void; onEventHighlight?: (id: string | null) => void; highlightedId?: string | null };
 
 function globeZoom(element: HTMLElement) {
   return Math.log2(Math.min(element.clientWidth * 0.8, element.clientHeight * 0.65, 740) * Math.PI / 512);
@@ -54,7 +54,7 @@ function coordinateGrid(map: MapLibreMap): FeatureCollection<LineString> {
   return { type: "FeatureCollection", features };
 }
 
-export function EventMap({ points, point, onPick, fitToPoints = false, country = "kr", overview = false, onReady, onCountryFocused }: Props) {
+export function EventMap({ points, point, onPick, fitToPoints = false, country = "kr", overview = false, onReady, onCountryFocused, onEventHighlight, highlightedId }: Props) {
   const { t, locale } = useTranslations();
   const container = useRef<HTMLDivElement>(null);
   const coordinates = useRef<HTMLOutputElement>(null);
@@ -74,6 +74,8 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
   const openGroup = useRef<((group: MapPosterGroup) => void) | null>(null);
   const hoverGroup = useRef<((group: MapPosterGroup, position: [number, number]) => void) | null>(null);
   const leaveGroup = useRef<(() => void) | null>(null);
+  const onEventHighlightRef = useRef(onEventHighlight);
+  onEventHighlightRef.current = onEventHighlight;
   const [retry, setRetry] = useState(0);
   const isPicker = !!onPick;
   const ready = useRef(onReady);
@@ -311,6 +313,9 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
             const content = document.createElement("div");
             content.className = "event-map__popup";
             const seen = new Set<string>();
+            if (instance.getZoom() < 6 && nearby[0]?.properties?.id) {
+              onEventHighlightRef.current?.(String(nearby[0].properties.id));
+            }
             for (const feature of nearby) {
               const properties = feature.properties;
               if (!properties?.id || seen.has(String(properties.id))) continue;
@@ -375,7 +380,7 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
   return (
     <div className={`event-map-shell${overview ? " event-map-shell--overview" : ""}`}>
       <div ref={container} className={`event-map${isPicker ? " event-map--picker" : ""}`} role="region" aria-label={isPicker ? t("행사 위치 선택 지도") : t("행사 지도")} />
-      {!isPicker && posterMap && <EventMapPosters map={posterMap} points={points || []} onOpenGroup={(group) => openGroup.current?.(group)} onHoverGroup={(group, position) => hoverGroup.current?.(group, position)} onLeaveGroup={() => leaveGroup.current?.()} />}
+      {!isPicker && posterMap && <EventMapPosters map={posterMap} points={points || []} onOpenGroup={(group) => openGroup.current?.(group)} onHoverGroup={(group, position) => hoverGroup.current?.(group, position)} onLeaveGroup={() => leaveGroup.current?.()} onEventHighlight={onEventHighlightRef.current} highlightedId={highlightedId} />}
       {!isPicker && <output ref={coordinates} className="event-map__coordinates" aria-hidden="true" />}
       {!isPicker && <span className="event-map__reticle" aria-hidden="true" />}
       {clusterIds && <EventClusterDialog ids={clusterIds} onDismiss={() => setClusterIds(null)} />}
