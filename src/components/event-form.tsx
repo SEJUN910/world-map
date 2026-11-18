@@ -15,6 +15,7 @@ import { ensureVisitorSession } from "@/lib/supabase/browser-visitor";
 import type { CloudEvent } from "@/lib/event-repository";
 import { eventPath } from "@/lib/events";
 import { preparePoster, readDrafts, type EventDraft } from "@/lib/drafts";
+import type { ExtractedFields } from "@/app/api/extract-poster/route";
 type Fields = {
   title: string;
   venue: string;
@@ -71,6 +72,8 @@ export function EventForm({
     longitude: number;
   } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [aiHint, setAiHint] = useState("");
   const [error, setError] = useState("");
   const [ready, setReady] = useState(!draftId);
   const [saved, setSaved] = useState(false);
@@ -135,9 +138,34 @@ export function EventForm({
     setBusy(true);
     setError("");
     setSaved(false);
+    setAiHint("");
     try {
       const image = await preparePoster(file);
-      if (request === imageRequest.current) setPoster(image);
+      if (request !== imageRequest.current) return;
+      setPoster(image);
+      setExtracting(true);
+      try {
+        const res = await fetch("/api/extract-poster", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ poster: image }),
+        });
+        if (res.ok) {
+          const extracted: ExtractedFields = await res.json();
+          setFields((prev) => ({
+            ...prev,
+            title: prev.title || extracted.title || prev.title,
+            startDate: prev.startDate || extracted.startDate || prev.startDate,
+            endDate: prev.endDate || extracted.endDate || prev.endDate,
+            venue: prev.venue || extracted.venue || prev.venue,
+            description: prev.description || extracted.description || prev.description,
+          }));
+          const filled = [extracted.title, extracted.startDate, extracted.venue, extracted.description].filter(Boolean).length;
+          if (filled > 0) setAiHint(t("AI가 포스터에서 정보를 채웠어요. 확인 후 수정해주세요."));
+        }
+      } catch { /* extraction failure is non-fatal */ } finally {
+        setExtracting(false);
+      }
     } catch (error) {
       if (request === imageRequest.current)
         setError(
@@ -372,9 +400,13 @@ export function EventForm({
               <p className="fine-print" role="status">
                 {busy
                   ? t("포스터를 준비하고 있어요…")
-                  : poster
-                    ? t("포스터를 바꾸려면 이미지를 다시 눌러주세요.")
-                    : t("직접 만들었거나 사용 허락을 받은 포스터를 올려주세요.")}
+                  : extracting
+                    ? t("AI가 포스터에서 행사 정보를 읽고 있어요…")
+                    : aiHint
+                      ? aiHint
+                      : poster
+                        ? t("포스터를 바꾸려면 이미지를 다시 눌러주세요.")
+                        : t("직접 만들었거나 사용 허락을 받은 포스터를 올려주세요.")}
               </p>
             </section>
             <section aria-label={t("행사 정보")}>
