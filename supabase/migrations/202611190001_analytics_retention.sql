@@ -11,7 +11,7 @@ begin
   ) then
     raise insufficient_privilege using message = 'Analytics key required';
   end if;
-  if p_days < 30 or p_days > 365 then
+  if p_days is null or p_days < 30 or p_days > 365 then
     raise exception 'p_days must be between 30 and 365';
   end if;
   with removed as (
