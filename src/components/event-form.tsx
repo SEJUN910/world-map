@@ -136,6 +136,7 @@ export function EventForm({
     if (!file || saving) return;
     const request = ++imageRequest.current;
     setBusy(true);
+    setExtracting(false);
     setError("");
     setSaved(false);
     setAiHint("");
@@ -143,6 +144,8 @@ export function EventForm({
       const image = await preparePoster(file);
       if (request !== imageRequest.current) return;
       setPoster(image);
+      // The poster is ready: AI extraction is an optional assist and must not lock the form.
+      setBusy(false);
       setExtracting(true);
       try {
         const res = await fetch("/api/extract-poster", {
@@ -152,6 +155,8 @@ export function EventForm({
         });
         if (res.ok) {
           const extracted: ExtractedFields = await res.json();
+          // A newer upload replaced this poster while extraction was running.
+          if (request !== imageRequest.current) return;
           setFields((prev) => ({
             ...prev,
             title: prev.title || extracted.title || prev.title,
@@ -164,7 +169,7 @@ export function EventForm({
           if (filled > 0) setAiHint(t("AI가 포스터에서 정보를 채웠어요. 확인 후 수정해주세요."));
         }
       } catch { /* extraction failure is non-fatal */ } finally {
-        setExtracting(false);
+        if (request === imageRequest.current) setExtracting(false);
       }
     } catch (error) {
       if (request === imageRequest.current)
