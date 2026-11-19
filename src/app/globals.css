@@ -1865,10 +1865,12 @@ canvas:focus-visible {
   pointer-events: none;
   border-radius: 0 0 var(--radius-sm) var(--radius-sm);
 }
+/* Overlay text is positioned against its own card, not the scrolling panel. */
+.country-page--atlas .country-results .event-card { position: relative; }
 /* Title overlay */
 .country-page--atlas .country-results .event-card > a > h3 {
   position: absolute;
-  bottom: 18px; left: 6px; right: 6px;
+  bottom: 22px; left: 6px; right: 6px;
   width: auto; height: auto; padding: 0; margin: 0;
   overflow: hidden; clip-path: none; white-space: normal;
   font-size: 11px; line-height: 1.35; font-weight: 600;
@@ -1881,10 +1883,13 @@ canvas:focus-visible {
   position: absolute;
   bottom: 5px; left: 6px; right: 6px;
   width: auto; height: auto; padding: 0; margin: 0;
-  overflow: visible; clip-path: none;
+  clip-path: none;
   font-size: 10px; color: rgba(255,255,255,0.8); z-index: 1;
-  display: flex; justify-content: space-between;
+  display: flex; justify-content: space-between; gap: 4px;
+  white-space: nowrap; overflow: hidden;
 }
+.country-page--atlas .country-results .event-card > a > .card-meta span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.country-page--atlas .country-results .event-card > a > .card-meta span:last-child { flex-shrink: 0; color: inherit; }
 /* Hide hover overlay details in atlas (text already visible via gradient) */
 .country-page--atlas .country-results .poster-overlay__details {
   display: none;
@@ -1989,8 +1994,8 @@ canvas:focus-visible {
   border-radius: 50%;
   transition: transform 180ms ease, border-color 180ms ease;
 }
-.map-poster:hover, .map-poster:focus-visible { z-index: 3; opacity: 1; }
-.map-poster:hover img, .map-poster:focus-visible img { transform: scale(1.18); border-color: #f39451; }
+.map-poster:hover, .map-poster:focus-visible, .map-poster.is-highlighted { z-index: 3; opacity: 1; }
+.map-poster:hover img, .map-poster:focus-visible img, .map-poster.is-highlighted img { transform: scale(1.18); border-color: #f39451; }
 .map-poster__info {
   position: absolute;
   left: 54px;
@@ -2055,11 +2060,14 @@ canvas:focus-visible {
   top: var(--space-3);
   right: 50px;
   z-index: 3;
+  padding: 2px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background: #fffffff2;
 }
 .poster-modal__facts dt {
   font-weight: 600;
 }
-.poster-modal__info > .language-select { align-self: flex-start; margin-bottom: 14px; }
 .create-dialog__header > .language-select, .cluster-dialog__header > .language-select { order: 1; margin-left: auto; margin-right: 12px; }
 .create-dialog__close, .cluster-dialog__close { order: 2; }
 @media (max-width: 640px) {
@@ -2258,9 +2266,15 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
   .country-page--atlas:not(.is-mobile-atlas) .country-results { display: none; }
   .atlas-mobile-catalog-toggle { position: absolute; z-index: 3; bottom: max(12px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 8px 16px; border: 1px solid #dce7f2; border-radius: 24px; color: #426a9d; background: #fff; font: inherit; font-size: 12px; cursor: pointer; }
   .atlas-mobile-catalog-toggle:focus-visible { outline: 2px solid #7ba6e8; outline-offset: 2px; }
-  .country-page--atlas .country-results { height: 200px; }
+  /* Sits above the 44px catalog toggle (bottom 12px + gap), honouring the safe area. */
+  .country-page--atlas .country-results { bottom: calc(64px + env(safe-area-inset-bottom)); height: 200px; scrollbar-width: none; }
   .country-page--atlas .country-results .explorer-grid { grid-auto-columns: 124px; }
   .country-page--atlas .country-results::-webkit-scrollbar { display: none; }
-  .country-page--atlas .country-map .event-map__coordinates { bottom: calc(200px + var(--space-4) + env(safe-area-inset-bottom, 0px)); }
+  /* 124px cards fit only the date; the region stays in the card's aria-label and the region chips. */
+  .country-page--atlas .country-results .event-card > a > .card-meta { font-size: 9px; }
+  .country-page--atlas .country-results .event-card > a > .card-meta span:first-child { display: none; }
+  .country-page--atlas .country-results .event-card > a > .card-meta span:last-child { flex-shrink: 1; }
+  /* 64px strip offset + 200px strip + 8px gap. */
+  .country-page--atlas .country-map .event-map__coordinates { bottom: calc(272px + env(safe-area-inset-bottom)); }
   .country-page--atlas.is-catalog-hidden .country-map .event-map__coordinates { bottom: calc(68px + env(safe-area-inset-bottom)); }
 }

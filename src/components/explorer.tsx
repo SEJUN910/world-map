@@ -47,10 +47,15 @@ export function Explorer({
   const regionStrip = useRef<HTMLElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
-  function handleEventHighlight(id: string | null) {
+  // Hovering a list card only highlights; scrolling the list there would make it jump under the cursor.
+  function handleCardHighlight(id: string | null) {
+    setHighlightedId(id);
+  }
+  // Hovering a map marker highlights its card and brings it into view.
+  function handleMapHighlight(id: string | null) {
     setHighlightedId(id);
     if (id) {
-      const card = listRef.current?.querySelector<HTMLElement>(`[data-event-id="${id}"]`);
+      const card = listRef.current?.querySelector<HTMLElement>(`[data-event-id="${CSS.escape(id)}"]`);
       card?.scrollIntoView({ behavior: "instant", block: "nearest" });
     }
   }
@@ -144,14 +149,14 @@ export function Explorer({
 
         <div className="country-split" aria-busy={pending}>
           <aside className="country-map" aria-label={t("지역 지도")}>
-            <EventMap country={country} points={mapPoints} fitToPoints={!!initialRegion} onEventHighlight={handleEventHighlight} highlightedId={highlightedId} />
+            <EventMap country={country} points={mapPoints} fitToPoints={!!initialRegion} onEventHighlight={handleMapHighlight} highlightedId={highlightedId} />
             {total > mapPoints.length && <p className="map-help">{t("지도에는 최대 5,000개의 행사만 표시돼요.")}</p>}
           </aside>
           <section id="atlas-catalog" className="country-results" aria-label={t("행사 목록")} hidden={!catalogOpen}>
         {events.length ? (
           <div ref={listRef} className="event-grid explorer-grid">
             {events.map((event) => (
-              <EventCard key={event.id} event={event} highlighted={highlightedId === event.id} onHover={handleEventHighlight} />
+              <EventCard key={event.id} event={event} highlighted={highlightedId === event.id} onHover={handleCardHighlight} />
             ))}
           </div>
         ) : (
