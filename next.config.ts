@@ -1,20 +1,8 @@
 import type { NextConfig } from "next";
+import { buildCsp } from "./src/lib/csp";
 
-// MapLibre GL requires unsafe-eval (GLSL shader compilation) and unsafe-inline
-// (dynamic style injection). worker-src blob: is needed for tile workers.
-const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
-  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).host
-  : "*.supabase.co";
-
-const csp = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://*.supabase.co https://*.supabase.in",
-  `connect-src 'self' https://${supabaseHost} https://api.geoapify.com https://*.tile.openstreetmap.org https://nominatim.openstreetmap.org https://api.anthropic.com`,
-  "worker-src blob:",
-  "frame-ancestors 'none'",
-].join("; ");
+// headers() is evaluated at build time: changing MAP_TILE_URL or the Supabase URL needs a redeploy.
+const csp = buildCsp({ supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL, mapTileUrl: process.env.MAP_TILE_URL });
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
