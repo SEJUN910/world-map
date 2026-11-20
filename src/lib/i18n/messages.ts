@@ -121,6 +121,7 @@ export const messages: [string, string, string][] = [
   ["나라 선택", "Choose a country", "選擇國家"],
   ["대한민국", "South Korea", "韓國"],
   ["대만", "Taiwan", "台灣"],
+  ["{country} 지도로 이동 중…", "Opening the {country} map…", "正在前往{country}地圖…"],
   ["festiva 홈", "festiva home", "festiva 首頁"],
   ["지구본으로 돌아가기", "Back to the globe", "返回地球"],
   ["뒤로가기", "Go back", "返回"],

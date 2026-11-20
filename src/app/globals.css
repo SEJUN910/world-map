@@ -1542,6 +1542,8 @@ canvas:focus-visible {
 .home-globe .event-map__coordinates { top: auto; bottom: 28px; left: 28px; }
 .home-globe .event-map__reticle { display: none; }
 .home-globe .maplibregl-ctrl-top-right { top: 180px; right: 24px; }
+.country-hover-popup { pointer-events: none; }
+.country-hover-popup .maplibregl-popup-content { padding: 6px 10px; border: 1px solid #dce7f7; border-radius: 6px; color: #234c87; font-size: 13px; font-weight: 600; box-shadow: 0 4px 16px #234c8714; }
 @media (max-width: 700px) {
   .minimal-home > .home-masthead { top: 22px; }
   .minimal-home .home-wordmark { font-size: 34px; }

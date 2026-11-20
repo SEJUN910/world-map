@@ -1,6 +1,6 @@
 export const countries = {
-  kr: { path: "/korea", name: "대한민국", english: "SOUTH KOREA", timezone: "Asia/Seoul", center: [127.8, 36.2] as [number, number], zoom: 5.5, bounds: [124, 33, 132, 39] },
-  tw: { path: "/taiwan", name: "대만", english: "TAIWAN", timezone: "Asia/Taipei", center: [120.9, 23.7] as [number, number], zoom: 6.4, bounds: [118, 21.8, 123, 26.5] },
+  kr: { path: "/korea", name: "대한민국", english: "SOUTH KOREA", timezone: "Asia/Seoul", center: [127.8, 36.2] as [number, number], zoom: 5.5, bounds: [124, 33, 132, 39], boundary: "/assets/korea.json" },
+  tw: { path: "/taiwan", name: "대만", english: "TAIWAN", timezone: "Asia/Taipei", center: [120.9, 23.7] as [number, number], zoom: 6.4, bounds: [118, 21.8, 123, 26.5], boundary: "/assets/taiwan.json" },
 } as const;
 export type CountryCode = keyof typeof countries;
 export function isCountryCode(value: unknown): value is CountryCode { return value === "kr" || value === "tw"; }

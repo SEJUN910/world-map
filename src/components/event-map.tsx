@@ -1,10 +1,10 @@
 "use client";
 import { useTranslations } from "@/components/language-provider";
 
-import { countries, isCountryCode, type CountryCode } from "@/lib/countries";
+import { countries, isCountryCode, pointInCountry, type CountryCode } from "@/lib/countries";
 import { useEffect, useRef, useState } from "react";
 import type { FeatureCollection, Geometry, LineString, Point } from "geojson";
-import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl";
+import type { ExpressionSpecification, GeoJSONSource, Map as MapLibreMap, Marker, PointLike } from "maplibre-gl";
 import { KoreaMap } from "./korea-map";
 import { EventClusterDialog } from "./event-cluster-dialog";
 import { EventMapPosters, type MapPosterGroup } from "./event-map-posters";
@@ -14,7 +14,7 @@ import type { MapBounds } from "@/lib/discovery-filters";
 
 export type EventMapPoint = { countryCode?: CountryCode; id: string; slug: string; title: string; latitude: number; longitude: number };
 type Coordinates = { latitude: number; longitude: number };
-type Props = ({ points: EventMapPoint[]; fitToPoints?: boolean; point?: never; onPick?: never } | { points?: never; fitToPoints?: never; point: Coordinates | null; onPick: (point: Coordinates) => void }) & { country?: CountryCode; overview?: boolean; onReady?: (focusCountry: (country: CountryCode) => void) => void; onCountryFocused?: () => void; onSelectEvents?: (ids: string[]) => void; selectedEventId?: string; onViewportChange?: (bounds: MapBounds, userChanged: boolean) => void; onEventHighlight?: (id: string | null) => void; highlightedId?: string | null };
+type Props = ({ points: EventMapPoint[]; fitToPoints?: boolean; point?: never; onPick?: never } | { points?: never; fitToPoints?: never; point: Coordinates | null; onPick: (point: Coordinates) => void }) & { country?: CountryCode; overview?: boolean; onReady?: (focusCountry: (country: CountryCode) => void) => void; onCountryFocused?: () => void; onSelectEvents?: (ids: string[]) => void; selectedEventId?: string; onViewportChange?: (bounds: MapBounds, userChanged: boolean) => void; onEventHighlight?: (id: string | null) => void; highlightedId?: string | null; onCountryClick?: (country: CountryCode) => void };
 
 function globeZoom(element: HTMLElement) {
   return Math.log2(Math.min(element.clientWidth * 0.8, element.clientHeight * 0.65, 740) * Math.PI / 512);
@@ -55,8 +55,12 @@ function coordinateGrid(map: MapLibreMap): FeatureCollection<LineString> {
   return { type: "FeatureCollection", features };
 }
 
-export function EventMap({ points, point, onPick, fitToPoints = false, country = "kr", overview = false, onReady, onCountryFocused, onSelectEvents, selectedEventId, onViewportChange, onEventHighlight, highlightedId }: Props) {
+export function EventMap({ points, point, onPick, fitToPoints = false, country = "kr", overview = false, onReady, onCountryFocused, onSelectEvents, selectedEventId, onViewportChange, onEventHighlight, highlightedId, onCountryClick }: Props) {
   const { t, locale } = useTranslations();
+  const translate = useRef(t);
+  translate.current = t;
+  const countryClick = useRef(onCountryClick);
+  countryClick.current = onCountryClick;
   const container = useRef<HTMLDivElement>(null);
   const selection = useRef(onSelectEvents);
   const viewport = useRef(onViewportChange);
@@ -97,11 +101,19 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
     let cleanupHover: (() => void) | undefined;
     const controller = new AbortController();
     setFailed(false);
+    // Set while a country flight runs, so hover and clicks cannot start a second one.
+    let focusLock = false;
+    let markCountry: ((country: CountryCode) => void) | undefined;
     async function start() {
-      const [lib, response, worldResponse] = await Promise.all([
+      const [lib, response, worldResponse, boundaries] = await Promise.all([
         import("maplibre-gl"),
         isPicker ? fetch("/api/map-config", { signal: controller.signal }) : Promise.resolve(null),
         !isPicker ? fetch("/assets/world.json", { signal: controller.signal }) : Promise.resolve(null),
+        // Country click targets are optional: a missing boundary only disables clicking that country.
+        overview ? Promise.all((Object.keys(countries) as CountryCode[]).map((code) =>
+          fetch(countries[code].boundary, { signal: controller.signal })
+            .then(async (boundary) => boundary.ok ? { type: "Feature" as const, id: code, properties: { code }, geometry: await boundary.json() as Geometry } : null)
+            .catch(() => null))) : Promise.resolve([]),
       ]);
       if (worldResponse && !worldResponse.ok) throw new Error("World geometry unavailable");
       const world: { t: Geometry["type"]; c: unknown }[] = worldResponse ? await worldResponse.json() : [];
@@ -186,7 +198,9 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
         }
         updateCoordinates();
         if (!isPicker) ready.current?.((targetCountry) => {
-          if (!instance) return;
+          if (!instance || focusLock) return;
+          focusLock = true;
+          markCountry?.(targetCountry);
           instance.stop();
           // The country handoff owns this flight; gestures must not interrupt it.
           instance.dragPan.disable();
@@ -217,6 +231,66 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
               for (const coordinate of coordinates) bounds.extend(coordinate);
               instance.fitBounds(bounds, { padding: 50, maxZoom: 11, duration: 500 });
             }
+          }
+          let markerCountry: ((coordinates: [number, number]) => boolean) | undefined;
+          const countryFeatures = boundaries.filter((feature) => feature !== null);
+          if (overview && countryFeatures.length) {
+            instance.addSource("countries", { type: "geojson", data: { type: "FeatureCollection", features: countryFeatures } });
+            const active: ExpressionSpecification = ["boolean", ["feature-state", "hover"], false];
+            instance.addLayer({ id: "country-fill", type: "fill", source: "countries", paint: { "fill-color": ["case", active, "#9dbdf0", "#c9dbf8"], "fill-opacity": 0.9 } });
+            instance.addLayer({ id: "country-outline", type: "line", source: "countries", paint: { "line-color": "#2865c5", "line-width": ["case", active, 1.6, 1], "line-opacity": ["case", active, 0.9, 0.55] } });
+            const tip = new lib.Popup({ closeButton: false, closeOnClick: false, focusAfterOpen: false, offset: 14, className: "country-hover-popup" });
+            let hovered: CountryCode | null = null;
+            const setHover = (code: CountryCode | null) => {
+              if (!instance || hovered === code) return;
+              if (hovered) instance.setFeatureState({ source: "countries", id: hovered }, { hover: false });
+              hovered = code;
+              if (code) instance.setFeatureState({ source: "countries", id: code }, { hover: true });
+            };
+            const clearHover = () => {
+              if (focusLock || !instance) return;
+              if (hovered) instance.getCanvas().style.cursor = "";
+              setHover(null);
+              tip.remove();
+            };
+            markCountry = (code) => { setHover(code); tip.remove(); };
+            // Event markers sit above countries and keep their own hover and click behavior.
+            const onMarker = (point: PointLike) => !!instance?.queryRenderedFeatures(point, { layers: ["event-clusters", "event-points"] }).length;
+            const countryAt = (point: { x: number; y: number }, radius: number) => {
+              const code = instance?.queryRenderedFeatures([[point.x - radius, point.y - radius], [point.x + radius, point.y + radius]], { layers: ["country-fill"] })[0]?.properties?.code;
+              return isCountryCode(code) ? code : null;
+            };
+            instance.on("mousemove", (event) => {
+              if (!instance || focusLock) return;
+              if (onMarker(event.point)) { setHover(null); tip.remove(); return; }
+              const code = countryAt(event.point, 2);
+              if (!code) return clearHover();
+              setHover(code);
+              instance.getCanvas().style.cursor = "pointer";
+              tip.setLngLat(event.lngLat).setText(translate.current(countries[code].name)).addTo(instance);
+            });
+            instance.on("mouseout", clearHover);
+            instance.on("dragstart", clearHover);
+            instance.on("click", (event) => {
+              if (!countryClick.current || focusLock || onMarker(event.point)) return;
+              const original = event.originalEvent;
+              if (original.button !== 0 || original.metaKey || original.ctrlKey || original.shiftKey || original.altKey) return;
+              // Countries are small on the globe, so touch gets a wider hit area than a mouse pointer.
+              const touch = (original as PointerEvent).pointerType === "touch" || window.matchMedia("(pointer: coarse)").matches;
+              const code = countryAt(event.point, touch ? 12 : 3);
+              if (code) countryClick.current(code);
+            });
+            // At globe zoom the event dots cover most of Korea and all of Taiwan, so a dot inside
+            // a supported country is the country's click target here.
+            markerCountry = (coordinates) => {
+              if (!instance || !countryClick.current || focusLock) return false;
+              const [longitude, latitude] = coordinates;
+              const code = countryAt(instance.project(coordinates), 12)
+                ?? (Object.keys(countries) as CountryCode[]).find((candidate) => pointInCountry(candidate, { latitude, longitude }));
+              if (!code) return false;
+              countryClick.current(code);
+              return true;
+            };
           }
           instance.addSource("events", { type: "geojson", data: collection(latestPoints.current), cluster: true, clusterMaxZoom: 15, clusterRadius: 40 });
           instance.addLayer({ id: "event-clusters", type: "circle", source: "events", filter: ["has", "point_count"], paint: { "circle-color": "#f39451", "circle-radius": ["step", ["get", "point_count"], 9, 10, 13, 50, 17], "circle-stroke-width": 2, "circle-stroke-color": "#ffffff", "circle-opacity": 1 } });
@@ -251,6 +325,7 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
           };
           instance.on("click", "event-clusters", (event) => {
             const cluster = event.features?.[0];
+            if (cluster?.geometry.type === "Point" && markerCountry?.(cluster.geometry.coordinates as [number, number])) return;
             if (cluster) openGroup.current?.({ clusterIds: [Number(cluster.properties.cluster_id)], eventIds: [], count: Number(cluster.properties.point_count), titles: [] });
           });
           hoverGroup.current = async (group, position) => {
@@ -323,6 +398,8 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
           instance.on("movestart", clearHover);
           instance.on("click", "event-points", (event) => {
             if (!instance) return;
+            const hit = event.features?.[0];
+            if (hit?.geometry.type === "Point" && markerCountry?.(hit.geometry.coordinates as [number, number])) return;
             const nearby = instance.queryRenderedFeatures([[event.point.x - 8, event.point.y - 8], [event.point.x + 8, event.point.y + 8]], { layers: ["event-points"] });
             if (selection.current) {
               const ids = [...new Set(nearby.map(feature => String(feature.properties?.id || "")).filter(Boolean))];
