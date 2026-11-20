@@ -251,6 +251,7 @@ export type Database = {
       begin_event_account_handoff: { Args: never; Returns: string };
       complete_event_account_handoff: { Args: { p_token: string }; Returns: number };
       record_analytics: { Args: { p_key: string; p_id: string; p_kind: string; p_event_id: string | null; p_visitor: string; p_session: string; p_path: string; p_country: string | null; p_locale: string; p_referrer: string }; Returns: undefined };
+      purge_analytics_hits: { Args: { p_key: string; p_days?: number }; Returns: number };
       traffic_totals: { Args: { p_key: string }; Returns: Json };
       is_admin: { Args: never; Returns: boolean };
     };

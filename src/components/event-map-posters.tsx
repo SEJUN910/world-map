@@ -13,7 +13,7 @@ const START_ZOOM = 6;
 const FULL_ZOOM = 7;
 const MAX_POSTERS = 36;
 
-export function EventMapPosters({ map, points, onOpenGroup, onHoverGroup, onLeaveGroup }: { map: MapLibreMap; points: EventMapPoint[]; onOpenGroup: (group: MapPosterGroup) => void; onHoverGroup: (group: MapPosterGroup, position: [number, number]) => void; onLeaveGroup: () => void }) {
+export function EventMapPosters({ map, points, onOpenGroup, onHoverGroup, onLeaveGroup, onEventHighlight, highlightedId }: { map: MapLibreMap; points: EventMapPoint[]; onOpenGroup: (group: MapPosterGroup) => void; onHoverGroup: (group: MapPosterGroup, position: [number, number]) => void; onLeaveGroup: () => void; onEventHighlight?: (id: string | null) => void; highlightedId?: string | null }) {
   const { t } = useTranslations();
   const root = useRef<HTMLDivElement>(null);
   const elements = useRef(new Map<string, HTMLAnchorElement>());
@@ -171,15 +171,19 @@ export function EventMapPosters({ map, points, onOpenGroup, onHoverGroup, onLeav
               const group = groups.current.get(event.id);
               const position = positions.current.get(event.id);
               if (group && group.count > 1 && position) onHoverGroup(group, [position.longitude, position.latitude]);
+              onEventHighlight?.(event.id);
             }}
             onFocus={() => {
               const group = groups.current.get(event.id);
               const position = positions.current.get(event.id);
               if (group && group.count > 1 && position) onHoverGroup(group, [position.longitude, position.latitude]);
+              onEventHighlight?.(event.id);
             }}
-            onMouseLeave={onLeaveGroup} onBlur={onLeaveGroup}
+            onMouseLeave={() => { onLeaveGroup(); onEventHighlight?.(null); }}
+            onBlur={() => { onLeaveGroup(); onEventHighlight?.(null); }}
             data-grouped={(groups.current.get(event.id)?.count || 0) > 1 || undefined}
-            className="map-poster" href={eventPath(event)} aria-label={(groups.current.get(event.id)?.count || 0) > 1 ? t("{count}개 행사 목록 보기", { count: groups.current.get(event.id)!.count }) : `${event.title}, ${t(eventDate(event))}`}
+            data-event-id={event.id}
+            className={`map-poster${highlightedId === event.id ? " is-highlighted" : ""}`} href={eventPath(event)} aria-label={(groups.current.get(event.id)?.count || 0) > 1 ? t("{count}개 행사 목록 보기", { count: groups.current.get(event.id)!.count }) : `${event.title}, ${t(eventDate(event))}`}
             onClick={(click) => {
               if (click.button !== 0 || click.metaKey || click.ctrlKey || click.shiftKey || click.altKey) return;
               click.preventDefault();

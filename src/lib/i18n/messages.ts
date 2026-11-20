@@ -213,6 +213,8 @@ export const messages: [string, string, string][] = [
   ["파일을 선택하거나 이곳에 끌어다 놓으세요", "Choose a file or drag it here", "選擇檔案或拖曳至此"],
   ["JPG, PNG, WebP · 최대 10MB · 1장", "JPG, PNG, WebP · up to 10MB · one image", "JPG、PNG、WebP · 最大 10MB · 1 張"],
   ["포스터를 준비하고 있어요…", "Preparing the poster…", "正在準備海報…"],
+  ["AI가 포스터에서 행사 정보를 읽고 있어요…", "Reading event info from the poster…", "正在從海報讀取活動資訊…"],
+  ["AI가 포스터에서 정보를 채웠어요. 확인 후 수정해주세요.", "AI filled in some details from the poster. Review and edit as needed.", "AI 已從海報填入部分資訊，請確認後修改。"],
   ["포스터를 바꾸려면 이미지를 다시 눌러주세요.", "Click the image to change the poster.", "再次點選圖片即可更換海報。"],
   ["직접 만들었거나 사용 허락을 받은 포스터를 올려주세요.", "Upload a poster you created or have permission to use.", "請上傳自行製作或已取得使用授權的海報。"],
   ["행사 정보", "Event information", "活動資訊"],
