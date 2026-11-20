@@ -62,11 +62,13 @@ export function EventPosterDialog({ event, opener, onDismiss, initiallyOpen = fa
       onCancel={(e) => { e.preventDefault(); onDismiss(); }}
       onClick={(e) => { if (e.target === e.currentTarget) onDismiss(); }}>
       <div className="poster-modal__panel">
+            <div className="poster-modal__header">
+              <LanguageSelect />
+            </div>
             <div className="poster-modal__image">
               {event.poster ? <img src={event.poster} alt={`${event.title} ${isTourImage ? t("대표 이미지") : t("포스터")}`} width={480} height={680} /> : <p>{t("포스터 준비 중")}</p>}
             </div>
             <div className="poster-modal__info">
-              <LanguageSelect />
               <p className="poster-modal__eyebrow">{event.region} <span aria-hidden="true">✳</span></p>
               <Title id={`poster-title-${event.id}`}>{event.title}</Title>
               {event.eventStatus && event.eventStatus !== "scheduled" && (
@@ -90,9 +92,11 @@ export function EventPosterDialog({ event, opener, onDismiss, initiallyOpen = fa
                   {event.sourceReferenceDate && <> {t("· 기준일")} {event.sourceReferenceDate}</>}
                 </p>
               )}
-              <div className="poster-modal__actions">
-                {event.officialUrl && <a href={event.officialUrl} target="_blank" rel="noopener noreferrer">{t("공식 안내 ↗")}</a>}
-              </div>
+              {event.officialUrl && (
+                <div className="poster-modal__actions">
+                  <a href={event.officialUrl} target="_blank" rel="noopener noreferrer">{t("공식 안내 ↗")}</a>
+                </div>
+              )}
               <ReportEvent id={event.id} />
             </div>
         <button ref={closeButton} className="poster-modal__close" type="button" onClick={onDismiss} aria-label={t("행사 소개 닫기")}>

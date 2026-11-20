@@ -1,8 +1,24 @@
 import type { NextConfig } from "next";
+import { buildCsp } from "./src/lib/csp";
+
+// headers() is evaluated at build time: changing MAP_TILE_URL or the Supabase URL needs a redeploy.
+const csp = buildCsp({ supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL, mapTileUrl: process.env.MAP_TILE_URL });
+
+const securityHeaders = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  { key: "Content-Security-Policy", value: csp },
+];
+
 const config: NextConfig = {
   poweredByHeader: false,
   // An isolated verification build does not overwrite the running dev server.
   distDir: process.env.FESTIVA_BUILD_DIR || ".next",
   experimental: { serverActions: { bodySizeLimit: "4mb" } },
+  async headers() {
+    return [{ source: "/(.*)", headers: securityHeaders }];
+  },
 };
 export default config;

@@ -1,0 +1,50 @@
+name: TourAPI Sync
+
+on:
+  schedule:
+    # Every Monday 01:00 KST (Sunday 16:00 UTC)
+    - cron: "0 16 * * 0"
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Write to database (omit for dry-run)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - run: npm ci
+
+      # Scheduled runs always apply; manual runs apply only when the box is checked.
+      - name: Run TourAPI import (dry-run)
+        if: ${{ github.event_name == 'workflow_dispatch' && !inputs.apply }}
+        env:
+          TOUR_API_SERVICE_KEY: ${{ secrets.TOUR_API_SERVICE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_IMPORT_SERVICE_KEY: ${{ secrets.SUPABASE_IMPORT_SERVICE_KEY }}
+          SUPABASE_IMPORT_PROJECT_REF: ${{ secrets.SUPABASE_IMPORT_PROJECT_REF }}
+        run: node scripts/import-tourapi.mjs
+
+      - name: Run TourAPI import (apply)
+        if: ${{ github.event_name == 'schedule' || inputs.apply }}
+        env:
+          TOUR_API_SERVICE_KEY: ${{ secrets.TOUR_API_SERVICE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_IMPORT_SERVICE_KEY: ${{ secrets.SUPABASE_IMPORT_SERVICE_KEY }}
+          SUPABASE_IMPORT_PROJECT_REF: ${{ secrets.SUPABASE_IMPORT_PROJECT_REF }}
+        run: node scripts/import-tourapi.mjs --apply

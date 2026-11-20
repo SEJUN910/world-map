@@ -5,12 +5,17 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { eventDate, eventPath, type FestivalEvent } from "@/lib/events";
 import { EventPosterDialog } from "./event-poster-dialog";
-export function EventCard({ event }: { event: FestivalEvent }) {
+export function EventCard({ event, highlighted, onHover }: { event: FestivalEvent; highlighted?: boolean; onHover?: (id: string | null) => void }) {
   const { t } = useTranslations();
   const link = useRef<HTMLAnchorElement>(null);
   const [open, setOpen] = useState(false);
   return (
-    <article className="event-card">
+    <article
+      className={`event-card${highlighted ? " is-highlighted" : ""}`}
+      data-event-id={event.id}
+      onMouseEnter={() => onHover?.(event.id)}
+      onMouseLeave={() => onHover?.(null)}
+    >
       <Link ref={link} prefetch={false} href={eventPath(event)} aria-label={`${event.title}, ${event.region}, ${t(eventDate(event))}`} onClick={(click) => {
         if (click.defaultPrevented || click.button !== 0 || click.metaKey || click.ctrlKey || click.shiftKey || click.altKey) return;
         click.preventDefault();

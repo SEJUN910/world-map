@@ -43,7 +43,11 @@ export async function POST(request: Request) {
   globalLimit.count++;
   limits.set(ip, limit);
   const cached = cache.get(cacheKey);
-  if (cached && cached.expires > now) return NextResponse.json({ results: cached.results }, { headers });
+  if (cached && cached.expires > now) {
+    cache.delete(cacheKey);
+    cache.set(cacheKey, cached);
+    return NextResponse.json({ results: cached.results }, { headers });
+  }
 
   const url = new URL("https://api.geoapify.com/v1/geocode/search");
   url.search = new URLSearchParams({ text: query, filter: `countrycode:${country}`, lang: country === "kr" ? "ko" : "en", limit: "5", format: "json", apiKey: key }).toString();

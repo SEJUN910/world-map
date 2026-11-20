@@ -30,6 +30,20 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
   const latestPoints = useRef(mapPoints); latestPoints.current = mapPoints;
   const [query, setQuery] = useState(initialQuery);
   const [catalogOpen, setCatalogOpen] = useState(true);
+  const listRef = useRef<HTMLDivElement>(null);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  // Hovering a list card only highlights; scrolling the list there would make it jump under the cursor.
+  function handleCardHighlight(id: string | null) {
+    setHighlightedId(id);
+  }
+  // Hovering a map marker highlights its card and brings it into view.
+  function handleMapHighlight(id: string | null) {
+    setHighlightedId(id);
+    if (id) {
+      const card = listRef.current?.querySelector<HTMLElement>(`[data-event-id="${CSS.escape(id)}"]`);
+      card?.scrollIntoView({ behavior: "instant", block: "nearest" });
+    }
+  }
   const [pending, startTransition] = useTransition();
   const [selectedIds, setSelectedIds] = useState<string[] | null>(null);
   const [selectedId, setSelectedId] = useState("");
@@ -111,12 +125,13 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
       <div className="country-split" aria-busy={pending}>
         <aside className="country-map" aria-label={t("지역 지도")}>
           <EventMap country={country} points={mapPoints} fitToPoints={!!initialRegion && !filters.bounds}
-            onSelectEvents={isMobile ? selectMapEvents : undefined} selectedEventId={selectedId} onViewportChange={isMobile ? onViewportChange : undefined} />
+            onSelectEvents={isMobile ? selectMapEvents : undefined} selectedEventId={selectedId} onViewportChange={isMobile ? onViewportChange : undefined}
+            onEventHighlight={isMobile ? undefined : handleMapHighlight} highlightedId={isMobile ? undefined : highlightedId} />
           {isMobile && viewportDirty && viewportBounds && <button type="button" className="atlas-search-area" disabled={pending} onClick={() => apply(initialRegion, initialQuery, { ...filters, bounds: viewportBounds.map(n => Number(n.toFixed(5))).join(",") })}>{t("이 지역에서 검색")}</button>}
           {total > mapPoints.length && <p className="map-help">{t("지도에는 최대 5,000개의 행사만 표시돼요.")}</p>}
         </aside>
         {!isMobile && <section id="atlas-catalog" className="country-results" aria-label={t("행사 목록")} hidden={!catalogOpen}>
-          {events.length ? <div className="event-grid explorer-grid">{events.map(event => <EventCard key={event.id} event={event} />)}</div> : <div className="empty-state"><span aria-hidden="true">✳</span><h2>{t("아직 발견하지 못했어요.")}</h2></div>}
+          {events.length ? <div ref={listRef} className="event-grid explorer-grid">{events.map(event => <EventCard key={event.id} event={event} highlighted={highlightedId === event.id} onHover={handleCardHighlight} />)}</div> : <div className="empty-state"><span aria-hidden="true">✳</span><h2>{t("아직 발견하지 못했어요.")}</h2></div>}
           {(page > 1 || page * 24 < total) && <nav className="pagination" aria-label={t("행사 목록 페이지")}>
             {page > 1 && <Link className="button button-secondary" href={pageHref(page - 1)}>{t("← 이전")}</Link>}
             {page * 24 < total && <Link className="button button-secondary" href={pageHref(page + 1)}>{t("다음 →")}</Link>}
