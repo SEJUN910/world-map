@@ -11,6 +11,7 @@ import type { FestivalEvent } from "./events";
 import { isEventId, todayInCountry } from "./events";
 import { cache } from "react";
 import { normalizeRichText } from "./rich-text";
+import { applyDiscoveryFilters, emptyDiscoveryFilters, type DiscoveryFilters } from "./discovery-filters";
 
 function activeSourceFilter() {
   return `source_name.is.null,and(country_code.eq.kr,end_date.gte.${todayInCountry("kr")}),and(country_code.eq.tw,end_date.gte.${todayInCountry("tw")})`;
@@ -92,7 +93,8 @@ export async function listEvents({
   query = "",
   page = 1,
   pageSize = 24,
-}: { country?: CountryCode; region?: string; query?: string; page?: number; pageSize?: number } = {}) {
+  filters = emptyDiscoveryFilters,
+}: { country?: CountryCode; region?: string; query?: string; page?: number; pageSize?: number; filters?: DiscoveryFilters } = {}) {
   const client = publicClient();
   let request = client
     .from("events")
@@ -114,6 +116,7 @@ export async function listEvents({
         `title.ilike.%${term}%,region.ilike.%${term}%,venue.ilike.%${term}%`,
       );
   }
+  request = applyDiscoveryFilters(request, filters, country);
   const { data, error, count } = await request.range(
     (page - 1) * pageSize,
     page * pageSize - 1,
@@ -125,7 +128,7 @@ export async function listEvents({
 
 // The map must not inherit the poster grid's 24-item pagination. Fetch only
 // public marker fields, in bounded batches, without generating image URLs.
-export async function listEventMapPoints({ country, region = "", query = "" }: { country?: CountryCode; region?: string; query?: string } = {}) {
+export async function listEventMapPoints({ country, region = "", query = "", filters = emptyDiscoveryFilters }: { country?: CountryCode; region?: string; query?: string; filters?: DiscoveryFilters } = {}) {
   const client = publicClient();
   const result: { id: string; slug: string; title: string; latitude: number; longitude: number; countryCode?: CountryCode }[] = [];
   const term = query.trim().slice(0, 100).replace(/[\\%_,()."']/g, " ");
@@ -138,6 +141,7 @@ export async function listEventMapPoints({ country, region = "", query = "" }: {
     if (country) request = request.eq("country_code", country);
     if (region) request = request.eq("region_code", region);
     if (term.trim()) request = request.or(`title.ilike.%${term}%,region.ilike.%${term}%,venue.ilike.%${term}%`);
+    request = applyDiscoveryFilters(request, filters, country || "kr");
     const { data, error } = await request.range(offset, offset + 999);
     if (error) throw new Error("지도 위치를 불러오지 못했어요.");
     result.push(...(data || []).map((row) => ({ ...row, countryCode: isCountryCode(row.country_code) ? row.country_code : "kr" as const })));

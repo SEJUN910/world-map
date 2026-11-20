@@ -1,5 +1,22 @@
 # Work Log
 
+## 2026-11-11 - Verified user deployment and registered production OAuth callback
+
+- User reported pushing the repository and deploying `https://world-map-imtc.vercel.app/`. Direct HTTP verification (web browsing tool could not open the host) returned 200 for home/Korea/Taiwan/robots/sitemap/traffic. Public HTML has correct production canonicals, Google-ready flag and no noindex; robots allows public crawling and points at production sitemap (98 entries, no localhost URLs). Public traffic API returns only the intended three totals.
+- Live Supabase Auth still used the local Site URL and allowed only local callbacks. Updated Site URL to the supplied verified production origin and added its exact `/auth/callback`, preserving all existing local redirects and Google/anonymous/manual-linking settings. Reread configuration confirmed success. No secrets printed and no local development origin/environment values changed.
+- Updated deployment guide to actual repository/production status. Google consent/login completion, real registration and Search Console/Naver ownership/indexing remain unverified; HTTP checks do not establish these. Existing local country-selector/source changes are still uncommitted and were not silently pushed/redeployed during this verification.
+
+## 2026-11-11 - Visible country select field
+
+- Replaced the subtle text/transparent chooser with a visible 180px white native select, blue-gray border, rounded corners, right-aligned chevron and 44px minimum target. Current-country heading remains visually hidden for correct document semantics; native select itself now displays the country. Preserved native mobile picker, keyboard access, language and direct navigation.
+- Country-switch markup/CSS only. Whitespace check and existing bounded desktop/mobile country-switch DOM/navigation checks passed without screenshots. Local changes only; no commit/push/deployment performed.
+
+## 2026-11-11 - Switch countries from the current country name
+
+- Country name now opens a native Korea/Taiwan chooser on desktop and mobile. Kept a plain current-country H1 (or paragraph when the event modal owns the H1), added a small chevron/44px target and keyboard focus indication, and enabled pointer events only on the control inside the non-interactive map heading. Native select is an overlaid sibling, so option labels do not contaminate the heading text.
+- New country-switch component navigates directly to the selected country's base route with current UI language, clearing previous region/query/page/event parameters. Homepage selection/back behavior unchanged. Updated explorer, CSS and README.
+- Verification: typecheck and whitespace check passed. Bounded headless DOM QA at desktop 1280px and mobile 390px verified hit-testing, both country options, Taiwan/Korea round trips, preserved English UI, cleared filters/page and one correct H1; no page errors/screenshots. Local source updated; this turn did not commit/push or verify a Vercel deployment. Existing `.openai/hosting.json` and generated `next-env.d.ts` modifications left intact.
+
 ## 2026-11-10 - Prepared GitHub/Vercel publication (accounts pending)
 
 - User requested Git-backed Vercel deployment. Existing local Git repository has no remote; GitHub/Vercel plugins were discovered but neither is installed/connected. Suggested both and continued local preparation; no remote repository, push, Vercel project, paid plan or deployment has been created. Default intended target is a new private `festiva` repository, subject to actual connected account/name availability.

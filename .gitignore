@@ -8,3 +8,7 @@ dist/
 *.tsbuildinfo
 .env*
 !.env.example
+
+# oh-my-claudecode runtime state (project skills under .omc/skills stay committable)
+.omc/*
+!.omc/skills/
