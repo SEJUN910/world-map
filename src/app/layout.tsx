@@ -7,6 +7,8 @@ import { LanguageProvider } from "@/components/language-provider";
 import { getLocale, getTranslations } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { AccountProvider, type Account } from "@/components/account-provider";
+import { SavedEventsProvider } from "@/components/saved-events";
+import { getSavedEventIds } from "@/lib/event-repository";
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations();
   const locale = await getLocale();
@@ -33,13 +35,15 @@ export default async function RootLayout({
   const client=await createClient();
   const {data:{user}}=await client.auth.getUser();
   const account:Account=user?{id:user.id,name:typeof user.user_metadata?.full_name==="string"?user.user_metadata.full_name.slice(0,80):"",anonymous:!!user.is_anonymous}:null;
+  // Read-only visitors have no session; skip the query instead of creating one.
+  const savedIds=user?await getSavedEventIds(client):[];
   return (
     <html lang={locale}>
       <body>
         <a href="#main" className="skip-link">
           {t("본문으로 건너뛰기")}
         </a>
-        <LanguageProvider initialLocale={locale}><AccountProvider initialAccount={account} googleReady={process.env.GOOGLE_AUTH_ENABLED==="true"}><SiteChrome>{children}</SiteChrome></AccountProvider></LanguageProvider>
+        <LanguageProvider initialLocale={locale}><AccountProvider initialAccount={account} googleReady={process.env.GOOGLE_AUTH_ENABLED==="true"}><SavedEventsProvider initialIds={savedIds}><SiteChrome>{children}</SiteChrome></SavedEventsProvider></AccountProvider></LanguageProvider>
       </body>
     </html>
   );

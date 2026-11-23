@@ -12,6 +12,7 @@ import { isEventId, todayInCountry } from "./events";
 import { cache } from "react";
 import { normalizeRichText } from "./rich-text";
 import { applyDiscoveryFilters, emptyDiscoveryFilters, type DiscoveryFilters } from "./discovery-filters";
+import { eventHasEnded, SAVED_EVENTS_LIMIT } from "./saved-events";
 
 function activeSourceFilter() {
   return `source_name.is.null,and(country_code.eq.kr,end_date.gte.${todayInCountry("kr")}),and(country_code.eq.tw,end_date.gte.${todayInCountry("tw")})`;
@@ -158,8 +159,7 @@ export async function getMapPosterEvents(ids: string[]): Promise<FestivalEvent[]
     .eq("publication_status", "published")
     .or(activeSourceFilter());
   if (error) throw new Error("지도 포스터를 불러오지 못했어요.");
-  const events = await mapEvents(client, data || []);
-  return events.map(({ authorId: _author, publicationStatus: _publication, updatedAt: _updated, storagePath: _storage, ...event }) => event);
+  return (await mapEvents(client, data || [])).map(publicEvent);
 }
 
 export const getPublicEvent = cache(async (id: string) => {
@@ -205,6 +205,46 @@ export async function getMyEvent(id: string) {
     .maybeSingle();
   if (error) throw new Error("행사를 불러오지 못했어요.");
   return data ? (await mapEvents(client, [data]))[0] : null;
+}
+
+// Saved IDs for the signed-in visitor, newest first. Errors (for example the
+// table missing before its migration is applied) degrade to "nothing saved".
+export async function getSavedEventIds(client: SupabaseClient<Database>) {
+  const { data, error } = await client
+    .from("saved_events")
+    .select("event_id")
+    .order("created_at", { ascending: false })
+    .limit(SAVED_EVENTS_LIMIT);
+  return error ? [] : (data || []).map((row) => row.event_id);
+}
+function publicEvent({ authorId: _author, publicationStatus: _publication, updatedAt: _updated, storagePath: _storage, ...event }: CloudEvent): FestivalEvent {
+  return event;
+}
+export async function getSavedEvents() {
+  const client = await createClient();
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  const empty = { user, active: [] as FestivalEvent[], ended: [] as FestivalEvent[], unavailableIds: [] as string[] };
+  if (!user) return empty;
+  const { data, error } = await client
+    .from("saved_events")
+    .select("event_id, events(*, event_images(storage_path))")
+    .order("created_at", { ascending: false })
+    .limit(SAVED_EVENTS_LIMIT);
+  if (error) throw new Error("관심 행사를 불러오지 못했어요.");
+  const rows = (data || []) as unknown as { event_id: string; events: RecordWithImage | null }[];
+  // RLS hides draft/hidden/deleted events of other authors (events is null);
+  // the visitor's own unpublished events are treated the same way.
+  const visible = rows.flatMap((row) => (row.events?.publication_status === "published" ? [row.events] : []));
+  const unavailableIds = rows.filter((row) => row.events?.publication_status !== "published").map((row) => row.event_id);
+  const events = (await mapEvents(client, visible)).map(publicEvent);
+  return {
+    user,
+    active: events.filter((event) => !eventHasEnded(event)),
+    ended: events.filter((event) => eventHasEnded(event)),
+    unavailableIds,
+  };
 }
 
 export async function getRegions(country: CountryCode = "kr") {

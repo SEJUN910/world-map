@@ -19,8 +19,9 @@ function AccountDialog({onClose,opener,next}:{onClose:()=>void;opener:React.RefO
   return <dialog ref={dialog} className="account-dialog" aria-labelledby="account-title" onCancel={e=>{e.preventDefault();onClose();}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}><div className="account-dialog__panel">
     <button ref={close} className="account-dialog__close" aria-label={t("닫기")} onClick={onClose}>×</button>
     <p className="eyebrow">FESTIVA ACCOUNT</p><h2 id="account-title">{member?(account.name||t("내 계정")):t("어디서든 이어지는 발견")}</h2>
-    {member?<><p>{t("구글 계정으로 연결되어 있어요.")}</p><Link className="button" href="/me/events" onClick={onClose}>{t("내 행사")}</Link><form action={signOutAccount}><button className="text-link" type="submit">{t("로그아웃")}</button></form></>:<><p>{t("Google로 로그인하면 다른 기기에서도 내 행사를 관리할 수 있어요. 처음이면 자동으로 가입됩니다.")}</p>
-      {account?.anonymous&&<p className="fine-print">{t("이 브라우저에서 올린 행사도 계정에 연결됩니다.")}</p>}
+    {member?<><p>{t("구글 계정으로 연결되어 있어요.")}</p><div className="account-dialog__links"><Link className="button" href="/me/events" onClick={onClose}>{t("내 행사")}</Link><Link className="button button-secondary" href="/me/saved" onClick={onClose}>{t("관심 행사")}</Link></div><form action={signOutAccount}><button className="text-link" type="submit">{t("로그아웃")}</button></form></>:<><p>{t("Google로 로그인하면 다른 기기에서도 내 행사를 관리할 수 있어요. 처음이면 자동으로 가입됩니다.")}</p>
+      {account?.anonymous&&<p className="fine-print">{t("이 브라우저에서 올린 행사와 관심 행사도 계정에 연결됩니다.")}</p>}
+      <Link className="text-link" href="/me/saved" onClick={onClose}>{t("관심 행사 보기")}</Link>
       <form action={startGoogleAuth}><input type="hidden" name="next" value={next}/><GoogleSubmit disabled={!googleReady}/></form>
       {!googleReady&&<p className="fine-print" role="status">{t("구글 로그인을 준비 중이에요.")}</p>}
     </>}

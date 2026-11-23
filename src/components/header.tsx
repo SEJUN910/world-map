@@ -11,6 +11,7 @@ export function Header() {
       </Link>
       <nav aria-label={t("주 메뉴")}>
         <Link href="/korea">{t("행사 둘러보기")}</Link>
+        <Link href="/me/saved">{t("관심 행사")}</Link>
         <Link href="/me/events">{t("내 행사")}</Link>
         <EventCreateButton className="button button-small">
           {t("행사 올리기")}<span aria-hidden="true">＋</span>

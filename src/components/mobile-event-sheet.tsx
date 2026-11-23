@@ -9,6 +9,7 @@ import { validDate, type DateChoice, type DiscoveryFilters } from "@/lib/discove
 import { useTranslations } from "./language-provider";
 import { EventPosterDialog } from "./event-poster-dialog";
 import { SiteTools } from "./site-tools";
+import { SaveEventButton } from "./saved-events";
 import { TrafficCounter } from "./traffic-counter";
 
 type Props = {
@@ -158,6 +159,7 @@ export function MobileEventSheet(props: Props) {
                   <div><h2>{event.title}</h2><p>{t(eventDate(event))}</p><p>{[event.region, event.venue].filter(Boolean).join(" · ") || event.address}</p></div>
                   <span className="event-list-card__arrow" aria-hidden="true">›</span>
                 </Link>
+                <SaveEventButton id={event.id} />
               </article>)}
             </div> : <div className="event-sheet__empty"><span aria-hidden="true">✳</span><p>{t("아직 발견하지 못했어요.")}</p></div>}
             {!loading && !error && <nav className="event-sheet__pages" aria-label={t("행사 목록 페이지")}>

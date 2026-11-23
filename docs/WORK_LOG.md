@@ -1,5 +1,16 @@
 # Work Log
 
+## 2026-11-23 - Saved events and sharing
+
+- Planned by Antigravity (`.omc/plans/saved-events.md`); analytics events (`event_save`/`event_share`) deferred to a later phase so the live analytics schema stays untouched.
+- `202611230001_saved_events.sql`: `saved_events(visitor_id, event_id)` with own-row RLS, insert allowed only for published events, a 200-per-visitor trigger, and `complete_event_account_handoff` extended to merge a guest's saved events into an existing Google account (newest first, capped at 200). First-time Google linking keeps the same user ID, so no merge is needed there.
+- Layout reads saved IDs only when a session already exists; read-only browsing still creates no anonymous visitor. `SavedEventsProvider` keeps card, mobile list, modal and the site-tools badge in sync, with optimistic toggle and rollback. The toast renders inside the top-most modal dialog so it stays visible and announced.
+- `/me/saved` (noindex, covered by robots `/me/`): active vs ended sections, bulk clear for ended, count-only notice and bulk clear for events no longer public. Links from site tools, header and account dialog. Mobile masthead unchanged.
+- Modal share button: Web Share API when present, otherwise clipboard, otherwise a selectable link field. Link format `/<country>?event=ID&lang=<locale>`.
+- Review fixes (separate code-review pass, verdict approve): the handoff takes the saved-events lock before counting and runs the merge in its own sub-block so it can never fail the event transfer; re-saving at the limit is a no-op; the save action no longer signs in anonymously from the server; server refreshes keep the optimistic value of in-flight toggles; the toast moves back to `<body>` when its dialog closes.
+- Applied `202611230001_saved_events.sql` to the live project through the Management API, after confirming the live `complete_event_account_handoff` matched `202611100005` exactly. New rollback-only `scripts/saved-events.test.sql` passed on the live database: own-row RLS, published-only inserts, duplicate no-op, 200 limit, guest-to-Google merge (dedupe, cap, source rows removed, return value unchanged) and privileges. Existing `auth-handoff.test.sql` passed again. No fixtures remain (checked afterwards).
+- Verification: typecheck, 38/38 unit tests (new `saved-events.test.mjs`) and production build passed. Headless Chrome on a local production server with Supabase anonymous sign-in blocked (no live writes): 20/20 checks, covering button placement (desktop card, 44px mobile list button), optimistic state and rollback, error toast above the modal, copied link format, English labels, mobile masthead unchanged, no horizontal overflow and no page errors. A real save and `/me/saved` with data were not exercised in the browser, because that would create a live anonymous user. The database side is covered by the SQL test.
+
 ## 2026-11-23 - Docs synced with code; TourAPI sync blocked on secrets
 
 - README still described several features as missing after the 11/18-20 work. Corrected: AI poster extraction (`/api/extract-poster`, optional `ANTHROPIC_API_KEY`), the `/admin` panel (`ADMIN_USER_ID` plus `app_metadata.role = "admin"`, otherwise 404), the weekly TourAPI GitHub Actions sync, the weekly 90-day analytics purge (Vercel Cron, `CRON_SECRET`) and the live deployment at `world-map-imtc.vercel.app`.

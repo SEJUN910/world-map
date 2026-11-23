@@ -2,6 +2,7 @@
 import { AccountControl } from "./account-control";
 import { LanguageSelect } from "./language-select";
 import { useTranslations } from "./language-provider";
+import { SavedEventsLink } from "./saved-events";
 
 export function SiteTools({ atlas = false, catalogOpen, onToggleCatalog }: {
   atlas?: boolean;
@@ -11,6 +12,7 @@ export function SiteTools({ atlas = false, catalogOpen, onToggleCatalog }: {
   const { t } = useTranslations();
   const catalogLabel = t(catalogOpen ? "포스터 접기" : "포스터 보기");
   return <div className={`site-tools${atlas ? " site-tools--atlas" : ""}`} role="group" aria-label={t("화면 도구")}>
+    <SavedEventsLink />
     <AccountControl compact />
     <LanguageSelect />
     {onToggleCatalog && <>

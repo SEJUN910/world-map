@@ -8,6 +8,7 @@ import { ReportEvent } from "./event-controls";
 import { useRouter } from "next/navigation";
 import { RichTextView } from "./rich-text-view";
 import { LanguageSelect } from "./language-select";
+import { SaveEventButton, ShareEventButton } from "./saved-events";
 
 export function LinkedEventDialog({ event }: { event: FestivalEvent }) {
   const opener = useRef<HTMLAnchorElement | null>(null);
@@ -92,11 +93,11 @@ export function EventPosterDialog({ event, opener, onDismiss, initiallyOpen = fa
                   {event.sourceReferenceDate && <> {t("· 기준일")} {event.sourceReferenceDate}</>}
                 </p>
               )}
-              {event.officialUrl && (
-                <div className="poster-modal__actions">
-                  <a href={event.officialUrl} target="_blank" rel="noopener noreferrer">{t("공식 안내 ↗")}</a>
-                </div>
-              )}
+              <div className="poster-modal__actions">
+                <SaveEventButton id={event.id} variant="label" />
+                <ShareEventButton event={event} />
+                {event.officialUrl && <a href={event.officialUrl} target="_blank" rel="noopener noreferrer">{t("공식 안내 ↗")}</a>}
+              </div>
               <ReportEvent id={event.id} />
             </div>
         <button ref={closeButton} className="poster-modal__close" type="button" onClick={onDismiss} aria-label={t("행사 소개 닫기")}>
