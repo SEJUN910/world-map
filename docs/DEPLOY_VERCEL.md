@@ -25,10 +25,13 @@
 | `GOOGLE_AUTH_ENABLED` | `true` — Supabase Google 설정 완료 상태 |
 | `NEXT_PUBLIC_SITE_URL` | 실제 프로덕션 주소. localhost를 복사하지 않음 |
 | `GOOGLE_SITE_VERIFICATION` / `NAVER_SITE_VERIFICATION` | 검색 서비스 확인 토큰이 있을 때만 |
+| `ANTHROPIC_API_KEY` | AI 포스터 자동 입력용, 서버 전용. 없으면 이 기능만 꺼짐 |
+| `CRON_SECRET` | 임의의 긴 문자열, 서버 전용. 없으면 주간 분석 기록 정리 cron이 401로 실패 |
+| `ADMIN_USER_ID` | `/admin`을 쓸 Supabase 계정 ID. 그 계정에 `app_metadata.role = "admin"`도 필요 |
 
 첫 배포에서 주소를 아직 모르면 `NEXT_PUBLIC_SITE_URL`은 생략하고 Vercel이 제공하는 프로덕션 도메인을 사용합니다. 주소 확인 후 정확한 HTTPS 원점을 설정하고 재배포합니다. 미리보기 주소를 프로덕션 기준 주소로 쓰지 않습니다.
 
-Google 클라이언트 비밀번호는 이미 Supabase에 있으므로 Vercel 앱 환경에는 필요하지 않습니다. TourAPI 수집은 로컬 스크립트로 운영하므로 해당 키도 일반 웹앱 배포에는 필요하지 않습니다. Supabase 관리 토큰이나 service-role 키도 웹앱에 넣지 않습니다. `ANALYTICS_INCLUDE_LOCAL`과 로컬 검증용 `FESTIVA_BUILD_DIR`은 배포 환경에 넣지 않습니다.
+Google 클라이언트 비밀번호는 이미 Supabase에 있으므로 Vercel 앱 환경에는 필요하지 않습니다. TourAPI 수집은 GitHub Actions(`TourAPI Sync`)가 맡으므로 TourAPI 키와 수집용 service-role 키는 Vercel이 아니라 GitHub 저장소 Secrets에 넣습니다. Supabase 관리 토큰이나 service-role 키도 웹앱에 넣지 않습니다. `ANALYTICS_INCLUDE_LOCAL`과 로컬 검증용 `FESTIVA_BUILD_DIR`은 배포 환경에 넣지 않습니다.
 
 ## 배포 후 Google 로그인
 

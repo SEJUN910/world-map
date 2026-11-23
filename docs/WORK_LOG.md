@@ -1,5 +1,21 @@
 # Work Log
 
+## 2026-11-23 - Docs synced with code; TourAPI sync blocked on secrets
+
+- README still described several features as missing after the 11/18-20 work. Corrected: AI poster extraction (`/api/extract-poster`, optional `ANTHROPIC_API_KEY`), the `/admin` panel (`ADMIN_USER_ID` plus `app_metadata.role = "admin"`, otherwise 404), the weekly TourAPI GitHub Actions sync, the weekly 90-day analytics purge (Vercel Cron, `CRON_SECRET`) and the live deployment at `world-map-imtc.vercel.app`.
+- The scheduled `TourAPI Sync` run on 2026-11-22 failed with `TOUR_API_SERVICE_KEY is missing`: the repository has no Actions secrets. All five secrets listed in README must be added; a manual dry-run needs only `TOUR_API_SERVICE_KEY`. Not yet verified that the Vercel production environment has `ANTHROPIC_API_KEY`, `CRON_SECRET` and `ADMIN_USER_ID`. Live `/`, `/korea`, `/taiwan`, `/sitemap.xml` and `/api/traffic` returned 200; `/admin` returned 404 for an anonymous request, which is the expected response.
+- Verification: typecheck passed and 35/35 unit tests passed. Docs-only change.
+
+## 2026-11-20 - Merged PRs, Antigravity/Claude workflow, globe click restored
+
+- Merged PR #2 (UI/ops, MIRA-10) then PR #1 (country switch, discovery filters, mobile sheet) after resolving four conflicts on the PR #1 branch (`d2941ec`). Work now happens on `main` only; Multica and the third-party project subagents were removed (`d13f676`, `d89537f`). `CLAUDE.md` records the split: Antigravity plans via `omc ask`, Claude implements.
+- Restored click-to-zoom on the home globe for Korea and Taiwan; the feature was lost in the globe.gl → MapLibre rewrite (`f418049`). Hover highlight and tooltip on desktop; event circles inside either country also navigate there on the home globe.
+
+## 2026-11-18 ~ 2026-11-19 - Operations hardening (Multica agent runs)
+
+- Added a design-token UI pass with map-list highlighting (`bea8475`), the weekly TourAPI GitHub Actions sync (`df4d1d3`), error tracking with a global boundary and `/api/log-error` (`675b9a7`), AI poster extraction (`e26614d`, `d48f916`), the `/admin` moderation panel (`3b90301`), security headers/CSP (`2576cef`), an LRU geocode cache, analytics retention and a weekly cleanup cron (`8e1df68`).
+- Follow-up fixes: CSP for OSM tiles, the MapLibre worker and posters (`b707d03`); poster-extraction body cap, origin check, rate limit and upstream timeout (`c6bd05d`); an admin check matching RLS (`08ae785`); purge null guard and scheduled TourAPI apply (`0c13911`); atlas/mobile UI fixes (`38c51bd`).
+
 ## 2026-11-11 - Verified user deployment and registered production OAuth callback
 
 - User reported pushing the repository and deploying `https://world-map-imtc.vercel.app/`. Direct HTTP verification (web browsing tool could not open the host) returned 200 for home/Korea/Taiwan/robots/sitemap/traffic. Public HTML has correct production canonicals, Google-ready flag and no noindex; robots allows public crawling and points at production sitemap (98 entries, no localhost URLs). Public traffic API returns only the intended three totals.

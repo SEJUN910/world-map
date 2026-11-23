@@ -27,8 +27,8 @@ http://127.0.0.1:3000 에서 확인합니다. `.env.example`을 참고해 `.env.
 - 등록 폼의 ‘비공개로 저장’은 초안 상태로 보관하는 기능입니다. 공개 지도에 표시되지 않고, ‘내 행사’에서 수정 후 공개할 수 있습니다. 자동 저장은 아닙니다.
 - 실제 공개 데이터만 메인·목록·모달·검색에 표시합니다. 사이트맵에는 메인·한국·대만·한국 지역과 공개 행사 모달 주소를 포함하며 언어별 대체 주소를 제공합니다. 비공개·삭제·종료된 행사는 사이트맵에서 제외합니다. 예시 행사/콘셉트 포스터는 제거했습니다.
 - 한국관광공사 TourAPI의 진행 중·예정 행사를 대표 이미지와 함께 표시합니다. 대표 이미지는 행사 포스터 또는 현장 사진일 수 있습니다. 상세에는 출처·기준일·이미지 이용조건을 표시하며 종료된 공공 행사는 탐색·지역 목록·사이트맵에서 제외합니다.
-- 행사 신고는 방문자별 행사당 1회 접수할 수 있습니다. 별도 관리자 화면은 없으며 신고 처리는 Supabase Dashboard에서 진행합니다.
-- AI 포스터 자동 추출은 아직 연결하지 않았습니다. 직접 입력으로 등록할 수 있습니다.
+- 행사 신고는 방문자별 행사당 1회 접수할 수 있습니다. 신고는 `/admin` 관리자 화면에서 처리합니다([운영](#운영) 참고).
+- 포스터를 올리면 AI가 이미지를 읽어 입력 칸을 미리 채웁니다. 서버의 `/api/extract-poster`가 Claude API를 호출합니다. 기본 모델은 `claude-haiku-5-5`이고 `ANTHROPIC_POSTER_MODEL`로 바꿀 수 있습니다. 요청 크기·출처 검사, 요청 제한, 15초 시간 제한을 적용합니다. 서버에 `ANTHROPIC_API_KEY`가 없으면 이 기능만 꺼지고 직접 입력으로 등록할 수 있습니다.
 
 ### 지도 데이터
 
@@ -81,7 +81,9 @@ Geoapify에서 발급받은 키를 서버 환경변수 `GEOAPIFY_API_KEY`에 설
 
 반영은 관리 환경에 `SUPABASE_IMPORT_PROJECT_REF`와 `SUPABASE_IMPORT_SERVICE_KEY`를 일시적인 환경변수로 지정한 뒤 `npm run import:tourapi -- --apply`로 실행합니다. 프로젝트 URL과 프로젝트 ID가 일치해야 합니다. 서비스 키는 저장소·브라우저·공개 환경변수에 넣지 마세요. 재실행은 TourAPI 콘텐츠 ID를 기준으로 갱신하며 숨김/삭제 상태를 복구하지 않습니다. 원본에서 사라진 행사를 자동 삭제하지 않습니다. 이미지 URL은 한국관광공사 서버를 가리키므로 원본 서비스에 따라 나중에 변경되거나 사용할 수 없을 수 있습니다.
 
-기존 전국문화축제표준데이터 64건은 TourAPI 이미지와 공개 조회 검증 후 소프트 삭제했습니다. `import:festivals`는 예전 데이터 확인 용도로만 남기고 쓰기 기능을 막았습니다. 사용자 등록 행사는 그대로 유지합니다. 아직 정기 수집 일정은 설정하지 않았으므로 새 행사와 원본 변경 사항을 가져오려면 TourAPI 수집을 다시 실행해야 합니다.
+기존 전국문화축제표준데이터 64건은 TourAPI 이미지와 공개 조회 검증 후 소프트 삭제했습니다. `import:festivals`는 예전 데이터 확인 용도로만 남기고 쓰기 기능을 막았습니다. 사용자 등록 행사는 그대로 유지합니다.
+
+GitHub Actions의 `TourAPI Sync` 워크플로가 매주 월요일 01:00(KST)에 `--apply`로 수집 결과를 반영합니다. 저장소 Secrets에 `TOUR_API_SERVICE_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_IMPORT_SERVICE_KEY`, `SUPABASE_IMPORT_PROJECT_REF`가 모두 있어야 합니다. 하나라도 없으면 실행이 실패합니다. Actions 탭에서 수동으로 실행하면 기본은 dry-run이고, `apply`를 체크해야 DB에 씁니다.
 
 공개 행사와 작성자에게만 5분짜리 이미지 URL을 발급합니다. 이미 발급된 링크는 행사를 비공개로 바꾼 뒤에도 남은 만료 시간 동안 유효할 수 있습니다. 삭제는 행사 상태를 `deleted`로 바꾸는 방식이며 공개 목록·상세·사이트맵에서 즉시 제외됩니다. 파일의 최종 보존/삭제 운영은 별도로 관리합니다.
 
@@ -117,13 +119,15 @@ docs/WORK_LOG.md           프로젝트 작업 기록
 
 ## 운영
 
-별도 관리자 페이지와 관리자 암호 로그인은 제거했습니다. 신고 처리가 필요하면 Supabase Dashboard의 `reports`를 확인하고 해당 `events.publication_status`를 `hidden`으로 변경합니다. 일반 방문자의 DB 권한과 RLS는 유지합니다.
+`/admin`에서는 처리 대기 중인 신고와 최근 행사 50개를 보고, 신고 처리와 행사 삭제를 할 수 있습니다. 서버 환경변수 `ADMIN_USER_ID`에 지정한 Supabase 계정으로 로그인해야 하며, 그 계정에 `app_metadata.role = "admin"`도 있어야 열립니다. 조건이 맞지 않으면 404를 반환합니다. 관리자 암호 로그인은 없습니다. Supabase Dashboard의 `reports`와 `events.publication_status`를 직접 고쳐도 됩니다. 일반 방문자의 DB 권한과 RLS는 그대로입니다.
+
+Vercel Cron이 매주 일요일 03:00(UTC)에 `/api/cron/analytics`를 호출해 90일이 지난 원시 분석 기록을 지웁니다. 서버에 `CRON_SECRET`이 없으면 이 요청은 401로 거부됩니다.
 
 방문자를 읽기 전용 탐색 때 미리 생성하지 않습니다. Supabase의 익명 세션 생성 제한을 유지하며, 실제 브라우저 요청으로 생성해 IP별 제한이 적용되도록 합니다. 사용하지 않는 익명 방문자 정리 시 게시물 작성자를 일괄 삭제하지 않도록 주의해야 합니다. 방문자 쿠키를 영구적인 계정 복구 수단으로 취급하지 않습니다.
 
 사용자 Codex 설정의 `supabase_festiva`는 공식 로컬 stdio MCP 0.15.0으로 이 프로젝트에만 연결됩니다. 실행 파일과 관리 인증정보는 저장소 밖 사용자 `.codex`에 보관합니다. 설정 변경 후에는 새 세션/앱 재시작이 필요합니다.
 
-아직 사이트를 배포하지 않았습니다. 공개 전 `NEXT_PUBLIC_SITE_URL`을 실제 도메인으로 지정하고 Next.js 서버 호스팅을 연결해야 합니다. `.openai/hosting.json`에는 기존 Sites 프로젝트 ID만 보존합니다. 지리 데이터는 Natural Earth 110m 세계/50m 한국·대만 데이터이며 외부 폰트나 런타임 CDN은 사용하지 않습니다.
+운영 사이트는 Vercel 프로젝트 `world-map-imtc`(https://world-map-imtc.vercel.app)이며, `main`에 푸시하면 배포됩니다. 별도 도메인을 연결하면 `NEXT_PUBLIC_SITE_URL`을 그 주소로 바꾼 뒤 다시 배포합니다. `.openai/hosting.json`에는 기존 Sites 프로젝트 ID만 보존합니다. 지리 데이터는 Natural Earth 110m 세계/50m 한국·대만 데이터이며 외부 폰트나 런타임 CDN은 사용하지 않습니다.
 
 ## Taiwan seed data
 
@@ -145,7 +149,7 @@ Public route navigation (`/`, `/korea`, `/taiwan`, normalized `/regions`) record
 
 Applied `202611100004_analytics.sql` and `202611100006_public_traffic.sql`. Raw analytics/settings tables remain inaccessible to clients. `/api/traffic` returns only three validated numeric totals through a key-protected RPC, with server/CDN caching; the former detailed dashboard RPC was removed. Only the SHA-256 hash of `ANALYTICS_WRITE_KEY` is stored in `analytics_settings`. Keep this server-only key in the hosting environment; rotating it requires updating the database hash too. No administrator password, service-role key or Google account is needed for these public counters.
 
-No raw IP, full URL/query, user agent, event content or Supabase visitor/account ID is stored. Browser/session identities are HMAC hashes, and referrers contain hostnames only; none are returned by the public counters. Ingestion validates bounded allowlisted payloads, requires the same origin, and applies per-instance throttling. This is not a fraud-proof advertising billing system. Raw hit storage currently has no scheduled retention cleanup; review storage/retention as traffic grows.
+No raw IP, full URL/query, user agent, event content or Supabase visitor/account ID is stored. Browser/session identities are HMAC hashes, and referrers contain hostnames only; none are returned by the public counters. Ingestion validates bounded allowlisted payloads, requires the same origin, and applies per-instance throttling. This is not a fraud-proof advertising billing system. A weekly Vercel Cron job (`/api/cron/analytics`, Sunday 03:00 UTC) deletes raw hits older than 90 days.
 
 ## Search and social sharing
 
@@ -153,6 +157,6 @@ Public home/country/region pages and event modal URLs have localized titles/desc
 
 JSON-LD describes the website, collection lists and breadcrumbs. A direct event URL emits Event data only when dates and a real address are available. No prices, free entry, organizers or ticket availability are invented. Structured data makes the content understandable; rich-result display remains a search-engine decision. `/images/events/ID` resolves a current public poster through a no-store redirect, keeping short-lived Supabase signatures out of indexed metadata. `/og` provides the default 1200?630 social image, with an SVG brand favicon.
 
-`sitemap.xml` includes current public event URLs, real update dates and language alternates; private/hidden/deleted/expired records are excluded. Robots excludes private/admin/API paths. Local builds and Vercel previews are noindex; previews also receive an X-Robots-Tag. Set `NEXT_PUBLIC_SITE_URL` to the final public HTTPS origin before building/deploying. Vercel's project production domain is a fallback; arbitrary request/preview hosts are never used as canonical origins. There is no public deployment yet.
+`sitemap.xml` includes current public event URLs, real update dates and language alternates; private/hidden/deleted/expired records are excluded. Robots excludes private/admin/API paths. Local builds and Vercel previews are noindex; previews also receive an X-Robots-Tag. Set `NEXT_PUBLIC_SITE_URL` to the final public HTTPS origin before building/deploying. Vercel's project production domain is a fallback; arbitrary request/preview hosts are never used as canonical origins. Production is served at https://world-map-imtc.vercel.app.
 
 After deployment, register the actual domain with Google Search Console and Naver Search Advisor, configure optional `GOOGLE_SITE_VERIFICATION` and `NAVER_SITE_VERIFICATION` token values, redeploy, and submit `/sitemap.xml`. These accounts/domain ownership have not been registered by the agent. Verify a country URL and an event URL with URL Inspection/Rich Results Test after the live site is reachable.
