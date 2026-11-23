@@ -8,6 +8,7 @@ const countries = compile(await file("countries"));
 const events = compile((await file("events")).replace('"./countries"', JSON.stringify(countries)));
 const { eventShareUrl, eventHasEnded, SAVED_EVENTS_LIMIT } = await import(compile((await file("saved-events")).replace('"./countries"', JSON.stringify(countries)).replace('"./events"', JSON.stringify(events))));
 const migration = await readFile(new URL("../supabase/migrations/202611230001_saved_events.sql", import.meta.url), "utf8");
+const membersOnly = await readFile(new URL("../supabase/migrations/202611230002_saved_events_members_only.sql", import.meta.url), "utf8");
 const id = "0b8f1c2e-3d4a-4b5c-8d6e-7f8091a2b3c4";
 
 test("share links point at the country modal URL and keep the sharer's language", () => {
@@ -25,8 +26,10 @@ test("an event ends after its last day in its own country; undated events never 
   assert.equal(eventHasEnded({ startDate: null, endDate: null }, "2026-11-23"), false);
 });
 
-test("the app limit matches the database trigger and handoff merge", () => {
+test("the app limit matches the database trigger; saving is for members only", () => {
   assert.equal(SAVED_EVENTS_LIMIT, 200);
   assert.match(migration, />= 200 then/);
-  assert.match(migration, /greatest\(0, 200 - /);
+  assert.match(membersOnly, /'is_anonymous'\)::boolean, false\) = false/);
+  // The handoff no longer touches saved events once guests cannot save.
+  assert.doesNotMatch(membersOnly.slice(membersOnly.indexOf("create or replace function")), /saved_events/);
 });

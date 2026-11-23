@@ -226,7 +226,7 @@ export async function getSavedEvents() {
     data: { user },
   } = await client.auth.getUser();
   const empty = { user, active: [] as FestivalEvent[], ended: [] as FestivalEvent[], unavailableIds: [] as string[] };
-  if (!user) return empty;
+  if (!user || user.is_anonymous) return empty;
   const { data, error } = await client
     .from("saved_events")
     .select("event_id, events(*, event_images(storage_path))")

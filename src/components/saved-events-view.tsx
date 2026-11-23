@@ -6,6 +6,9 @@ import type { FestivalEvent } from "@/lib/events";
 import { EventCard } from "./event-card";
 import { useTranslations } from "./language-provider";
 import { useSavedEvents } from "./saved-events";
+import { useAccount } from "./account-provider";
+import { GoogleSubmit } from "./account-control";
+import { startGoogleAuth } from "@/app/actions/auth";
 
 export function SavedEventsView({ active, ended, unavailableIds, member }: {
   active: FestivalEvent[];
@@ -16,6 +19,7 @@ export function SavedEventsView({ active, ended, unavailableIds, member }: {
   const { t } = useTranslations();
   const router = useRouter();
   const { saved, remove } = useSavedEvents();
+  const { googleReady } = useAccount();
   const [busy, setBusy] = useState(false);
   // Unsaving from a card or modal hides it here at once, before any refresh.
   const current = active.filter((event) => saved.has(event.id));
@@ -26,10 +30,13 @@ export function SavedEventsView({ active, ended, unavailableIds, member }: {
     if (await remove(ids)) router.refresh();
     setBusy(false);
   }
+  if (!member) return <div className="empty-state saved-page__login">
+    <h2>{t("로그인하고 관심 행사를 모아 보세요.")}</h2>
+    <p>{t("Google로 로그인하면 관심 행사를 저장하고 어느 기기에서나 볼 수 있어요. 처음이면 자동으로 가입됩니다.")}</p>
+    <form action={startGoogleAuth}><input type="hidden" name="next" value="/me/saved" /><GoogleSubmit disabled={!googleReady} /></form>
+    {!googleReady && <p className="fine-print" role="status">{t("구글 로그인을 준비 중이에요.")}</p>}
+  </div>;
   return <>
-    {!member && <p className="sample-banner">
-      {t("관심 행사는 이 브라우저에 연결되어 있어요. Google로 로그인하면 다른 기기에서도 이어서 볼 수 있어요.")}
-    </p>}
     {!!unavailable.length && <div className="saved-page__notice" role="status">
       <p>{t("공개가 중단되거나 삭제된 행사 {count}건이 있어요.", { count: unavailable.length })}</p>
       <button type="button" className="text-link" disabled={busy} onClick={() => void clear(unavailable)}>{t("목록에서 정리")}</button>

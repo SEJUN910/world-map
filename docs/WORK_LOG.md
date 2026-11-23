@@ -1,5 +1,12 @@
 # Work Log
 
+## 2026-11-23 - Saved events are members only
+
+- User decision: saving requires a Google login, so a guest's list can no longer be stranded in one browser. Applied the change directly, without an Antigravity plan, as a narrowing of the feature just shipped.
+- `202611230002_saved_events_members_only.sql`: the insert policy also requires a non-anonymous JWT (`is_anonymous`); any anonymous rows are deleted (there were none); `complete_event_account_handoff` is restored to its 202611100005 definition. The live function hash matches the original again.
+- App: the save action rejects anonymous and signed-out users. The layout and `/me/saved` query only for members. A signed-out bookmark click opens the existing Google login dialog with a saving-specific message and returns to the same page. `/me/saved` shows a login prompt instead of a list. Saving never creates an anonymous session now. The account dialog stops Escape and clicks from reaching a parent event modal.
+- Verification: typecheck, 38/38 unit tests and production build passed. Rollback-only `saved-events.test.sql` (rewritten) and `auth-handoff.test.sql` passed on the live DB, with no fixtures left. Headless Chrome, signed out, 21/21 checks: login dialog from card, modal and mobile list; Escape closes only the login dialog; copied link format; English prompt; mobile fit and overflow; zero anonymous sign-in attempts. Saving while actually signed in with Google was not automated, because that needs a real Google account.
+
 ## 2026-11-23 - Saved events and sharing
 
 - Planned by Antigravity (`.omc/plans/saved-events.md`); analytics events (`event_save`/`event_share`) deferred to a later phase so the live analytics schema stays untouched.

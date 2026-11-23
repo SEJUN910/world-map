@@ -35,8 +35,8 @@ export default async function RootLayout({
   const client=await createClient();
   const {data:{user}}=await client.auth.getUser();
   const account:Account=user?{id:user.id,name:typeof user.user_metadata?.full_name==="string"?user.user_metadata.full_name.slice(0,80):"",anonymous:!!user.is_anonymous}:null;
-  // Read-only visitors have no session; skip the query instead of creating one.
-  const savedIds=user?await getSavedEventIds(client):[];
+  // Saved events are a Google-member feature; skip the query for everyone else.
+  const savedIds=user&&!user.is_anonymous?await getSavedEventIds(client):[];
   return (
     <html lang={locale}>
       <body>

@@ -4,7 +4,8 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useAccount } from "./account-provider";
 import { useTranslations } from "./language-provider";
-import { ensureVisitorSession } from "@/lib/supabase/browser-visitor";
+import { AccountDialog } from "./account-control";
+import { safeAuthReturn } from "@/lib/auth";
 import { removeSavedEventsAction, setSavedEventAction } from "@/app/actions/saved-events";
 import { eventDate, type FestivalEvent } from "@/lib/events";
 import { eventShareUrl } from "@/lib/saved-events";
@@ -37,8 +38,9 @@ export function SavedEventsProvider({ initialIds, children }: { initialIds: stri
     }
     update(next);
   }, [initialKey, update]);
-  // Signing out leaves no identity, so nothing is saved any more.
-  useEffect(() => { if (!account) update(new Set()); }, [account, update]);
+  // Saved events belong to Google members only; signing out empties the list.
+  const member = !!account && !account.anonymous;
+  useEffect(() => { if (!member) update(new Set()); }, [member, update]);
   // Saves often happen inside a modal <dialog>, which makes the rest of the
   // page inert. Render the toast inside the top-most modal so it stays visible,
   // clickable and announced.
@@ -63,7 +65,6 @@ export function SavedEventsProvider({ initialIds, children }: { initialIds: stri
     if (save) optimistic.add(id); else optimistic.delete(id);
     update(optimistic);
     try {
-      if (save) await ensureVisitorSession();
       const result = await setSavedEventAction(id, save);
       if (result.error) throw new Error(result.error);
       setNotice({ text: t(save ? "관심 행사에 담았어요." : "관심 행사에서 뺐어요."), error: false });
@@ -110,14 +111,25 @@ function BookmarkIcon({ filled, size = 18 }: { filled: boolean; size?: number })
 export function SaveEventButton({ id, variant = "icon", className = "" }: { id: string; variant?: "icon" | "label"; className?: string }) {
   const { t } = useTranslations();
   const { saved, toggle } = useSavedEvents();
+  const { account } = useAccount();
+  const button = useRef<HTMLButtonElement>(null);
+  const [login, setLogin] = useState<string | null>(null);
   const isSaved = saved.has(id);
   const label = t(isSaved ? "관심 행사에서 빼기" : "관심 행사로 저장");
-  return <button type="button" className={`save-toggle save-toggle--${variant}${isSaved ? " is-saved" : ""} ${className}`.trim()}
-    aria-pressed={isSaved} aria-label={variant === "icon" ? label : undefined} title={label}
-    onClick={(click) => { click.preventDefault(); click.stopPropagation(); void toggle(id); }}>
-    <BookmarkIcon filled={isSaved} />
-    {variant === "label" && <span>{t(isSaved ? "저장됨" : "관심 행사 저장")}</span>}
-  </button>;
+  return <>
+    <button ref={button} type="button" className={`save-toggle save-toggle--${variant}${isSaved ? " is-saved" : ""} ${className}`.trim()}
+      aria-pressed={isSaved} aria-label={variant === "icon" ? label : undefined} title={label}
+      onClick={(click) => {
+        click.preventDefault(); click.stopPropagation();
+        // Not a Google member yet: ask to sign in, then come back to this page.
+        if (!account || account.anonymous) setLogin(safeAuthReturn(location.pathname + location.search));
+        else void toggle(id);
+      }}>
+      <BookmarkIcon filled={isSaved} />
+      {variant === "label" && <span>{t(isSaved ? "저장됨" : "관심 행사 저장")}</span>}
+    </button>
+    {login && <AccountDialog opener={button} next={login} intro={t("Google로 로그인하면 관심 행사를 저장하고 어느 기기에서나 볼 수 있어요. 처음이면 자동으로 가입됩니다.")} onClose={() => setLogin(null)} />}
+  </>;
 }
 
 export function SavedEventsLink() {
