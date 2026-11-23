@@ -3,13 +3,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Sheet, type SheetRef } from "react-modal-sheet";
 import { useMotionValueEvent, useReducedMotion } from "motion/react";
 import Link from "next/link";
-import { eventDate, eventPath, todayInCountry, type FestivalEvent } from "@/lib/events";
+import { todayInCountry, type FestivalEvent } from "@/lib/events";
 import type { CountryCode } from "@/lib/countries";
-import { validDate, type DateChoice, type DiscoveryFilters } from "@/lib/discovery-filters";
+import { validDate, type DateChoice, type DiscoveryFilters, type EventSort, type ExplorerView } from "@/lib/discovery-filters";
 import { useTranslations } from "./language-provider";
-import { EventPosterDialog } from "./event-poster-dialog";
 import { SiteTools } from "./site-tools";
-import { SaveEventButton } from "./saved-events";
+import { EventListItem } from "./event-list-item";
 import { TrafficCounter } from "./traffic-counter";
 
 type Props = {
@@ -20,6 +19,9 @@ type Props = {
   onApply: (region: string, query: string, filters: DiscoveryFilters) => void;
   pageHref: (page: number) => string;
   onHeight: (height: number) => void;
+  view: ExplorerView; onViewChange: (view: ExplorerView) => void;
+  sort: EventSort; onSort: (sort: EventSort) => void;
+  onShowOnMap: (event: FestivalEvent) => void;
 };
 function TrackHeight({ onHeight }: { onHeight: Props["onHeight"] }) {
   const { yInverted } = Sheet.useContext();
@@ -29,7 +31,7 @@ function TrackHeight({ onHeight }: { onHeight: Props["onHeight"] }) {
 }
 
 export function MobileEventSheet(props: Props) {
-  const { country, events, total, page, regions, region, query, filters, pending, selectedIds, selectedId, onSelect, onApply, onSelectionClear, pageHref, onHeight } = props;
+  const { country, events, total, page, regions, region, query, filters, pending, selectedIds, selectedId, onSelect, onApply, onSelectionClear, pageHref, onHeight, view, onViewChange, sort, onSort, onShowOnMap } = props;
   const { t } = useTranslations();
   const reduced = useReducedMotion();
   const sheet = useRef<SheetRef>(null);
@@ -40,8 +42,11 @@ export function MobileEventSheet(props: Props) {
   }, [onHeight]);
   const scroll = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
-  const [snap, setSnap] = useState(1);
+  // Snap 3 (full height) is the list view; lower snaps show the map.
+  const [snap, setSnap] = useState(view === "list" ? 3 : 1);
+  const snapRef = useRef(snap); snapRef.current = snap;
   const [showFilters, setShowFilters] = useState(false);
+  const filtersOpen = useRef(false); filtersOpen.current = showFilters;
   const [text, setText] = useState(query);
   const [custom, setCustom] = useState(filters.when === "custom");
   const [from, setFrom] = useState(filters.from || todayInCountry(country));
@@ -52,8 +57,6 @@ export function MobileEventSheet(props: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [retry, setRetry] = useState(0);
-  const [opened, setOpened] = useState<FestivalEvent | null>(null);
-  const opener = useRef<HTMLAnchorElement | null>(null);
 
   useEffect(() => { setText(query); setCustom(filters.when === "custom"); setFrom(filters.from || todayInCountry(country)); setTo(filters.to || todayInCountry(country)); }, [query, filters.when, filters.from, filters.to, country]);
   useEffect(() => {
@@ -61,6 +64,10 @@ export function MobileEventSheet(props: Props) {
     if (selectedIds) sheet.current?.snapTo(2);
   }, [selectedIds]);
   useEffect(() => { scroll.current?.scrollTo({ top: 0 }); }, [page, groupPage, events]);
+  useEffect(() => {
+    if (view === "list" && snapRef.current !== 3) { setShowFilters(false); sheet.current?.snapTo(3); }
+    if (view === "map" && snapRef.current === 3) sheet.current?.snapTo(1);
+  }, [view]);
   useEffect(() => {
     if (!selectedIds) { setGroupEvents([]); setLoading(false); setError(false); return; }
     const controller = new AbortController();
@@ -86,15 +93,19 @@ export function MobileEventSheet(props: Props) {
   const items = selectedIds ? groupEvents : events;
   const levels = ["", t("지도 중심"), t("지도와 목록"), t("목록 중심")];
   const activeCount = Number(!!region) + Number(filters.when !== "all") + Number(!!query) + Number(!!filters.bounds);
-  function openFilters() { setShowFilters(value => !value); sheet.current?.snapTo(3); }
+  function openFilters() { filtersOpen.current = !showFilters; setShowFilters(value => !value); sheet.current?.snapTo(3); }
   function applyDate(value: DateChoice) {
     setCustom(value === "custom"); setFormError("");
-    if (value === "custom") { setShowFilters(true); sheet.current?.snapTo(3); return; }
+    if (value === "custom") { filtersOpen.current = true; setShowFilters(true); sheet.current?.snapTo(3); return; }
     onApply(region, query, { ...filters, when: value, from: "", to: "" });
   }
   return <>
     <Sheet ref={sheet} isOpen onClose={() => sheet.current?.snapTo(1)} detent="full"
-      snapPoints={[0, 144, 0.5, 1]} initialSnap={1} onSnap={index => setSnap(Math.max(1, index))} disableDismiss disableScrollLocking
+      snapPoints={[0, 144, 0.5, 1]} initialSnap={view === "list" ? 3 : 1} onSnap={index => {
+        const next = Math.max(1, index); setSnap(next);
+        // Opening the filter panel expands the sheet but is not a switch to the list view.
+        if (next !== 3 || !filtersOpen.current) onViewChange(next === 3 ? "list" : "map");
+      }} disableDismiss disableScrollLocking
       prefersReducedMotion={!!reduced} tweenConfig={{ ease: "easeOut", duration: 0.26 }}
       onDragStart={() => { dragging.current = true; }} onDragEnd={() => { setTimeout(() => { dragging.current = false; }, 0); }}
       style={{ zIndex: 5, top: "calc(65px + max(12px, env(safe-area-inset-top)))" }}>
@@ -117,9 +128,12 @@ export function MobileEventSheet(props: Props) {
         </Sheet.Header>
         <div className="event-sheet__fixed">
           <div className="event-sheet__heading"><strong>{selectedIds ? t("선택한 위치의 행사") : t("행사 목록")}</strong>
-            <button type="button" onClick={() => { setShowFilters(false); sheet.current?.snapTo(snap === 1 ? 2 : 1); }}>{snap === 1 ? t("목록 보기") : t("지도 보기")}</button>
+            <span>{t("총 {count}개", { count: selectedIds ? selectedIds.length : total })}</span>
           </div>
           <div className="event-sheet__filters">
+            <select aria-label={t("정렬")} value={sort} disabled={pending || !!selectedIds} onChange={event => onSort(event.target.value as EventSort)}>
+              <option value="latest">{t("최신 등록순")}</option><option value="soon">{t("일정 빠른 순")}</option><option value="ending">{t("종료 임박순")}</option>
+            </select>
             <select aria-label={t("기간 필터")} value={custom ? "custom" : filters.when} disabled={pending} onChange={event => applyDate(event.target.value as DateChoice)}>
               <option value="all">{t("기간 전체")}</option><option value="today">{t("오늘")}</option><option value="weekend">{t("이번 주말")}</option><option value="month">{t("이번 달")}</option><option value="custom">{t("기간 선택")}</option>
             </select>
@@ -132,7 +146,7 @@ export function MobileEventSheet(props: Props) {
             </button>
           </div>
         </div>
-        <Sheet.Content id="event-sheet-body" disableDrag disableScroll={snap === 1} inert={snap === 1} style={{ opacity: "var(--sheet-body-opacity, 0)" }} scrollRef={scroll} scrollClassName="event-sheet__scroll" scrollStyle={{ padding: "0 16px", paddingBottom: "max(24px, env(safe-area-inset-bottom), var(--keyboard-inset-height, 0px))" }} aria-busy={pending || loading}>
+        <Sheet.Content id="event-sheet-body" disableDrag disableScroll={snap === 1} inert={snap === 1} style={{ opacity: "var(--sheet-body-opacity, 0)" }} scrollRef={scroll} scrollClassName="event-sheet__scroll" scrollStyle={{ padding: "0 16px", paddingBottom: "calc(max(24px, env(safe-area-inset-bottom), var(--keyboard-inset-height, 0px)) + 64px)" }} aria-busy={pending || loading}>
           {showFilters ? <div className="event-sheet__settings">
             <form onSubmit={event => {
               event.preventDefault();
@@ -150,17 +164,7 @@ export function MobileEventSheet(props: Props) {
             {selectedIds && <div className="event-sheet__selection"><span>{t("지도에서 선택한 위치")}</span><button type="button" onClick={onSelectionClear}>{t("전체 목록")}</button></div>}
             {filters.bounds && !selectedIds && <div className="event-sheet__selection"><span>{t("현재 지도 영역")}</span><button type="button" onClick={() => onApply(region, query, { ...filters, bounds: "" })}>{t("영역 해제")}</button></div>}
             {loading ? <p className="event-sheet__notice" role="status">{t("불러오는 중…")}</p> : error ? <div className="event-sheet__notice" role="alert"><p>{t("행사를 불러오지 못했어요.")}</p><button type="button" onClick={() => setRetry(value => value + 1)}>{t("다시 시도")}</button></div> : items.length ? <div className="event-sheet__list">
-              {items.map(event => <article key={event.id} className={`event-list-card${event.id === selectedId ? " is-selected" : ""}`}>
-                <Link prefetch={false} href={eventPath(event)} onClick={click => {
-                  if (click.button !== 0 || click.metaKey || click.ctrlKey || click.shiftKey || click.altKey) return;
-                  click.preventDefault(); opener.current = click.currentTarget; onSelect(event.id); setOpened(event);
-                }}>
-                  <img src={event.poster} alt="" width={72} height={96} loading="lazy" />
-                  <div><h2>{event.title}</h2><p>{t(eventDate(event))}</p><p>{[event.region, event.venue].filter(Boolean).join(" · ") || event.address}</p></div>
-                  <span className="event-list-card__arrow" aria-hidden="true">›</span>
-                </Link>
-                <SaveEventButton id={event.id} />
-              </article>)}
+              {items.map(event => <EventListItem key={event.id} event={event} selected={event.id === selectedId} onOpen={() => onSelect(event.id)} onShowOnMap={onShowOnMap} />)}
             </div> : <div className="event-sheet__empty"><span aria-hidden="true">✳</span><p>{t("아직 발견하지 못했어요.")}</p></div>}
             {!loading && !error && <nav className="event-sheet__pages" aria-label={t("행사 목록 페이지")}>
               {selectedIds ? <>
@@ -175,6 +179,5 @@ export function MobileEventSheet(props: Props) {
         </Sheet.Content>
       </Sheet.Container>
     </Sheet>
-    {opened && <EventPosterDialog event={opened} opener={opener} onDismiss={() => setOpened(null)} />}
   </>;
 }

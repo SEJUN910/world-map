@@ -12,9 +12,11 @@ import { eventPath, type FestivalEvent } from "@/lib/events";
 import { EventPosterDialog } from "./event-poster-dialog";
 import type { MapBounds } from "@/lib/discovery-filters";
 
+// Changing `nonce` re-centres the map on the coordinates, even for the same event.
+export type MapFocusTarget = { latitude: number; longitude: number; nonce: number };
 export type EventMapPoint = { countryCode?: CountryCode; id: string; slug: string; title: string; latitude: number; longitude: number };
 type Coordinates = { latitude: number; longitude: number };
-type Props = ({ points: EventMapPoint[]; fitToPoints?: boolean; point?: never; onPick?: never } | { points?: never; fitToPoints?: never; point: Coordinates | null; onPick: (point: Coordinates) => void }) & { country?: CountryCode; overview?: boolean; onReady?: (focusCountry: (country: CountryCode) => void) => void; onCountryFocused?: () => void; onSelectEvents?: (ids: string[]) => void; selectedEventId?: string; onViewportChange?: (bounds: MapBounds, userChanged: boolean) => void; onEventHighlight?: (id: string | null) => void; highlightedId?: string | null; onCountryClick?: (country: CountryCode) => void };
+type Props = ({ points: EventMapPoint[]; fitToPoints?: boolean; point?: never; onPick?: never } | { points?: never; fitToPoints?: never; point: Coordinates | null; onPick: (point: Coordinates) => void }) & { country?: CountryCode; overview?: boolean; onReady?: (focusCountry: (country: CountryCode) => void) => void; onCountryFocused?: () => void; onSelectEvents?: (ids: string[]) => void; selectedEventId?: string; onViewportChange?: (bounds: MapBounds, userChanged: boolean) => void; onEventHighlight?: (id: string | null) => void; highlightedId?: string | null; onCountryClick?: (country: CountryCode) => void; focusTarget?: MapFocusTarget | null };
 
 function globeZoom(element: HTMLElement) {
   return Math.log2(Math.min(element.clientWidth * 0.8, element.clientHeight * 0.65, 740) * Math.PI / 512);
@@ -55,7 +57,7 @@ function coordinateGrid(map: MapLibreMap): FeatureCollection<LineString> {
   return { type: "FeatureCollection", features };
 }
 
-export function EventMap({ points, point, onPick, fitToPoints = false, country = "kr", overview = false, onReady, onCountryFocused, onSelectEvents, selectedEventId, onViewportChange, onEventHighlight, highlightedId, onCountryClick }: Props) {
+export function EventMap({ points, point, onPick, fitToPoints = false, country = "kr", overview = false, onReady, onCountryFocused, onSelectEvents, selectedEventId, onViewportChange, onEventHighlight, highlightedId, onCountryClick, focusTarget }: Props) {
   const { t, locale } = useTranslations();
   const translate = useRef(t);
   translate.current = t;
@@ -448,6 +450,14 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
     void start().catch((error) => { if (!disposed && error.name !== "AbortError") setFailed(true); });
     return () => { disposed = true; cleanupHover?.(); hoverGroup.current = null; leaveGroup.current = null; controller.abort(); observer?.disconnect(); marker.current?.remove(); marker.current = null; setPosterMap(null); openGroup.current = null; instance?.remove(); map.current = null; };
   }, [isPicker, fitToPoints, overview, country, retry]);
+
+  // posterMap is set once the map has loaded, so a target given before that
+  // (for example right after switching from the list view) still applies.
+  useEffect(() => {
+    if (!focusTarget || !posterMap) return;
+    posterMap.stop();
+    posterMap.flyTo({ center: [focusTarget.longitude, focusTarget.latitude], zoom: Math.max(posterMap.getZoom(), 10), duration: 700 });
+  }, [focusTarget?.nonce, posterMap]);
 
   useEffect(() => {
     if (map.current?.getLayer("event-points")) map.current.setPaintProperty("event-points", "circle-color", ["case", ["==", ["get", "id"], selectedEventId || ""], "#2865c5", "#f39451"]);

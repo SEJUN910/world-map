@@ -5,6 +5,19 @@ export type DateChoice = "all" | "today" | "weekend" | "month" | "custom";
 export type DiscoveryFilters = { when: DateChoice; from: string; to: string; bounds: string };
 export const emptyDiscoveryFilters: DiscoveryFilters = { when: "all", from: "", to: "", bounds: "" };
 export type MapBounds = [number, number, number, number];
+// List order. "latest" is the default and is never written to URLs.
+export type EventSort = "latest" | "soon" | "ending";
+export function normalizeSort(value: unknown): EventSort {
+  return value === "soon" || value === "ending" ? value : "latest";
+}
+export type ExplorerView = "map" | "list";
+export function normalizeView(value: unknown): ExplorerView {
+  return value === "list" ? "list" : "map";
+}
+// Extra URL values for the list view and sort; both stay out of canonical URLs.
+export function viewParams(view: ExplorerView, sort: EventSort) {
+  return { ...(view === "list" ? { view } : {}), ...(sort !== "latest" ? { sort } : {}) };
+}
 export function validDate(value: unknown): value is string {
   return typeof value === "string" && /^20\d{2}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
 }

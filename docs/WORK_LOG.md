@@ -1,5 +1,15 @@
 # Work Log
 
+## 2026-11-23 - List view (map ↔ list)
+
+- Planned by Antigravity (`.omc/plans/list-view.md`), phase 1 only. The optional sort indexes were skipped (117 published events), so there is no DB change.
+- `?view=list` is a client switch (`history.replaceState`), so the map is not reloaded. `?sort=soon|ending` is a server sort in `listEvents` that also hides ended events. Both are kept in pagination, region and filter links, excluded from canonical URLs, and make the page noindex.
+- Mobile: a floating `목록보기/지도보기` button is portalled to `<body>` next to the react-modal-sheet portal and rides above the sheet using `--mobile-sheet-height`. Sheet snap 3 is the list view, and view and snap stay in sync both ways. The sheet heading shows the total and a sort select. Rows use the shared `EventListItem`. "이 지역에서 검색" moved up so it clears the button.
+- Desktop: a `지도 | 목록` toggle on the map; list mode is a separate scrolling layout (search, date, sort, region links, total, 2/1-column rows, page N/M).
+- `EventListItem` shows the progress badge (`eventBadge`, using the country's local date), save, and "지도에서 보기". The event modal and desktop cards get the same action. `EventMap.focusTarget` flies to the event once the map has loaded, including after a remount.
+- Verification: typecheck, 40/40 unit tests (new `list-view.test.mjs`: badge boundaries, sort/view parsing, URL params) and production build passed. Headless Chrome on a local production server: 32 list-view checks, covering toggle and URL, the list layout without a map, badges and actions, region and pagination links keeping view and sort, end-date and start-date ordering, ended events hidden, modal "지도에서 보기" returning to the map, direct URL restore, English labels, 1-column under 1024px, the mobile floating button above the sheet and at the bottom in list mode, 44px row actions, rows fitting 390px (a grid `min-width` bug was found and fixed), and no overflow or page errors. Saved-events QA re-ran 21/21. Local builds are always noindex, so default-page indexability is to be checked on production.
+- Review fixes (separate code-review pass, no blockers): a used map focus target is cleared on filter or region changes and when leaving the map, so a region fit is no longer overridden by an old "show on map". Opening the mobile filter panel expands the sheet without switching to the list view. The view now follows `useSearchParams()` instead of the server prop, so back/forward keep the URL and the view in sync (checked in the browser). The PC map shows the sort select while a date sort is active so it can be undone. The badge suppresses a hydration warning that could occur around local midnight. Accepted for phase 1: events with no end date sort last under "종료 임박순", and map markers are not filtered by the date sort.
+
 ## 2026-11-23 - Saved events are members only
 
 - User decision: saving requires a Google login, so a guest's list can no longer be stranded in one browser. Applied the change directly, without an Antigravity plan, as a narrowing of the feature just shipped.

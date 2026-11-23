@@ -6,7 +6,7 @@ import { useRef, useState } from "react";
 import { eventDate, eventPath, type FestivalEvent } from "@/lib/events";
 import { EventPosterDialog } from "./event-poster-dialog";
 import { SaveEventButton } from "./saved-events";
-export function EventCard({ event, highlighted, onHover }: { event: FestivalEvent; highlighted?: boolean; onHover?: (id: string | null) => void }) {
+export function EventCard({ event, highlighted, onHover, onShowOnMap }: { event: FestivalEvent; highlighted?: boolean; onHover?: (id: string | null) => void; onShowOnMap?: (event: FestivalEvent) => void }) {
   const { t } = useTranslations();
   const link = useRef<HTMLAnchorElement>(null);
   const [open, setOpen] = useState(false);
@@ -51,7 +51,7 @@ export function EventCard({ event, highlighted, onHover }: { event: FestivalEven
         <h3>{event.title}</h3>
       </Link>
       <SaveEventButton id={event.id} />
-      {open && <EventPosterDialog event={event} opener={link} onDismiss={() => setOpen(false)} />}
+      {open && <EventPosterDialog event={event} opener={link} onDismiss={() => setOpen(false)} onShowOnMap={onShowOnMap && ((target) => { setOpen(false); onShowOnMap(target); })} />}
     </article>
   );
 }

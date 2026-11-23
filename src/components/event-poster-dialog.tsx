@@ -23,8 +23,9 @@ export function LinkedEventDialog({ event }: { event: FestivalEvent }) {
   }} />;
 }
 
-export function EventPosterDialog({ event, opener, onDismiss, initiallyOpen = false }: {
+export function EventPosterDialog({ event, opener, onDismiss, initiallyOpen = false, onShowOnMap }: {
   initiallyOpen?: boolean;
+  onShowOnMap?: (event: FestivalEvent) => void;
   event: FestivalEvent;
   opener: React.RefObject<HTMLAnchorElement | null>;
   onDismiss: () => void;
@@ -96,6 +97,7 @@ export function EventPosterDialog({ event, opener, onDismiss, initiallyOpen = fa
               <div className="poster-modal__actions">
                 <SaveEventButton id={event.id} variant="label" />
                 <ShareEventButton event={event} />
+                {onShowOnMap && <button type="button" className="share-event__button" onClick={() => onShowOnMap(event)}>{t("지도에서 보기")}</button>}
                 {event.officialUrl && <a href={event.officialUrl} target="_blank" rel="noopener noreferrer">{t("공식 안내 ↗")}</a>}
               </div>
               <ReportEvent id={event.id} />

@@ -11,7 +11,7 @@ import type { FestivalEvent } from "./events";
 import { isEventId, todayInCountry } from "./events";
 import { cache } from "react";
 import { normalizeRichText } from "./rich-text";
-import { applyDiscoveryFilters, emptyDiscoveryFilters, type DiscoveryFilters } from "./discovery-filters";
+import { applyDiscoveryFilters, emptyDiscoveryFilters, type DiscoveryFilters, type EventSort } from "./discovery-filters";
 import { eventHasEnded, SAVED_EVENTS_LIMIT } from "./saved-events";
 
 function activeSourceFilter() {
@@ -95,16 +95,25 @@ export async function listEvents({
   page = 1,
   pageSize = 24,
   filters = emptyDiscoveryFilters,
-}: { country?: CountryCode; region?: string; query?: string; page?: number; pageSize?: number; filters?: DiscoveryFilters } = {}) {
+  sort = "latest",
+}: { country?: CountryCode; region?: string; query?: string; page?: number; pageSize?: number; filters?: DiscoveryFilters; sort?: EventSort } = {}) {
   const client = publicClient();
   let request = client
     .from("events")
     .select("*, event_images(storage_path)", { count: "exact" })
     .eq("country_code", country)
     .eq("publication_status", "published")
-    .or(activeSourceFilter())
-    .order("created_at", { ascending: false })
-    .order("id");
+    .or(activeSourceFilter());
+  if (sort === "latest") request = request.order("created_at", { ascending: false });
+  else {
+    // Date orders only list events that have not ended yet (undated ones drop out).
+    const today = todayInCountry(country);
+    request = request
+      .or(`end_date.gte.${today},and(end_date.is.null,start_date.gte.${today})`)
+      .order(sort === "soon" ? "start_date" : "end_date", { ascending: true, nullsFirst: false });
+    if (sort === "ending") request = request.order("start_date", { ascending: true, nullsFirst: false });
+  }
+  request = request.order("id");
   if (region) request = request.eq("region_code", region);
   // Escape PostgREST filter grammar and SQL LIKE wildcards. All values remain parameters.
   if (query.trim()) {
