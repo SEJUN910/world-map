@@ -1,5 +1,11 @@
 # Work Log
 
+## 2026-11-24 - Sync secrets registered
+
+- User registered the five GitHub secrets (TOUR_API_SERVICE_KEY, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SUPABASE_IMPORT_PROJECT_REF, SUPABASE_IMPORT_SERVICE_KEY).
+- Dry runs on GitHub: TourAPI 59 usable, Paris 406 usable, culture info first stopped on its repeat check (the listing's pages are not in a stable order) — fixed by fetching it in one page (commit "Fetch the culture listing in one page"), then 800 usable.
+- No apply run yet: user chose to let the Monday schedule write (TourAPI 01:00 KST, culture info 02:00 KST, Paris 11:00 KST). Check those runs and the event counts afterwards.
+
 ## 2026-11-24 - Category filter (category + tags)
 
 - Korea grew to ~830 events; user asked for a category filter. Planned by Antigravity (`.omc/plans/category-filter.md`); user chose to store category + finer tags. Deviations: backfill by re-running the imports with `--sql` (GitHub secrets not set), mobile chips inside the sheet header.
