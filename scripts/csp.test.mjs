@@ -16,7 +16,9 @@ test("default tiles, public posters and the same-origin MapLibre worker are allo
   const img = directive(csp, "img-src");
   for (const source of ["'self'", "data:", "blob:", "https://tile.openstreetmap.org", "https://*.tile.openstreetmap.org", "https://abc.supabase.co", "https://tong.visitkorea.or.kr", "https://*.gov.tw", "https://*.taiwan.net.tw"]) assert.ok(img.includes(source), source);
   const connect = directive(csp, "connect-src");
-  assert.deepEqual(connect, ["'self'", "https://abc.supabase.co", "https://tile.openstreetmap.org", "https://*.tile.openstreetmap.org"]);
+  assert.deepEqual(connect, ["'self'", "https://abc.supabase.co", "https://tile.openstreetmap.org", "https://*.tile.openstreetmap.org", "https://tiles.openfreemap.org"]);
+  // The vector basemap needs no image or wildcard origin.
+  assert.ok(!img.includes("https://tiles.openfreemap.org") && !connect.some((source) => source.includes("openfreemap") && source.includes("*")));
   assert.deepEqual(directive(csp, "worker-src"), ["'self'", "blob:"]);
   assert.deepEqual(directive(csp, "base-uri"), ["'self'"]);
   assert.deepEqual(directive(csp, "object-src"), ["'none'"]);

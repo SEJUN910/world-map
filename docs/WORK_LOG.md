@@ -1,5 +1,14 @@
 # Work Log
 
+## 2026-11-24 - Detailed basemap (OpenFreeMap)
+
+- User: zooming past country level showed nothing and no place names. Options compared (Google/Naver/Kakao rewrite vs MapLibre + vector tiles); user chose free OpenFreeMap. Planned by Antigravity (`.omc/plans/basemap.md`), approved as-is.
+- `src/lib/map-style.ts`: light OpenMapTiles-schema style (water, landcover/park, waterways, buildings z14+, state/country boundaries, roads with casing, place/water/road labels), labels per UI locale, Hangul/CJK via `localIdeographFontFamily`.
+- `event-map.tsx`: basemap inserted under the grid and event layers; world.json land, grid and background fade out over z4→5. Home globe attaches it only at z ≥ 3.5. Source errors before any tile (or 3 errors) remove it and restore the globe. Attribution bottom-right, collapsed ⓘ on mobile. Picker map unchanged.
+- CSP `connect-src` + `https://tiles.openfreemap.org` (TileJSON, tiles, glyphs all on that origin; checked the live TileJSON).
+- Review fixes: basemap layers get `minzoom` 4 (opacity 0 still downloads tiles, so a zoomed-out globe fetched them after the first zoom-in); the home globe's country fill fades to 0.08 over the basemap (still the click target); non-basemap map errors are logged again (an error listener silences MapLibre's console output); the tile error count resets on each loaded tile; the grid is not recomputed while hidden; picker attribution colour and CJK font option left as before.
+- QA: home makes 0 tile requests until zoom and none again after ◎ back to the globe, /korea loads tiles + glyphs with no CSP violations, Korean and English labels checked on screenshots, blocked tile server falls back to the globe without the error screen, mobile attribution clears the sheet; split-layout regression 79 PASS.
+
 ## 2026-11-24 - Serve from Seoul
 
 - `/korea` took ~1.1s to first byte: `x-vercel-id: icn1::iad1` showed pages rendered in Washington DC while Supabase is in Seoul (`ap-northeast-2`), so every auth/list/region/map query crossed the Pacific.

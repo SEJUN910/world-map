@@ -11,6 +11,7 @@ import { EventMapPosters, type MapPosterGroup } from "./event-map-posters";
 import { eventPath, type FestivalEvent } from "@/lib/events";
 import { EventPosterDialog } from "./event-poster-dialog";
 import type { MapBounds } from "@/lib/discovery-filters";
+import { BASEMAP_ATTACH_ZOOM, BASEMAP_BACKGROUND, BASEMAP_FADE, BASEMAP_GLYPHS, BASEMAP_LABEL_LAYERS, BASEMAP_SOURCE, LOCAL_IDEOGRAPH_FONTS, basemapLayers, basemapSource, fadeOut, labelField } from "@/lib/map-style";
 
 // Changing `nonce` re-centres the map on the coordinates, even for the same event.
 export type MapFocusTarget = { latitude: number; longitude: number; nonce: number };
@@ -59,6 +60,8 @@ function coordinateGrid(map: MapLibreMap): FeatureCollection<LineString> {
 
 export function EventMap({ points, point, onPick, fitToPoints = false, country = "kr", overview = false, onReady, onCountryFocused, onSelectEvents, selectedEventId, onViewportChange, onEventHighlight, highlightedId, onCountryClick, focusTarget }: Props) {
   const { t, locale } = useTranslations();
+  const localeRef = useRef(locale);
+  localeRef.current = locale;
   const translate = useRef(t);
   translate.current = t;
   const countryClick = useRef(onCountryClick);
@@ -131,6 +134,7 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
         container: container.current,
         style: {
           version: 8,
+          ...(isPicker ? {} : { glyphs: BASEMAP_GLYPHS }),
           projection: { type: isPicker ? "mercator" : "globe" },
           sources: config ? { basemap: { type: "raster", tiles: [config.tiles], tileSize: 256, maxzoom: 19, attribution } } : { land: { type: "geojson", data: land } },
           layers: [
@@ -149,6 +153,7 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
         locale: { "NavigationControl.ZoomIn": t("확대"), "NavigationControl.ZoomOut": t("축소"), "Map.Title": t("행사 지도") },
         renderWorldCopies: false,
         attributionControl: false,
+        ...(isPicker ? {} : { localIdeographFontFamily: LOCAL_IDEOGRAPH_FONTS }),
       });
       map.current = instance;
       instance.on("moveend", event => {
@@ -186,8 +191,10 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
         const longitude = ((center.lng + 180) % 360 + 360) % 360 - 180;
         coordinates.current.textContent = `LAT ${Math.abs(center.lat).toFixed(4)}° ${center.lat < 0 ? "S" : "N"}   /   LON ${Math.abs(longitude).toFixed(4)}° ${longitude < 0 ? "W" : "E"}`;
       };
+      // While the basemap is shown the grid is invisible from zoom 5, so it is not recomputed there.
+      let basemapActive = false;
       const updateGrid = () => {
-        if (!instance) return;
+        if (!instance || (basemapActive && instance.getZoom() >= BASEMAP_FADE[1])) return;
         (instance.getSource("coordinate-grid") as GeoJSONSource | undefined)?.setData(coordinateGrid(instance));
       };
       instance.on("move", updateCoordinates);
@@ -197,6 +204,64 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
         if (!isPicker) {
           instance.addSource("coordinate-grid", { type: "geojson", data: coordinateGrid(instance) });
           instance.addLayer({ id: "coordinate-grid", type: "line", source: "coordinate-grid", paint: { "line-color": "#377ce5", "line-width": 0.8, "line-opacity": 0.22 } });
+          // Detailed basemap (roads, water, place names) under the grid and the event layers.
+          // If the tile server fails, it is removed and the world.json globe comes back.
+          let attached = false, gaveUp = false, tilesLoaded = false, tileErrors = 0;
+          let basemapAttribution: InstanceType<typeof lib.AttributionControl> | undefined;
+          const restoreGlobe = () => {
+            if (!instance) return;
+            for (const layer of basemapLayers(localeRef.current)) if (instance.getLayer(layer.id)) instance.removeLayer(layer.id);
+            if (instance.getSource(BASEMAP_SOURCE)) instance.removeSource(BASEMAP_SOURCE);
+            instance.setPaintProperty("space", "background-color", "#ffffff");
+            instance.setPaintProperty("land-fill", "fill-opacity", 1);
+            instance.setPaintProperty("land-outline", "line-opacity", 0.85);
+            instance.setPaintProperty("coordinate-grid", "line-opacity", 0.22);
+            if (instance.getLayer("country-fill")) instance.setPaintProperty("country-fill", "fill-opacity", 0.9);
+            if (basemapAttribution) instance.removeControl(basemapAttribution);
+            basemapAttribution = undefined;
+            basemapActive = false;
+            updateGrid();
+          };
+          const attachBasemap = () => {
+            if (!instance || attached || gaveUp) return;
+            attached = true;
+            basemapActive = true;
+            instance.addSource(BASEMAP_SOURCE, basemapSource);
+            for (const layer of basemapLayers(localeRef.current)) instance.addLayer(layer, "coordinate-grid");
+            instance.setPaintProperty("space", "background-color", BASEMAP_BACKGROUND);
+            instance.setPaintProperty("land-fill", "fill-opacity", fadeOut(1));
+            instance.setPaintProperty("land-outline", "line-opacity", fadeOut(0.85));
+            instance.setPaintProperty("coordinate-grid", "line-opacity", fadeOut(0.22));
+            const compact = window.matchMedia("(max-width: 700px)").matches;
+            // The home globe's country fill would cover the detail; keep it faint (it is still the click target).
+            if (instance.getLayer("country-fill")) instance.setPaintProperty("country-fill", "fill-opacity", fadeOut(0.9, 0.08));
+            basemapAttribution = new lib.AttributionControl({ compact });
+            instance.addControl(basemapAttribution, "bottom-right");
+            // MapLibre opens a compact attribution until the first drag; on a phone it would cover the map buttons.
+            if (compact) instance.once("idle", () => instance?.getContainer().querySelector(".maplibregl-ctrl-attrib.maplibregl-compact")?.classList.remove("maplibregl-compact-show"));
+          };
+          instance.on("data", (event) => {
+            if (event.dataType === "source" && (event as { sourceId?: string }).sourceId === BASEMAP_SOURCE && (event as { tile?: unknown }).tile) { tilesLoaded = true; tileErrors = 0; }
+          });
+          instance.on("error", (event) => {
+            if (disposed) return;
+            // An "error" listener stops MapLibre's own console logging, so pass other errors on.
+            if ((event as { sourceId?: string }).sourceId !== BASEMAP_SOURCE) { console.error(event.error); return; }
+            if (gaveUp) return;
+            tileErrors++;
+            // Unreachable from the start (blocked, down, TileJSON failed) or failing repeatedly in a row.
+            if (!tilesLoaded || tileErrors >= 3) { gaveUp = true; restoreGlobe(); }
+          });
+          if (overview) {
+            // The home globe makes no tile requests until the user zooms towards a country.
+            const attachWhenClose = () => {
+              if (!instance || instance.getZoom() < BASEMAP_ATTACH_ZOOM) return;
+              instance.off("zoom", attachWhenClose);
+              attachBasemap();
+            };
+            instance.on("zoom", attachWhenClose);
+            attachWhenClose();
+          } else attachBasemap();
         }
         updateCoordinates();
         if (!isPicker) ready.current?.((targetCountry) => {
@@ -471,6 +536,11 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
     }
     map.current?.getCanvas().setAttribute("aria-label", t("행사 지도"));
   }, [locale, posterMap, t]);
+
+  // Place names follow the UI language without moving the map.
+  useEffect(() => {
+    for (const id of BASEMAP_LABEL_LAYERS) if (map.current?.getLayer(id)) map.current.setLayoutProperty(id, "text-field", labelField(locale));
+  }, [locale, posterMap]);
 
   useEffect(() => {
     const source = map.current?.getSource("events") as GeoJSONSource | undefined;

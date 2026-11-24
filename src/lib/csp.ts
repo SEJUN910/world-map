@@ -7,6 +7,8 @@
 // kept for its fallback worker path.
 
 const OSM_TILES = ["https://tile.openstreetmap.org", "https://*.tile.openstreetmap.org"];
+// Vector basemap: TileJSON, .pbf tiles and glyphs all come from this one origin (see src/lib/map-style.ts).
+const OPENFREEMAP = "https://tiles.openfreemap.org";
 // Public poster sources allowed by events.source_image_url (see 202611100003_taiwan_events.sql).
 const PUBLIC_POSTER_SOURCES = ["https://tong.visitkorea.or.kr", "https://*.gov.tw", "https://*.taiwan.net.tw"];
 const SUPABASE_FALLBACK = ["https://*.supabase.co", "https://*.supabase.in"];
@@ -36,7 +38,7 @@ export function buildCsp({ supabaseUrl, mapTileUrl }: CspEnv = {}): string {
   // map-config only accepts https tile URLs; ignore anything else here too.
   const tileOrigin = mapTileUrl?.trim().toLowerCase().startsWith("https://") ? originOf(mapTileUrl) : null;
   const imgSrc = unique(["'self'", "data:", "blob:", ...OSM_TILES, tileOrigin, ...supabaseSources, ...PUBLIC_POSTER_SOURCES]);
-  const connectSrc = unique(["'self'", ...supabaseSources, ...OSM_TILES, tileOrigin]);
+  const connectSrc = unique(["'self'", ...supabaseSources, ...OSM_TILES, OPENFREEMAP, tileOrigin]);
   return [
     "default-src 'self'",
     "script-src 'self' 'unsafe-eval' 'unsafe-inline'",

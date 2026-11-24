@@ -2361,3 +2361,8 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
 .event-map__coordinates { background: #fff; color: #444; box-shadow: 0 1px 4px #00000024; }
 .country-page--atlas .region-chips :is(button, a) { border-color: #d6d6d6; background: #fff; color: #222; }
 .country-page--atlas .region-chips :is(button, a).active { border-color: #1f5fd1; background: #1f5fd1; color: #fff; font-weight: 600; }
+
+/* Basemap attribution: bottom-right; on mobile it sits above the bottom sheet. */
+.event-map:not(.event-map--picker) .maplibregl-ctrl-attrib { color: #555; }
+.event-map:not(.event-map--picker) .maplibregl-ctrl-attrib a { color: #555; }
+.is-mobile-atlas .country-map .maplibregl-ctrl-bottom-right { bottom: calc(var(--mobile-sheet-height, 144px) + 8px); }
