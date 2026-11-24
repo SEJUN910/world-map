@@ -1,5 +1,13 @@
 # Work Log
 
+## 2026-11-24 - Korean culture data (한눈에보는문화정보)
+
+- Korea had 43 active events (TourAPI festivals only). User applied for data.go.kr 15138937; the "unregistered key" errors were ours: the stored key is already URL-encoded and was encoded twice.
+- Planned by Antigravity (`.omc/plans/korea-cultureinfo.md`); user widened it to performances ≤90 days. `scripts/import-cultureinfo.mjs` + `cultureinfo-lib.mjs` (tested), migration `202611240004` (kcisa_culture owner-check branch, applied after a rolled-back test with all rows), weekly `cultureinfo-sync.yml`, CSP `www.culture.go.kr`, modal source/license label and no empty description block.
+- Measured: 1,032 listed → 786 published (Seoul 390+, all 16 provinces under the TourAPI names). Korea now shows ~830 active events.
+- Review fixes before shipping: the TourAPI duplicate filter kept duplicates (`!skip()` is true) — fixed, 2 rows hidden; tag stripping after decoding deleted `<title>` parts of titles — XML decoded once, only real tags stripped, then entities; key encoded exactly once whatever form it is stored in; CDATA unwrapped; padded dates; refuse a listing that repeats items; short titles cannot match by containment; the `--sql` output also hides rows that left.
+- QA: Korea culture 11 PASS, split 79, France 27, basemap 19, country requests 34; unit tests 48.
+
 ## 2026-11-24 - Country requests
 
 - Instead of adding every country, visitors can request one: home select → “+ 다른 나라 요청하기…” → searchable dialog of ~246 unsupported ISO countries. Planned by Antigravity (`.omc/plans/country-requests.md`), approved; deviation: local/preview never write (shared production DB).

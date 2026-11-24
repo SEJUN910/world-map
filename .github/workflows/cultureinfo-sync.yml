@@ -1,0 +1,54 @@
+name: Culture Info Sync
+
+on:
+  schedule:
+    # Every Monday 02:00 KST (Sunday 17:00 UTC), an hour after the TourAPI sync
+    - cron: "0 17 * * 0"
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Write to database (omit for dry-run)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# A manual run and the weekly run must not write at the same time.
+concurrency:
+  group: cultureinfo-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - run: npm ci
+
+      # Uses the same data.go.kr key as the TourAPI sync. Scheduled runs always
+      # apply; manual runs apply only when the box is checked.
+      - name: Run culture info import (dry-run)
+        if: ${{ github.event_name == 'workflow_dispatch' && !inputs.apply }}
+        env:
+          TOUR_API_SERVICE_KEY: ${{ secrets.TOUR_API_SERVICE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+        run: node scripts/import-cultureinfo.mjs
+
+      - name: Run culture info import (apply)
+        if: ${{ github.event_name == 'schedule' || inputs.apply }}
+        env:
+          TOUR_API_SERVICE_KEY: ${{ secrets.TOUR_API_SERVICE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_IMPORT_SERVICE_KEY: ${{ secrets.SUPABASE_IMPORT_SERVICE_KEY }}
+          SUPABASE_IMPORT_PROJECT_REF: ${{ secrets.SUPABASE_IMPORT_PROJECT_REF }}
+        run: node scripts/import-cultureinfo.mjs --apply

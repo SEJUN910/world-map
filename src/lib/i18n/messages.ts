@@ -409,6 +409,8 @@ export const messages: [string, string, string][] = [
   ["대만 행사 둘러보기", "Browse events in Taiwan", "瀏覽台灣活動"],
   ["프랑스 행사 둘러보기", "Browse events in France", "瀏覽法國活動"],
   ["+ 다른 나라 요청하기…", "+ Request another country…", "+ 申請其他國家…"],
+  ["문화포털 한눈에보는문화정보", "Korea Culture Portal listings", "韓國文化入口網站資訊"],
+  ["· 이용허락범위 제한 없음", "· no usage restriction", "· 無使用限制"],
   ["다른 나라 요청하기", "Request another country", "申請其他國家"],
   ["보고 싶은 나라를 골라 주세요. 요청이 많은 나라부터 행사를 추가할게요.", "Pick a country you want to see. We add events for the most requested countries first.", "請選擇想看的國家，我們會優先加入申請較多的國家的活動。"],
   ["나라 검색", "Search countries", "搜尋國家"],

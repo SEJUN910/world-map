@@ -85,17 +85,19 @@ export function EventPosterDialog({ event, opener, onDismiss, initiallyOpen = fa
                 {(event.venue || event.address) && <div><dt>{t("장소")}</dt><dd>{event.venue}{event.address && <small>{event.address}</small>}</dd></div>}
                 {event.region && <div><dt>{t("지역")}</dt><dd>{event.region}</dd></div>}
               </dl>
-              <div className="poster-modal__description" lang={textLang}>
+              {/* Some imported listings carry no description; the official link covers them. */}
+              {(event.description.trim() || event.descriptionContent) && <div className="poster-modal__description" lang={textLang}>
                 <h3>{t("행사 소개")}</h3>
                 <RichTextView content={event.descriptionContent} text={event.description} />
-              </div>
+              </div>}
               {event.sourceName && event.sourceUrl && (
                 <p className="poster-modal__source">
-                  {t("이미지·행사 정보:")}{" "}<a href={event.sourceUrl} target="_blank" rel="noopener noreferrer">{isTourImage ? t("한국관광공사 TourAPI") : event.sourceName === "taiwan_tourism" ? "Taiwan Tourism Administration" : isParis ? "Que faire à Paris (Ville de Paris)" : t("공공데이터포털")} ↗</a>
+                  {t("이미지·행사 정보:")}{" "}<a href={event.sourceUrl} target="_blank" rel="noopener noreferrer">{isTourImage ? t("한국관광공사 TourAPI") : event.sourceName === "taiwan_tourism" ? "Taiwan Tourism Administration" : isParis ? "Que faire à Paris (Ville de Paris)" : event.sourceName === "kcisa_culture" ? t("문화포털 한눈에보는문화정보") : t("공공데이터포털")} ↗</a>
                   {event.sourceProvider && <> {t("· 제공:")} {event.sourceProvider}</>}
                   {event.sourceImageLicense === "OGDL-1.0" && <> · <a href="https://data.gov.tw/license" target="_blank" rel="noopener noreferrer">Open Government Data License 1.0</a></>}
                   {event.sourceImageLicense === "ODbL" && <> · <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">Open Database License (ODbL)</a></>}
-                  {event.sourceImageLicense && event.sourceImageLicense !== "OGDL-1.0" && event.sourceImageLicense !== "ODbL" && <> {t("· 공공누리")} {event.sourceImageLicense === "Type3" ? t("제3유형 (출처표시·변경금지)") : t("제1유형 (출처표시)")}</>}
+                  {event.sourceImageLicense === "NO_RESTRICTION" && <> {t("· 이용허락범위 제한 없음")}</>}
+                  {event.sourceImageLicense && !["OGDL-1.0", "ODbL", "NO_RESTRICTION"].includes(event.sourceImageLicense) && <> {t("· 공공누리")} {event.sourceImageLicense === "Type3" ? t("제3유형 (출처표시·변경금지)") : t("제1유형 (출처표시)")}</>}
                   {event.sourceReferenceDate && <> {t("· 기준일")} {event.sourceReferenceDate}</>}
                 </p>
               )}
