@@ -6,7 +6,7 @@ const compile = source => `data:text/javascript;base64,${Buffer.from(ts.transpil
 const file = name => readFile(new URL(`../src/lib/${name}.ts`, import.meta.url), "utf8");
 const countries = compile(await file("countries"));
 const events = compile((await file("events")).replace('"./countries"', JSON.stringify(countries)));
-const { normalizeDiscoveryFilters, discoveryDateRange, parseBounds, discoveryParams, applyDiscoveryFilters } = await import(compile((await file("discovery-filters")).replace('"./events"', JSON.stringify(events))));
+const { normalizeDiscoveryFilters, discoveryDateRange, parseBounds, discoveryParams, applyDiscoveryFilters } = await import(compile((await file("discovery-filters")).replace('"./event-categories"', JSON.stringify(compile(await file("event-categories")))).replace('"./events"', JSON.stringify(events))));
 const filter = when => normalizeDiscoveryFilters({ when });
 
 test("weekends include Sunday and cross year boundaries; month includes only remaining days", () => {
@@ -37,4 +37,15 @@ test("catalog and map filters use inclusive event overlap and exclude undated ev
     ["or","end_date.gte.2026-11-14,and(end_date.is.null,start_date.gte.2026-11-14)"],
     ["gte","longitude",120],["lte","longitude",122],["gte","latitude",22],["lte","latitude",25]
   ]);
+});
+
+test("category filter accepts only known categories, travels in URLs and filters the query", () => {
+  assert.equal(normalizeDiscoveryFilters({ category: "exhibition" }).category, "exhibition");
+  for (const value of [undefined, "", "music", "Exhibition", ["festival"], "__proto__"]) assert.equal(normalizeDiscoveryFilters({ category: value }).category, "", String(value));
+  assert.deepEqual(discoveryParams(normalizeDiscoveryFilters({ category: "performance" })), { category: "performance" });
+  assert.deepEqual(discoveryParams(normalizeDiscoveryFilters({})), {});
+  const calls = [];
+  const request = { lte: (...args) => (calls.push(["lte", ...args]), request), gte: (...args) => (calls.push(["gte", ...args]), request), or: (...args) => (calls.push(["or", ...args]), request), eq: (...args) => (calls.push(["eq", ...args]), request) };
+  applyDiscoveryFilters(request, normalizeDiscoveryFilters({ category: "festival" }), "kr");
+  assert.deepEqual(calls, [["eq", "category", "festival"]]);
 });

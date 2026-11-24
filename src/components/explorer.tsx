@@ -18,6 +18,7 @@ import { SiteTools } from "./site-tools";
 import { useMobileAtlas } from "./mobile-atlas-controls";
 import { CountrySwitch } from "./country-switch";
 import { SourceNotice } from "./source-notice";
+import { CategoryChips } from "./category-chips";
 const MobileEventSheet = dynamic(() => import("./mobile-event-sheet").then(module => module.MobileEventSheet), { ssr: false });
 
 export function Explorer({ country = "kr", events, mapPoints, total, regions, initialRegion = "", initialQuery = "", page = 1, initialEvent = null, filters = emptyDiscoveryFilters, initialView = "map", sort = "latest" }: {
@@ -67,7 +68,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
     setSelectedIds(null); setSelectedId(""); setViewportDirty(false); setFocus(null);
     listRef.current?.scrollTo({ top: 0 });
     setFrom(filters.from || todayInCountry(country)); setTo(filters.to || todayInCountry(country));
-  }, [country, initialRegion, initialQuery, filters.when, filters.from, filters.to, filters.bounds, page]);
+  }, [country, initialRegion, initialQuery, filters.when, filters.from, filters.to, filters.bounds, filters.category, page]);
   const changeView = useCallback((next: ExplorerView) => {
     if (viewRef.current === next) return;
     viewRef.current = next;
@@ -170,6 +171,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
         <div className="split-panel__top">
           <MinimalMasthead back actions={<CountrySwitch country={country} heading={initialEvent ? "p" : "h1"} />} />
           {searchForm}
+          <CategoryChips value={filters.category} disabled={pending} onChange={category => apply(initialRegion, initialQuery, { ...filters, category })} />
           <div className="split-panel__filters">{dateFilter}{sortSelect}</div>
         </div>
         <div className="split-panel__summary">

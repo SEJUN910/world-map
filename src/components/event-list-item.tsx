@@ -5,6 +5,7 @@ import { eventBadge, eventDate, eventPath, todayInCountry, type FestivalEvent } 
 import { useTranslations } from "./language-provider";
 import { EventPosterDialog } from "./event-poster-dialog";
 import { SaveEventButton } from "./saved-events";
+import { CATEGORY_LABELS } from "@/lib/event-categories";
 
 // One row of the list view (mobile sheet and desktop list): thumbnail, progress
 // badge, title, dates and place, with save and "show on map" actions.
@@ -38,6 +39,7 @@ export function EventListItem({ event, selected = false, highlighted = false, on
       <span className="event-row__text">
         <span className="event-row__meta">
           {badge && <span className={`event-badge event-badge--${badge.tone}`} suppressHydrationWarning>{t(badge.label, badge.values)}</span>}
+          {event.category && event.category !== "other" && <span className="event-row__category">{t(CATEGORY_LABELS[event.category])}</span>}
           {event.region && <span>{event.region}</span>}
         </span>
         <strong className="event-row__title" lang={event.sourceName === "paris_qfap" ? "fr" : undefined}>{event.title}</strong>

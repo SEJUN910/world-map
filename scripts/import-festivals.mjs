@@ -52,6 +52,7 @@ function normalize(raw, syncedAt) {
     source_provider: provider,
     source_reference_date: validDate(reference) ? reference : null,
     source_synced_at: syncedAt,
+    category: "festival", tags: ["festival"],
     title,
     slug: slug(title),
     description: clean(raw.FSTVL_CO).slice(0, 3000),

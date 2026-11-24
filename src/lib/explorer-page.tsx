@@ -9,7 +9,7 @@ import { todayInCountry } from "./events";
 import { getLocale, getTranslations } from "./i18n/server";
 import { breadcrumbData, collectionStructuredData, eventDescription, eventStructuredData, pageMetadata } from "./seo";
 import { normalizeDiscoveryFilters, discoveryParams, normalizeSort, normalizeView, type EventSort } from "./discovery-filters";
-export type ExplorerParams = { q?: string; region?: string; page?: string; event?: string; lang?: string; when?: string; from?: string; to?: string; bounds?: string; view?: string; sort?: string };
+export type ExplorerParams = { q?: string; region?: string; page?: string; event?: string; lang?: string; when?: string; from?: string; to?: string; bounds?: string; category?: string; view?: string; sort?: string };
 function normalized(params: ExplorerParams) {
   const text = (value: unknown) => typeof value === "string" ? value.slice(0, 100) : "";
   return { region: text(params.region), query: text(params.q).trim(), page: Math.max(1, Math.min(10000, Math.floor(Number(params.page) || 1))), eventId: text(params.event), filters: normalizeDiscoveryFilters(params), view: normalizeView(params.view), sort: normalizeSort(params.sort) };
@@ -40,7 +40,7 @@ export async function explorerMetadata(country: CountryCode, params: ExplorerPar
   const ctx = await context(country, params, regionPath);
   const event = ctx.data.initialEvent;
   const expired = !!event?.endDate && event.endDate < todayInCountry(country);
-  return pageMetadata({ title: ctx.title, description: ctx.description, path: ctx.path, locale: ctx.locale, values: ctx.values, noindex: event ? expired : ctx.view === "list" || ctx.sort !== "latest" || !!ctx.query || ctx.filters.when !== "all" || !!ctx.filters.bounds || !ctx.data.result.total || (!!params.region && !ctx.region), image: event?.poster ? `/images/events/${event.id}` : "/og" });
+  return pageMetadata({ title: ctx.title, description: ctx.description, path: ctx.path, locale: ctx.locale, values: ctx.values, noindex: event ? expired : ctx.view === "list" || ctx.sort !== "latest" || !!ctx.query || ctx.filters.when !== "all" || !!ctx.filters.bounds || !!ctx.filters.category || !ctx.data.result.total || (!!params.region && !ctx.region), image: event?.poster ? `/images/events/${event.id}` : "/og" });
 }
 export async function ExplorerPage({ country, params, regionPath }: { country: CountryCode; params: ExplorerParams; regionPath?: string }) {
   const ctx = await context(country, params, regionPath);

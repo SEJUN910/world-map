@@ -4,6 +4,7 @@ import { useAccount } from "./account-provider";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { CATEGORY_LABELS, EVENT_CATEGORIES, isEventCategory, type EventCategory } from "@/lib/event-categories";
 import { countries, countryByPath, isCountryCode, pointInCountry, type CountryCode } from "@/lib/countries";
 import { EventMap } from "./event-map";
 import dynamic from "next/dynamic";
@@ -26,6 +27,7 @@ type Fields = {
   endDate: string;
   dateUnknown: boolean;
   officialUrl: string;
+  category: EventCategory;
 };
 const empty: Fields = {
   title: "",
@@ -37,6 +39,7 @@ const empty: Fields = {
   endDate: "",
   dateUnknown: false,
   officialUrl: "",
+  category: "other",
 };
 
 function RegistrationSteps({ step, onChange }: { step: number; onChange: (step: number) => void }) {
@@ -102,6 +105,7 @@ export function EventForm({
         endDate: draft.endDate || "",
         dateUnknown: !draft.startDate,
         officialUrl: draft.officialUrl,
+        category: isEventCategory(draft.category) ? draft.category : "other",
       });
       setDescriptionContent(normalizeRichText(draft.descriptionContent));
       setCountry(draft.countryCode || "kr");
@@ -243,6 +247,7 @@ export function EventForm({
       startDate: fields.dateUnknown ? null : fields.startDate,
       endDate: fields.dateUnknown ? null : fields.endDate || null,
       officialUrl: fields.officialUrl.trim(),
+      category: fields.category,
       updatedAt: new Date().toISOString(),
     };
     setSaving(true);
@@ -263,6 +268,7 @@ export function EventForm({
         "startDate",
         "endDate",
         "officialUrl",
+        "category",
       ] as const)
         form.set(key, String(draft[key] ?? ""));
       form.set("publicationStatus", publicationStatus);
@@ -425,6 +431,12 @@ export function EventForm({
                     required
                     placeholder={t("예: 성수 골목 주말마켓")}
                   />
+                </label>
+                <label>
+                  {t("분야")}
+                  <select value={fields.category} onChange={(event) => { if (isEventCategory(event.target.value)) update("category", event.target.value); }}>
+                    {EVENT_CATEGORIES.map((category) => <option key={category} value={category}>{t(CATEGORY_LABELS[category])}</option>)}
+                  </select>
                 </label>
                 <fieldset>
                   <legend>

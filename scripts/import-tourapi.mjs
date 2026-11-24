@@ -113,6 +113,7 @@ async function buildEvent(item) {
     source_name: sourceName, source_id: id, source_url: sourceUrl,
     source_provider: "한국관광공사", source_reference_date: date(clean(common.modifiedtime) || clean(item.modifiedtime)),
     source_synced_at: syncedAt, source_image_url: image, source_image_license: license,
+    category: "festival", tags: ["festival"],
     title, slug: slug(title), description: plainText(common.overview).slice(0, 3000),
     region, region_code: slug(region), venue, address, latitude, longitude,
     start_date: startDate, end_date: endDate, official_url: website(extra.eventhomepage) || website(common.homepage),

@@ -63,6 +63,8 @@ export type Database = {
           source_image_url: string | null;
           source_image_license: string | null;
           source_image_credit: string | null;
+          category: string;
+          tags: string[];
           source_url: string | null;
           source_provider: string | null;
           source_reference_date: string | null;
@@ -95,6 +97,8 @@ export type Database = {
           source_image_url?: string | null;
           source_image_license?: string | null;
           source_image_credit?: string | null;
+          category?: string;
+          tags?: string[];
           source_url?: string | null;
           source_provider?: string | null;
           source_reference_date?: string | null;
@@ -127,6 +131,8 @@ export type Database = {
           source_image_url?: string | null;
           source_image_license?: string | null;
           source_image_credit?: string | null;
+          category?: string;
+          tags?: string[];
           source_url?: string | null;
           source_provider?: string | null;
           source_reference_date?: string | null;

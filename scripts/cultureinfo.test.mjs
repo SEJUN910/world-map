@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { decodeEntities, normalizeRegion, sameEvent, selectRule, xmlText } from "./cultureinfo-lib.mjs";
+import { classify, decodeEntities, normalizeRegion, sameEvent, selectRule, xmlText } from "./cultureinfo-lib.mjs";
 
 test("double-encoded titles decode once fully; bad code points are dropped", () => {
   assert.equal(decodeEntities("[대학로] 연극 &amp;lt;오백에 삼십&amp;gt;"), "[대학로] 연극 <오백에 삼십>");
@@ -45,4 +45,12 @@ test("a very short title never matches by containment alone", () => {
   const festival = { title: "서울 빛초롱 축제", startDate: "2026-12-12", endDate: "2027-01-04", latitude: 37.569, longitude: 126.978 };
   assert.equal(sameEvent({ ...festival, title: "축제" }, festival), false);
   assert.equal(sameEvent({ ...festival, title: "2026 서울빛초롱축제" }, festival), true);
+});
+
+test("realms map to one category and a tag", () => {
+  assert.deepEqual(classify("행사/축제"), { category: "festival", tags: ["festival"] });
+  assert.deepEqual(classify("전시"), { category: "exhibition", tags: ["exhibition"] });
+  assert.deepEqual(classify("연극"), { category: "performance", tags: ["theater"] });
+  assert.deepEqual(classify("국악"), { category: "performance", tags: ["gugak"] });
+  assert.equal(classify("교육/체험"), null);
 });

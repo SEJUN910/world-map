@@ -9,6 +9,7 @@ import { getSupabaseConfig } from "./supabase/config";
 import type { Database } from "./supabase/database.types";
 import type { FestivalEvent } from "./events";
 import { isEventId, todayInCountry } from "./events";
+import { isEventCategory } from "./event-categories";
 import { cache } from "react";
 import { normalizeRichText } from "./rich-text";
 import { applyDiscoveryFilters, emptyDiscoveryFilters, type DiscoveryFilters, type EventSort } from "./discovery-filters";
@@ -89,6 +90,8 @@ async function mapEvents(
     sourceReferenceDate: row.source_reference_date,
     sourceImageLicense: row.source_image_license,
     sourceImageCredit: row.source_image_credit ?? null,
+    category: isEventCategory(row.category) ? row.category : "other",
+    tags: row.tags ?? [],
   }));
 }
 export async function listEvents({

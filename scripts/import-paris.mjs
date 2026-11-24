@@ -34,12 +34,23 @@ const MIN_KEPT_SHARE = 0.7;
 // Selection: what a visitor would plan a trip around, not one-evening shows or workshops.
 const EXCLUDED = ["Atelier", "Conférence", "Santé", "Solidarité", "Prévention", "Handicap", "Senior"];
 const RULES = [
-  { tags: ["Festival"], minDays: 0, maxDays: 180 },
-  { tags: ["Expo", "Art contemporain", "Photo", "Peinture", "Street-art", "BD"], minDays: 0, maxDays: 120 },
-  { tags: ["Gourmand", "Salon", "Brocante"], minDays: 0, maxDays: 30 },
+  { tags: ["Festival"], minDays: 0, maxDays: 180, category: "festival" },
+  { tags: ["Expo", "Art contemporain", "Photo", "Peinture", "Street-art", "BD"], minDays: 0, maxDays: 120, category: "exhibition" },
+  { tags: ["Gourmand", "Salon", "Brocante"], minDays: 0, maxDays: 30, category: "other" },
   // Plain concerts and plays (hundreds of single dates and long runs) are left out;
   // shows that are part of a festival come in through the festival rule.
 ];
+// Listing tags → the shared tag keys stored with each event (unknown tags are dropped).
+const TAG_KEYS = { Festival: "festival", Expo: "exhibition", Concert: "concert", "Théâtre": "theater", "Spectacle musical": "musical", Danse: "dance", Cirque: "circus", Humour: "comedy", Ecrans: "film", Nuit: "night", Enfants: "kids", Gourmand: "food", Salon: "fair", Brocante: "flea-market", "Art contemporain": "contemporary-art", Photo: "photo", Peinture: "painting", "Street-art": "street-art", BD: "comics", "Littérature": "literature", Histoire: "history", Nature: "nature", "Balade urbaine": "walk", Sport: "sport", Sciences: "science" };
+const tagKeys = (record) => [...new Set(tagsOf(record).map((tag) => TAG_KEYS[tag]).filter(Boolean))].slice(0, 12);
+/** The first matching rule (festival, then exhibition, then fair), or null. */
+function ruleFor(record) {
+  const tags = tagsOf(record);
+  const start = listingDate(record.date_start), end = listingDate(record.date_end);
+  if (!start || !end) return null;
+  const length = days(start, end);
+  return RULES.find((rule) => tags.some((tag) => rule.tags.includes(tag)) && length >= rule.minDays && length <= rule.maxDays) ?? null;
+}
 
 const clean = (value) => String(value ?? "").replace(/\s+/g, " ").trim();
 const slug = (value) => clean(value).normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0, 80) || "event";
@@ -91,10 +102,8 @@ function selected(record) {
   const tags = tagsOf(record);
   if (!tags.length) return skip("no category");
   if (tags.some((tag) => EXCLUDED.includes(tag))) return skip("workshop/talk/service category");
-  const start = listingDate(record.date_start), end = listingDate(record.date_end);
-  if (!start || !end) return skip("missing dates");
-  const length = days(start, end);
-  if (!RULES.some((rule) => tags.some((tag) => rule.tags.includes(tag)) && length >= rule.minDays && length <= rule.maxDays)) return skip("not a festival/exhibition/fair/run, or permanent");
+  if (!listingDate(record.date_start) || !listingDate(record.date_end)) return skip("missing dates");
+  if (!ruleFor(record)) return skip("not a festival/exhibition/fair/run, or permanent");
   return true;
 }
 function toRow(record) {
@@ -123,6 +132,7 @@ function toRow(record) {
     source_name: sourceName, source_id: id, source_url: sourceUrl, source_provider: "Ville de Paris",
     source_reference_date: listingDate(record.updated_at), source_synced_at: syncedAt,
     source_image_url: image, source_image_license: "ODbL", source_image_credit: credit,
+    category: ruleFor(record).category, tags: tagKeys(record),
     title, slug: slug(title), description, region: place.region, region_code: place.code, venue, address,
     latitude, longitude, start_date: startDate, end_date: endDate,
     official_url: website(record.url) || website(record.access_link), publication_status: "published",
@@ -140,7 +150,7 @@ async function fetchRecords() {
 }
 
 function sqlFor(rows) {
-  const quote = (value) => value === null || value === undefined ? "null" : typeof value === "number" ? String(value) : `'${String(value).replaceAll("'", "''")}'`;
+  const quote = (value) => value === null || value === undefined ? "null" : Array.isArray(value) ? (value.length ? `array[${value.map(quote).join(", ")}]::text[]` : "'{}'::text[]") : typeof value === "number" ? String(value) : `'${String(value).replaceAll("'", "''")}'`;
   const columns = Object.keys(rows[0]);
   const updates = columns.filter((column) => !["id", "author_id", "source_name", "source_id", "publication_status"].includes(column)).map((column) => `${column} = excluded.${column}`);
   return `insert into public.events (${columns.join(", ")}) values\n${rows.map((row) => `(${columns.map((column) => quote(row[column])).join(", ")})`).join(",\n")}\non conflict (source_name, source_id) where source_name is not null do update set ${updates.join(", ")};\n`;

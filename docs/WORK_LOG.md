@@ -1,5 +1,13 @@
 # Work Log
 
+## 2026-11-24 - Category filter (category + tags)
+
+- Korea grew to ~830 events; user asked for a category filter. Planned by Antigravity (`.omc/plans/category-filter.md`); user chose to store category + finer tags. Deviations: backfill by re-running the imports with `--sql` (GitHub secrets not set), mobile chips inside the sheet header.
+- Migrations `202611240005` (category, tags, index, festival backfill) and `202611240006` (per-element tag check via `valid_event_tags`), both tested in rolled-back transactions, then applied. Paris and culture rows re-upserted with categories: culture 574 performance / 212 exhibition / 1 festival; Paris 236 exhibition / 145 festival / 25 other; TourAPI 111 and Taiwan 6 festival.
+- App: `?category=` in DiscoveryFilters (list + map, noindex), CategoryChips on desktop and mobile, row label, event form category select (validation default other; stale pages keep the saved category). Import scripts write category/tags; SQL generators quote arrays.
+- Review fixes: festival import writes category, per-element tag check (no NULL/comma/double hyphen), mobile reset keeps the chip category, stale clients cannot reset category.
+- QA: category 16 PASS (desktop/mobile filter, region link keeps it, clear, empty state, invalid fallback, noindex), split 79, France 27, Korea culture 11, country requests 34; unit tests 50.
+
 ## 2026-11-24 - Korean culture data (한눈에보는문화정보)
 
 - Korea had 43 active events (TourAPI festivals only). User applied for data.go.kr 15138937; the "unregistered key" errors were ours: the stored key is already URL-encoded and was encoded twice.

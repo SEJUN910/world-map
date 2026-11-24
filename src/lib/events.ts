@@ -1,5 +1,6 @@
 import type { RichDocument } from "./rich-text";
 import { countries, type CountryCode } from "./countries";
+import type { EventCategory } from "./event-categories";
 
 export type FestivalEvent = {
   countryCode?: CountryCode;
@@ -25,6 +26,8 @@ export type FestivalEvent = {
   sourceReferenceDate?: string | null;
   sourceImageLicense?: string | null;
   sourceImageCredit?: string | null;
+  category?: EventCategory;
+  tags?: string[];
   eventStatus?: string;
 };
 export function todayInCountry(country: CountryCode = "kr") {

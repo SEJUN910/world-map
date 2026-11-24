@@ -17,7 +17,7 @@ const source = await readFile(
   "utf8",
 );
 const { outputText } = ts.transpileModule(
-  source.replace('"./countries"', JSON.stringify(countryModuleUrl)).replace('"./rich-text"', JSON.stringify(richModuleUrl)).replace(
+  source.replace('"./countries"', JSON.stringify(countryModuleUrl)).replace('"./event-categories"', JSON.stringify(`data:text/javascript;base64,${Buffer.from(ts.transpileModule(await readFile(new URL("../src/lib/event-categories.ts", import.meta.url), "utf8"), { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText).toString("base64")}`)).replace('"./rich-text"', JSON.stringify(richModuleUrl)).replace(
     '"zod"',
     JSON.stringify(pathToFileURL(require.resolve("zod")).href),
   ),
@@ -147,6 +147,9 @@ test("Taiwan location validation rejects country-coordinate mismatches", () => {
   assert.equal(eventInputSchema.safeParse({ ...valid, countryCode: "fr", latitude: 48.8566, longitude: 2.3522 }).success, true);
   assert.equal(eventInputSchema.safeParse({ ...valid, countryCode: "fr" }).success, false);
   assert.equal(eventInputSchema.safeParse({ ...valid, countryCode: "jp" }).success, false);
+  assert.equal(eventInputSchema.parse(valid).category, "other");
+  assert.equal(eventInputSchema.parse({ ...valid, category: "exhibition" }).category, "exhibition");
+  assert.equal(eventInputSchema.safeParse({ ...valid, category: "music" }).success, false);
   assert.equal(eventInputSchema.safeParse({ ...valid, countryCode: "kr", latitude: 25.0379, longitude: 121.5631 }).success, false);
   assert.equal(eventInputSchema.safeParse({ ...valid, countryCode: "jp" }).success, false);
 });

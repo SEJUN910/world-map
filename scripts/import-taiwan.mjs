@@ -17,14 +17,14 @@ for (const event of dataset.events) {
   if (!response.ok || !type.startsWith("image/")) throw Error(`Image unavailable: ${event.sourceId}`);
   const hash = createHash("sha256").update(`taiwan_tourism:${event.sourceId}`).digest("hex");
   const id = `${hash.slice(0,8)}-${hash.slice(8,12)}-4${hash.slice(13,16)}-a${hash.slice(17,20)}-${hash.slice(20,32)}`;
-  rows.push({ id, author_id: null, country_code: "tw", timezone: "Asia/Taipei", slug: event.title.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0,80), title: event.title, description: event.description, region: event.region, region_code: event.regionCode, venue: event.venue, address: event.address, latitude: event.latitude, longitude: event.longitude, start_date: event.startDate, end_date: event.endDate, official_url: event.officialUrl, publication_status: "published", event_status: "scheduled", source_name: "taiwan_tourism", source_id: event.sourceId, source_url: dataset.source, source_provider: "Taiwan Tourism Administration", source_reference_date: dataset.referenceDate, source_synced_at: new Date().toISOString(), source_image_url: event.poster, source_image_license: "OGDL-1.0" });
+  rows.push({ id, author_id: null, country_code: "tw", timezone: "Asia/Taipei", category: "festival", tags: ["festival"], slug: event.title.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0,80), title: event.title, description: event.description, region: event.region, region_code: event.regionCode, venue: event.venue, address: event.address, latitude: event.latitude, longitude: event.longitude, start_date: event.startDate, end_date: event.endDate, official_url: event.officialUrl, publication_status: "published", event_status: "scheduled", source_name: "taiwan_tourism", source_id: event.sourceId, source_url: dataset.source, source_provider: "Taiwan Tourism Administration", source_reference_date: dataset.referenceDate, source_synced_at: new Date().toISOString(), source_image_url: event.poster, source_image_license: "OGDL-1.0" });
 }
 if (!rows.length) throw Error("No current Taiwan events; refresh the curated dataset first");
 const option = process.argv.indexOf("--sql");
 if (option >= 0) {
   const filename = process.argv[option + 1];
   if (!filename) throw Error("--sql requires an output filename");
-  const quote = (value) => value === null ? "null" : typeof value === "number" ? String(value) : `'${String(value).replaceAll("'", "''")}'`;
+  const quote = (value) => value === null || value === undefined ? "null" : Array.isArray(value) ? (value.length ? `array[${value.map(quote).join(", ")}]::text[]` : "'{}'::text[]") : typeof value === "number" ? String(value) : `'${String(value).replaceAll("'", "''")}'`;
   const columns = Object.keys(rows[0]);
   const sql = `insert into public.events (${columns.join(",")}) values\n${rows.map((row) => `(${columns.map((key) => quote(row[key])).join(",")})`).join(",\n")}\non conflict (source_name,source_id) where source_name is not null do update set ${columns.filter((key) => !["id","author_id","source_name","source_id","publication_status"].includes(key)).map((key) => `${key}=excluded.${key}`).join(",")};\n`;
   await writeFile(filename, sql, "utf8");

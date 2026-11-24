@@ -7,7 +7,7 @@
 import { createHash } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { createClient } from "@supabase/supabase-js";
-import { normalizeRegion, sameEvent, selectRule, xmlText } from "./cultureinfo-lib.mjs";
+import { classify, normalizeRegion, sameEvent, selectRule, xmlText } from "./cultureinfo-lib.mjs";
 
 const apply = process.argv.includes("--apply");
 const sqlIndex = process.argv.indexOf("--sql");
@@ -124,6 +124,7 @@ async function toRow(item) {
     id: uuidFor(item.seq), author_id: null, country_code: "kr", timezone: "Asia/Seoul",
     source_name: sourceName, source_id: item.seq, source_url: sourceUrl, source_provider: "한국문화정보원",
     source_reference_date: null, source_synced_at: syncedAt, source_image_url: image, source_image_license: "NO_RESTRICTION", source_image_credit: null,
+    ...classify(item.realm),
     title, slug: slug(title), description, region, region_code: slug(region), venue, address,
     latitude: item.latitude, longitude: item.longitude, start_date: item.startDate, end_date: item.endDate,
     official_url: website(field(detail, "url")) || website(field(detail, "placeUrl")), publication_status: "published",
@@ -145,7 +146,7 @@ async function activeTourapiEvents() {
 }
 
 function sqlFor(rows, keep) {
-  const quote = (value) => value === null || value === undefined ? "null" : typeof value === "number" ? String(value) : `'${String(value).replaceAll("'", "''")}'`;
+  const quote = (value) => value === null || value === undefined ? "null" : Array.isArray(value) ? (value.length ? `array[${value.map(quote).join(", ")}]::text[]` : "'{}'::text[]") : typeof value === "number" ? String(value) : `'${String(value).replaceAll("'", "''")}'`;
   const columns = Object.keys(rows[0]);
   const updates = columns.filter((column) => !["id", "author_id", "source_name", "source_id", "publication_status"].includes(column)).map((column) => `${column} = excluded.${column}`);
   // Assumes standard_conforming_strings = on (the Postgres and Supabase default).

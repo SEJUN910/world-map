@@ -2392,3 +2392,14 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
 .country-request__actions button { min-height: 44px; padding: 0 18px; border: 1px solid #d6d6d6; border-radius: 8px; background: #fff; color: #222; font: inherit; font-size: 14px; cursor: pointer; }
 .country-request__actions button[type="submit"] { border-color: #1f5fd1; background: #1f5fd1; color: #fff; font-weight: 600; }
 .country-request__actions button:disabled { opacity: .5; cursor: default; }
+
+/* Category filter chips (desktop panel and mobile sheet). */
+.category-chips { display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.category-chips::-webkit-scrollbar { display: none; }
+.category-chips button { flex: 0 0 auto; height: 32px; padding: 0 14px; border: 1px solid #d6d6d6; border-radius: 16px; background: #fff; color: #333; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.category-chips button:hover:not(:disabled) { border-color: #9a9a9a; }
+.category-chips button[aria-pressed="true"] { border-color: #222; background: #222; color: #fff; }
+.category-chips button:disabled { opacity: .6; cursor: wait; }
+.category-chips button:focus-visible { outline: 2px solid #1f5fd1; outline-offset: 1px; }
+.event-sheet__fixed .category-chips { margin-top: 8px; }
+.event-row__category { flex: 0 0 auto; color: #222; font-weight: 600; }

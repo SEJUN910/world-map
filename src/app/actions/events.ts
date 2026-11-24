@@ -28,6 +28,7 @@ export async function saveEventAction(
   const parsed = eventInputSchema.safeParse({
     id: form.get("id"),
     countryCode: form.get("countryCode") || "kr",
+    category: form.get("category") || "other",
     title: form.get("title"),
     description: form.get("description"),
     descriptionContent,
@@ -73,6 +74,8 @@ export async function saveEventAction(
   const row = {
     country_code: value.countryCode,
     timezone: countries[value.countryCode].timezone,
+    // A page loaded before categories existed sends none; keep the saved one then.
+    ...(form.has("category") || !existing ? { category: value.category } : {}),
     title: value.title,
     slug: makeSlug(value.title),
     description: value.description,

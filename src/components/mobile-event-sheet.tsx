@@ -11,6 +11,7 @@ import { SiteTools } from "./site-tools";
 import { EventListItem } from "./event-list-item";
 import { TrafficCounter } from "./traffic-counter";
 import { SourceNotice } from "./source-notice";
+import { CategoryChips } from "./category-chips";
 
 type Props = {
   country: CountryCode; events: FestivalEvent[]; total: number; page: number;
@@ -146,6 +147,7 @@ export function MobileEventSheet(props: Props) {
               {!!activeCount && <small>{activeCount}</small>}
             </button>
           </div>
+          <CategoryChips value={filters.category} disabled={pending} onChange={category => onApply(region, query, { ...filters, category })} />
         </div>
         <Sheet.Content id="event-sheet-body" disableDrag disableScroll={snap === 1} inert={snap === 1} style={{ opacity: "var(--sheet-body-opacity, 0)" }} scrollRef={scroll} scrollClassName="event-sheet__scroll" scrollStyle={{ padding: "0 16px", paddingBottom: "calc(max(24px, env(safe-area-inset-bottom), var(--keyboard-inset-height, 0px)) + 64px)" }} aria-busy={pending || loading}>
           {showFilters ? <div className="event-sheet__settings">
@@ -158,7 +160,7 @@ export function MobileEventSheet(props: Props) {
               <label>{t("검색")}<input type="search" placeholder={t("행사, 지역, 장소 검색")} value={text} maxLength={100} onChange={event => setText(event.target.value)} /></label>
               {custom && <div className="event-sheet__dates"><label>{t("시작일")}<input type="date" value={from} onChange={event => setFrom(event.target.value)} required /></label><label>{t("종료일")}<input type="date" value={to} min={from} onChange={event => setTo(event.target.value)} required /></label></div>}
               {formError && <p role="alert">{formError}</p>}
-              <div className="event-sheet__apply"><button type="button" onClick={() => { setShowFilters(false); setText(""); setCustom(false); onApply("", "", { when: "all", from: "", to: "", bounds: "" }); }}>{t("초기화")}</button><button type="submit" disabled={pending}>{t("적용")}</button></div>
+              <div className="event-sheet__apply"><button type="button" onClick={() => { setShowFilters(false); setText(""); setCustom(false); onApply("", "", { when: "all", from: "", to: "", bounds: "", category: filters.category }); }}>{t("초기화")}</button><button type="submit" disabled={pending}>{t("적용")}</button></div>
             </form>
             <SiteTools /><TrafficCounter inline />
           </div> : <>

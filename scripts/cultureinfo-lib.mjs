@@ -57,11 +57,18 @@ export function normalizeRegion(name) {
 
 const day = 86_400_000;
 const RULES = [
-  { realms: ["행사/축제"], maxDays: 180 },
-  { realms: ["전시"], maxDays: 180 },
+  { realms: ["행사/축제"], maxDays: 180, category: "festival" },
+  { realms: ["전시"], maxDays: 180, category: "exhibition" },
   // Performances only as dated runs: open runs and season-long shows are left out.
-  { realms: ["음악/콘서트", "연극", "뮤지컬/오페라", "무용/발레", "국악"], maxDays: 90 },
+  { realms: ["음악/콘서트", "연극", "뮤지컬/오페라", "무용/발레", "국악"], maxDays: 90, category: "performance" },
 ];
+// Fine-grained tag per realm (keys shared with the Paris import).
+const REALM_TAGS = { "행사/축제": "festival", 전시: "exhibition", "음악/콘서트": "concert", 연극: "theater", "뮤지컬/오페라": "musical", "무용/발레": "dance", 국악: "gugak" };
+/** Category and tags for a realm, or null when the realm is not imported. */
+export function classify(realm) {
+  const rule = RULES.find((candidate) => candidate.realms.includes(realm));
+  return rule ? { category: rule.category, tags: [REALM_TAGS[realm]] } : null;
+}
 /** The selection rule an event falls under, or null (education, kids, other, or too long a run). */
 export function selectRule(realm, startDate, endDate) {
   const length = (Date.parse(endDate) - Date.parse(startDate)) / day;
