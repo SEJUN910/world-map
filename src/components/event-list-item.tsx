@@ -8,9 +8,11 @@ import { SaveEventButton } from "./saved-events";
 
 // One row of the list view (mobile sheet and desktop list): thumbnail, progress
 // badge, title, dates and place, with save and "show on map" actions.
-export function EventListItem({ event, selected = false, onOpen, onShowOnMap }: {
+export function EventListItem({ event, selected = false, highlighted = false, onHover, onOpen, onShowOnMap }: {
   event: FestivalEvent;
   selected?: boolean;
+  highlighted?: boolean;
+  onHover?: (id: string | null) => void;
   onOpen?: (event: FestivalEvent) => void;
   onShowOnMap?: (event: FestivalEvent) => void;
 }) {
@@ -20,7 +22,8 @@ export function EventListItem({ event, selected = false, onOpen, onShowOnMap }: 
   const badge = eventBadge(event, todayInCountry(event.countryCode || "kr"));
   const place = [event.venue, event.address].filter(Boolean).join(" · ");
   const showOnMap = onShowOnMap && ((target: FestivalEvent) => { setOpen(false); onShowOnMap(target); });
-  return <article className={`event-row${selected ? " is-selected" : ""}`} data-event-id={event.id}>
+  return <article className={`event-row${selected ? " is-selected" : ""}${highlighted ? " is-highlighted" : ""}`} data-event-id={event.id}
+    onMouseEnter={onHover && (() => onHover(event.id))} onMouseLeave={onHover && (() => onHover(null))}>
     <Link ref={link} prefetch={false} href={eventPath(event)} className="event-row__body" onClick={(click) => {
       if (click.button !== 0 || click.metaKey || click.ctrlKey || click.shiftKey || click.altKey) return;
       click.preventDefault();

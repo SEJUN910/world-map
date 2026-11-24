@@ -1,5 +1,15 @@
 # Work Log
 
+## 2026-11-24 - Desktop split: list left, map right
+
+- Planned by Antigravity (`.omc/plans/desktop-split.md`), approved as-is.
+- Desktop (>700px) explorer is now a left list panel (`clamp(340px, 30vw, 400px)`, EventListItem rows, search/date/sort/regions/total, pagination) beside the map. The panel collapses via a toggle on its border; MapLibre's ResizeObserver resizes the map.
+- Removed the desktop map|list toggle and the map-less desktop list page; `?view=list` still opens (same split) and keeps its mobile meaning. SiteTools no longer carries the poster-panel toggle.
+- PC now has "이 지역에서 검색" after a user drag/zoom (`?bounds=`), cleared with the summary chip. Row hover ↔ map poster highlight both ways.
+- Mobile path unchanged (bottom sheet, floating 목록보기). URL/SEO rules unchanged.
+- Review fixes: desktop and mobile share one tree shape so the map is not remounted when the viewport check flips to mobile after hydration; on a phone the server-rendered split shows only the map; `fitToPoints` no longer depends on `bounds`, so a region-page bounds search keeps the user's viewport; desktop links no longer carry `view=list`; removed CSS for the old floating poster panel.
+- QA: headless Chrome at 1280/900/390 — layout, independent list scroll, collapse + map resize, search-area only after a user drag, bounds round-trip, `?view=list&sort=ending`, /taiwan, region page, mobile list switch, mobile SSR (no JS) map-only, mobile map created once, region bounds search keeps viewport — 75 PASS.
+
 ## 2026-11-23 - List view (map ↔ list)
 
 - Planned by Antigravity (`.omc/plans/list-view.md`), phase 1 only. The optional sort indexes were skipped (117 published events), so there is no DB change.
