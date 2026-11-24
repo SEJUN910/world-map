@@ -2371,3 +2371,24 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
 .poster-modal__credit { margin: 6px 0 0; color: #666; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
 .source-notice { margin: 18px 16px 0; color: #666; font-size: 11px; line-height: 1.5; }
 .source-notice a { color: #444; text-decoration: underline; }
+
+/* Country request dialog (home globe select → "+ 다른 나라 요청하기"). */
+.country-request { width: min(440px, calc(100vw - 32px)); max-height: min(640px, 85dvh); padding: 0; border: 0; border-radius: 14px; background: #fff; color: #222; box-shadow: 0 12px 40px #0000003d; }
+.country-request::backdrop { background: #0f1f3a66; }
+.country-request__panel { display: flex; flex-direction: column; gap: 12px; max-height: min(640px, 85dvh); padding: 20px; }
+.country-request h2 { margin: 0; color: #111; font-size: 18px; }
+.country-request__lead { margin: 0; color: #555; font-size: 13px; line-height: 1.5; }
+.country-request__search { width: 100%; min-height: 44px; padding: 0 14px; border: 2px solid #1f5fd1; border-radius: 8px; color: #111; font: inherit; font-size: 16px; }
+.country-request__list { flex: 1; min-height: 160px; overflow-y: auto; overscroll-behavior: contain; border: 1px solid #ebebeb; border-radius: 8px; }
+.country-request__list label { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 14px; border-bottom: 1px solid #f2f2f2; cursor: pointer; font-size: 14px; }
+.country-request__list label:hover { background: #f7f9fc; }
+.country-request__list label.is-selected { background: #f2f7ff; box-shadow: inset 3px 0 0 #1f5fd1; font-weight: 600; }
+.country-request__list input { accent-color: #1f5fd1; }
+.country-request__list span { flex: 1; min-width: 0; }
+.country-request__list small { color: #8a8a8a; font-size: 11px; }
+.country-request__empty { margin: 0; padding: 20px; color: #767676; font-size: 13px; text-align: center; }
+.country-request__status { min-height: 1.4em; margin: 0; color: #1f5fd1; font-size: 13px; line-height: 1.4; }
+.country-request__actions { display: flex; justify-content: flex-end; gap: 8px; }
+.country-request__actions button { min-height: 44px; padding: 0 18px; border: 1px solid #d6d6d6; border-radius: 8px; background: #fff; color: #222; font: inherit; font-size: 14px; cursor: pointer; }
+.country-request__actions button[type="submit"] { border-color: #1f5fd1; background: #1f5fd1; color: #fff; font-weight: 600; }
+.country-request__actions button:disabled { opacity: .5; cursor: default; }

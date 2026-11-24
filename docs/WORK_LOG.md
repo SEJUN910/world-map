@@ -1,5 +1,12 @@
 # Work Log
 
+## 2026-11-24 - Country requests
+
+- Instead of adding every country, visitors can request one: home select → “+ 다른 나라 요청하기…” → searchable dialog of ~246 unsupported ISO countries. Planned by Antigravity (`.omc/plans/country-requests.md`), approved; deviation: local/preview never write (shared production DB).
+- `country_requests` (visitor hash + ISO code, one vote each), `record_country_request` (analytics write key) and `country_request_summary` (admin only) RPCs; migration tested in a rolled-back transaction, then applied. `/admin` shows the ranking.
+- Review fixes (migration `202611240003`, applied): requests use their own cookie and hash prefix (not joinable to analytics); a daily-rotating keyed network hash caps new requests at 20 per network per day so dropping cookies cannot stuff the ranking; anon EXECUTE on the summary revoked; a full throttle map evicts its oldest entry; particle-free duplicate message; search matches the name in any UI language with cached `Intl.DisplayNames`.
+- QA: 34 PASS (desktop + mobile dialog, no navigation, focus return, Taiwan navigation still works, API 403/400 guards); unit tests 42 PASS.
+
 ## 2026-11-24 - France (Paris) as a third country
 
 - Researched event open data for Japan, Hong Kong/Singapore, Thailand and Paris; only Paris "Que faire à Paris" (ODbL, no key, coordinates, images, photo credits) was ready. Planned by Antigravity (`.omc/plans/france.md`), approved as-is.

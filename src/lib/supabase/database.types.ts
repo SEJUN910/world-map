@@ -290,6 +290,8 @@ export type Database = {
       purge_analytics_hits: { Args: { p_key: string; p_days?: number }; Returns: number };
       traffic_totals: { Args: { p_key: string }; Returns: Json };
       is_admin: { Args: never; Returns: boolean };
+      record_country_request: { Args: { p_key: string; p_visitor: string; p_country: string; p_ip_day: string }; Returns: string };
+      country_request_summary: { Args: never; Returns: { country_code: string; total_count: number; recent_count: number; last_requested_at: string }[] };
     };
     Enums: {
       [_ in never]: never;

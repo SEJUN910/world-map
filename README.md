@@ -143,6 +143,10 @@ Vercel Cron이 매주 일요일 03:00(UTC)에 `/api/cron/analytics`를 호출해
 
 운영 사이트는 Vercel 프로젝트 `world-map-imtc`(https://world-map-imtc.vercel.app)이며, `main`에 푸시하면 배포됩니다. 별도 도메인을 연결하면 `NEXT_PUBLIC_SITE_URL`을 그 주소로 바꾼 뒤 다시 배포합니다. `.openai/hosting.json`에는 기존 Sites 프로젝트 ID만 보존합니다. 지리 데이터는 Natural Earth 110m 세계/50m 한국·대만 데이터와 OpenFreeMap 벡터 타일·라틴 글리프(`tiles.openfreemap.org`, CSP `connect-src`에 허용)입니다. 그 밖의 외부 폰트나 런타임 CDN은 사용하지 않습니다.
 
+## Country requests
+
+The home globe's country select ends with “+ 다른 나라 요청하기…”, which opens a dialog listing every ISO 3166-1 country we do not cover yet (names from `Intl.DisplayNames` in the UI language, searchable by local name, English name or ISO code). No login: `POST /api/country-requests` checks same origin, blocks bot user agents, validates `{ countryCode }`, throttles 10 requests per minute per keyed IP hash (memory only) and records one vote per visitor and country through `record_country_request`: a keyed hash of its own `festiva-country-request` cookie (not linkable to analytics), the ISO code, and a keyed hash of the network and UTC day that caps new requests at 20 per network per day. The IP itself is never stored. Local and preview builds answer `recorded: false` without writing, because they share the production database. `/admin` ranks requested countries by all-time or last-30-day count (`country_request_summary`, admin only). Counts are not shown to visitors.
+
 ## France (Paris) data
 
 `/france` shows festivals, exhibitions and fairs from the City of Paris open data “Que faire à Paris” (https://opendata.paris.fr/explore/dataset/que-faire-a-paris-/, ODbL, no key). Titles and descriptions stay in the original French (`lang="fr"`); the modal shows the photographer credit (`source_image_credit`) under the poster and the source with an ODbL link, and the list ends with an ODbL notice. Region chips are the Paris arrondissements (`paris-01`…`paris-20`) plus `grand-paris`. Images are hotlinked from `https://cdn.paris.fr` (CSP `img-src`).
