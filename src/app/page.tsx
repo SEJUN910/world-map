@@ -15,7 +15,7 @@ export default async function Home() {
     <main id="main" className="minimal-home">
       <h1 className="visually-hidden">festiva</h1>
       <StructuredData value={{ "@context": "https://schema.org", "@type": "WebSite", name: "festiva", url: absoluteUrl("/"), inLanguage: ["ko", "en", "zh-TW"] }} />
-      <noscript><nav className="no-script-countries" aria-label="Countries"><a href={localizedPath("/korea", locale)}>South Korea</a><a href={localizedPath("/taiwan", locale)}>Taiwan</a></nav></noscript>
+      <noscript><nav className="no-script-countries" aria-label="Countries"><a href={localizedPath("/korea", locale)}>South Korea</a><a href={localizedPath("/taiwan", locale)}>Taiwan</a><a href={localizedPath("/france", locale)}>France</a></nav></noscript>
       <MinimalMasthead />
       <Globe points={points} />
     </main>

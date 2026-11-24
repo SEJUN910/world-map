@@ -1,5 +1,6 @@
 "use client";
 import { analyticsPath } from "./analytics-path";
+import { countryByPath } from "./countries";
 import type { Locale } from "./i18n";
 let lastPage = "";
 let pending = Promise.resolve();
@@ -17,7 +18,7 @@ export function sendAnalytics(kind: "page_view" | "event_view", locale: Locale, 
   }
   let referrer = "";
   try { const url = new URL(document.referrer); if (url.host !== location.host) referrer = url.hostname; } catch { /* Direct visit */ }
-  const body = JSON.stringify({ id: crypto.randomUUID(), kind, eventId, path, country: path === "/taiwan" ? "tw" : path === "/korea" || path === "/regions" ? "kr" : null, locale, referrer });
+  const body = JSON.stringify({ id: crypto.randomUUID(), kind, eventId, path, country: path === "/regions" ? "kr" : countryByPath(path), locale, referrer });
   pending = pending.then(() => fetch("/api/analytics", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true })).then(() => {}).catch(() => { /* Analytics must never block the UI. */ });
 }
 export function leaveAnalyticsPage() { lastPage = ""; }

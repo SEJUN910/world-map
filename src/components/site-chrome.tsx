@@ -2,6 +2,7 @@
 import { useTranslations } from "@/components/language-provider";
 
 import { usePathname } from "next/navigation";
+import { countryByPath } from "@/lib/countries";
 import { Header } from "@/components/header";
 import { AnalyticsTracker } from "./analytics-tracker";
 import { SiteTools } from "./site-tools";
@@ -10,8 +11,8 @@ import { TrafficCounter } from "./traffic-counter";
 export function SiteChrome({ children }: { children: React.ReactNode }) {
   const { t } = useTranslations();
   const pathname = usePathname();
-  const isHome = pathname === "/" || pathname === "/korea" || pathname === "/taiwan" || pathname.startsWith("/regions/");
-  const isAtlas = pathname === "/korea" || pathname === "/taiwan" || pathname.startsWith("/regions/");
+  const isAtlas = !!countryByPath(pathname) || pathname.startsWith("/regions/");
+  const isHome = pathname === "/" || isAtlas;
   return (
     <>
       <AnalyticsTracker />

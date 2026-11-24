@@ -4,7 +4,7 @@ import { useAccount } from "./account-provider";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { countries, isCountryCode, pointInCountry, type CountryCode } from "@/lib/countries";
+import { countries, countryByPath, isCountryCode, pointInCountry, type CountryCode } from "@/lib/countries";
 import { EventMap } from "./event-map";
 import dynamic from "next/dynamic";
 import { DESCRIPTION_LIMIT, normalizeRichText, type RichDocument } from "@/lib/rich-text";
@@ -63,7 +63,7 @@ export function EventForm({
   const router = useRouter();
   const { account } = useAccount();
   const pathname = usePathname();
-  const [country, setCountry] = useState<CountryCode>(existing?.countryCode || (pathname === "/taiwan" ? "tw" : "kr"));
+  const [country, setCountry] = useState<CountryCode>(existing?.countryCode || countryByPath(pathname) || "kr");
   const [fields, setFields] = useState<Fields>(empty);
   const [poster, setPoster] = useState("");
   const [descriptionContent, setDescriptionContent] = useState<RichDocument | null>(null);

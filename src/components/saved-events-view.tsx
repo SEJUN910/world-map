@@ -50,6 +50,7 @@ export function SavedEventsView({ active, ended, unavailableIds, member }: {
       <div className="form-actions">
         <Link className="button" href="/korea">{t("한국 행사 둘러보기")}</Link>
         <Link className="button button-secondary" href="/taiwan">{t("대만 행사 둘러보기")}</Link>
+        <Link className="button button-secondary" href="/france">{t("프랑스 행사 둘러보기")}</Link>
       </div>
     </div>}
     {!!past.length && <section aria-labelledby="saved-ended" className="saved-page__ended">

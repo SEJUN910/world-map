@@ -1,20 +1,21 @@
 import type { MetadataRoute } from "next";
 import { publicClient } from "@/lib/event-repository";
 import { todayInCountry } from "@/lib/events";
+import { COUNTRY_CODES, COUNTRY_PATHS, countries, isCountryCode } from "@/lib/countries";
 import { absoluteUrl, localizedPath, localeAlternates } from "@/lib/seo";
 export const dynamic = "force-dynamic";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const entries: MetadataRoute.Sitemap = ["/", "/korea", "/taiwan"].map((path) => ({ url: absoluteUrl(localizedPath(path,"ko")), alternates: { languages: localeAlternates(path) } }));
+  const entries: MetadataRoute.Sitemap = ["/", ...COUNTRY_PATHS].map((path) => ({ url: absoluteUrl(localizedPath(path,"ko")), alternates: { languages: localeAlternates(path) } }));
   const client = publicClient();
   const regions = new Map<string,string>();
   for (let offset = 0; ; offset += 1000) {
     const { data, error } = await client.from("events").select("id,country_code,region_code,region,updated_at")
       .eq("publication_status","published")
-      .or(`end_date.is.null,and(country_code.eq.kr,end_date.gte.${todayInCountry("kr")}),and(country_code.eq.tw,end_date.gte.${todayInCountry("tw")})`)
+      .or(["end_date.is.null", ...COUNTRY_CODES.map((code) => `and(country_code.eq.${code},end_date.gte.${todayInCountry(code)})`)].join(","))
       .order("id").range(offset,offset+999);
     if (error) throw Error("Could not generate sitemap");
     for (const event of data || []) {
-      const path = event.country_code === "tw" ? "/taiwan" : "/korea";
+      const path = countries[isCountryCode(event.country_code) ? event.country_code : "kr"].path;
       const values = { event: event.id };
       entries.push({ url: absoluteUrl(localizedPath(path,"ko",values)), lastModified: event.updated_at, alternates: { languages: localeAlternates(path,values) } });
       if (event.country_code === "kr" && event.region.trim()) {

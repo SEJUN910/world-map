@@ -58,6 +58,9 @@ export function EventPosterDialog({ event, opener, onDismiss, initiallyOpen = fa
   }, [opener]);
 
   const isTourImage = event.sourceName === "tourapi";
+  const isParis = event.sourceName === "paris_qfap";
+  // Paris listings are shown in the original French.
+  const textLang = isParis ? "fr" : undefined;
   const Title = initiallyOpen ? "h1" : "h2";
   return (
     <dialog open={initiallyOpen || undefined} ref={dialog} className="poster-modal" aria-label={event.title}
@@ -69,10 +72,11 @@ export function EventPosterDialog({ event, opener, onDismiss, initiallyOpen = fa
             </div>
             <div className="poster-modal__image">
               {event.poster ? <img src={event.poster} alt={`${event.title} ${isTourImage ? t("대표 이미지") : t("포스터")}`} width={480} height={680} /> : <p>{t("포스터 준비 중")}</p>}
+              {event.sourceImageCredit && <p className="poster-modal__credit">{t("사진:")} {event.sourceImageCredit}</p>}
             </div>
             <div className="poster-modal__info">
               <p className="poster-modal__eyebrow">{event.region} <span aria-hidden="true">✳</span></p>
-              <Title id={`poster-title-${event.id}`}>{event.title}</Title>
+              <Title id={`poster-title-${event.id}`} lang={textLang}>{event.title}</Title>
               {event.eventStatus && event.eventStatus !== "scheduled" && (
                 <p className="poster-modal__status">{event.eventStatus === "cancelled" ? t("취소된 행사입니다.") : t("연기된 행사입니다.")}</p>
               )}
@@ -81,16 +85,17 @@ export function EventPosterDialog({ event, opener, onDismiss, initiallyOpen = fa
                 {(event.venue || event.address) && <div><dt>{t("장소")}</dt><dd>{event.venue}{event.address && <small>{event.address}</small>}</dd></div>}
                 {event.region && <div><dt>{t("지역")}</dt><dd>{event.region}</dd></div>}
               </dl>
-              <div className="poster-modal__description">
+              <div className="poster-modal__description" lang={textLang}>
                 <h3>{t("행사 소개")}</h3>
                 <RichTextView content={event.descriptionContent} text={event.description} />
               </div>
               {event.sourceName && event.sourceUrl && (
                 <p className="poster-modal__source">
-                  {t("이미지·행사 정보:")}{" "}<a href={event.sourceUrl} target="_blank" rel="noopener noreferrer">{isTourImage ? t("한국관광공사 TourAPI") : event.sourceName === "taiwan_tourism" ? "Taiwan Tourism Administration" : t("공공데이터포털")} ↗</a>
+                  {t("이미지·행사 정보:")}{" "}<a href={event.sourceUrl} target="_blank" rel="noopener noreferrer">{isTourImage ? t("한국관광공사 TourAPI") : event.sourceName === "taiwan_tourism" ? "Taiwan Tourism Administration" : isParis ? "Que faire à Paris (Ville de Paris)" : t("공공데이터포털")} ↗</a>
                   {event.sourceProvider && <> {t("· 제공:")} {event.sourceProvider}</>}
                   {event.sourceImageLicense === "OGDL-1.0" && <> · <a href="https://data.gov.tw/license" target="_blank" rel="noopener noreferrer">Open Government Data License 1.0</a></>}
-                  {event.sourceImageLicense && event.sourceImageLicense !== "OGDL-1.0" && <> {t("· 공공누리")} {event.sourceImageLicense === "Type3" ? t("제3유형 (출처표시·변경금지)") : t("제1유형 (출처표시)")}</>}
+                  {event.sourceImageLicense === "ODbL" && <> · <a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener noreferrer">Open Database License (ODbL)</a></>}
+                  {event.sourceImageLicense && event.sourceImageLicense !== "OGDL-1.0" && event.sourceImageLicense !== "ODbL" && <> {t("· 공공누리")} {event.sourceImageLicense === "Type3" ? t("제3유형 (출처표시·변경금지)") : t("제1유형 (출처표시)")}</>}
                   {event.sourceReferenceDate && <> {t("· 기준일")} {event.sourceReferenceDate}</>}
                 </p>
               )}

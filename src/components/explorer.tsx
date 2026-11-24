@@ -17,6 +17,7 @@ import { TrafficCounter } from "./traffic-counter";
 import { SiteTools } from "./site-tools";
 import { useMobileAtlas } from "./mobile-atlas-controls";
 import { CountrySwitch } from "./country-switch";
+import { SourceNotice } from "./source-notice";
 const MobileEventSheet = dynamic(() => import("./mobile-event-sheet").then(module => module.MobileEventSheet), { ssr: false });
 
 export function Explorer({ country = "kr", events, mapPoints, total, regions, initialRegion = "", initialQuery = "", page = 1, initialEvent = null, filters = emptyDiscoveryFilters, initialView = "map", sort = "latest" }: {
@@ -184,6 +185,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
             <span className="list-view__page">{t("{current} / {total} 페이지", { current: page, total: pages })}</span>
             {page * 24 < total && <Link className="button button-secondary" href={pageHref(page + 1)}>{t("다음 →")}</Link>}
           </nav>}
+          <SourceNotice country={country} />
           <TrafficCounter inline />
         </div>
       </section>}

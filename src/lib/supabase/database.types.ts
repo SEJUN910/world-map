@@ -62,6 +62,7 @@ export type Database = {
           source_id: string | null;
           source_image_url: string | null;
           source_image_license: string | null;
+          source_image_credit: string | null;
           source_url: string | null;
           source_provider: string | null;
           source_reference_date: string | null;
@@ -93,6 +94,7 @@ export type Database = {
           source_id?: string | null;
           source_image_url?: string | null;
           source_image_license?: string | null;
+          source_image_credit?: string | null;
           source_url?: string | null;
           source_provider?: string | null;
           source_reference_date?: string | null;
@@ -124,6 +126,7 @@ export type Database = {
           source_id?: string | null;
           source_image_url?: string | null;
           source_image_license?: string | null;
+          source_image_credit?: string | null;
           source_url?: string | null;
           source_provider?: string | null;
           source_reference_date?: string | null;

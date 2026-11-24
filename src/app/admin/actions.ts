@@ -1,5 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { COUNTRY_PATHS } from "@/lib/countries";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 
@@ -16,8 +17,7 @@ export async function adminDeleteEventAction(eventId: string): Promise<void> {
     redirect("/admin?result=delete-failed");
   }
   revalidatePath("/");
-  revalidatePath("/korea");
-  revalidatePath("/taiwan");
+  for (const path of COUNTRY_PATHS) revalidatePath(path);
   revalidatePath("/admin");
   redirect("/admin?result=deleted");
 }

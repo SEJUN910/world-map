@@ -10,6 +10,7 @@ import { useTranslations } from "./language-provider";
 import { SiteTools } from "./site-tools";
 import { EventListItem } from "./event-list-item";
 import { TrafficCounter } from "./traffic-counter";
+import { SourceNotice } from "./source-notice";
 
 type Props = {
   country: CountryCode; events: FestivalEvent[]; total: number; page: number;
@@ -175,6 +176,7 @@ export function MobileEventSheet(props: Props) {
                 {page * 24 < total && <Link prefetch={false} href={pageHref(page + 1)}>{t("다음 →")}</Link>}
               </>}
             </nav>}
+            <SourceNotice country={country} />
           </>}
         </Sheet.Content>
       </Sheet.Container>

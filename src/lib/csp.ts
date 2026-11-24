@@ -10,7 +10,7 @@ const OSM_TILES = ["https://tile.openstreetmap.org", "https://*.tile.openstreetm
 // Vector basemap: TileJSON, .pbf tiles and glyphs all come from this one origin (see src/lib/map-style.ts).
 const OPENFREEMAP = "https://tiles.openfreemap.org";
 // Public poster sources allowed by events.source_image_url (see 202611100003_taiwan_events.sql).
-const PUBLIC_POSTER_SOURCES = ["https://tong.visitkorea.or.kr", "https://*.gov.tw", "https://*.taiwan.net.tw"];
+const PUBLIC_POSTER_SOURCES = ["https://tong.visitkorea.or.kr", "https://*.gov.tw", "https://*.taiwan.net.tw", "https://cdn.paris.fr"];
 const SUPABASE_FALLBACK = ["https://*.supabase.co", "https://*.supabase.in"];
 
 export type CspEnv = { supabaseUrl?: string; mapTileUrl?: string };

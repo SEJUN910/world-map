@@ -1,7 +1,7 @@
 "use client";
 import { useTranslations } from "@/components/language-provider";
 
-import { countries, isCountryCode, type CountryCode } from "@/lib/countries";
+import { COUNTRY_CODES, countries, isCountryCode, type CountryCode } from "@/lib/countries";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { EventMap, type EventMapPoint } from "./event-map";
@@ -35,8 +35,7 @@ export function Globe({ points }: { points: EventMapPoint[] }) {
         onChange={(event) => { if (isCountryCode(event.target.value)) go(event.target.value); }}
       >
         <option value="" disabled>{t("나라 선택")}</option>
-        <option value="kr">{t("대한민국")}</option>
-        <option value="tw">{t("대만")}</option>
+        {COUNTRY_CODES.map((code) => <option key={code} value={code}>{t(countries[code].name)}</option>)}
       </select>
       <p className="visually-hidden" role="status">{navigating ? t("{country} 지도로 이동 중…", { country: t(countries[navigating].name) }) : ""}</p>
       <div className="home-globe">

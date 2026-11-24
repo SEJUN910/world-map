@@ -16,7 +16,7 @@ http://127.0.0.1:3000 에서 확인합니다. `.env.example`을 참고해 `.env.
 
 ## 동작
 
-- 지구본 → 한국·대만 지도 → 지역·검색·페이지별 실제 공개 행사 탐색. 지도는 현재 목록 페이지와 무관하게 조건에 맞는 공개 행사의 좌표를 최대 5,000개까지 표시합니다. 가까운 점은 묶이며, 확대하거나 누르면 확인할 수 있습니다.
+- 지구본 → 한국·대만·프랑스 지도 → 지역·검색·페이지별 실제 공개 행사 탐색. 지도는 현재 목록 페이지와 무관하게 조건에 맞는 공개 행사의 좌표를 최대 5,000개까지 표시합니다. 가까운 점은 묶이며, 확대하거나 누르면 확인할 수 있습니다.
 - 행사 카드·지도 포스터를 누르면 원본 이미지, 일정·장소·주소, 소개, 공식 안내·출처와 신고 기능을 담은 모달이 열립니다. 닫기·바깥 클릭·Esc를 지원합니다. 별도 행사 상세 화면은 없으며 `/korea?event=행사ID`로 지도 위에서 모달을 바로 열 수 있습니다. 기존 `/events/ID/슬러그` 주소는 이 모달 주소로 이동합니다.
 - 새 행사 등록은 ① 위치 선택 → ② 포스터·내용의 두 단계입니다. 주소 검색이나 직접 지정으로 위치를 정해야 다음 단계로 넘어갑니다. 돌아가도 포스터·소개 등 입력 내용은 유지되고, 기존 행사 수정은 두 번째 단계부터 시작합니다. 주소 검색으로 지역·좌표가 자동 입력되고 장소명이 비어 있으면 함께 채웁니다. 주소를 수정하면 이전 좌표를 지워 재선택하도록 합니다.
 - 행사 소개는 필수이며 Tiptap 편집기로 최대 20,000자까지 작성합니다. 소제목·굵게·기울임·밑줄·목록·인용·링크·구분선·실행 취소를 지원하며, 단계 이동 후에도 서식이 유지됩니다. 본문은 `description_content` JSON과 일반 텍스트 `description`을 함께 저장하고 모달과 작성자 화면에서 서식을 표시합니다. 기존 일반 텍스트 소개는 변환 없이 계속 표시됩니다. 본문 이미지·임베드·임의 HTML은 지원하지 않습니다.
@@ -65,7 +65,7 @@ Geoapify에서 발급받은 키를 서버 환경변수 `GEOAPIFY_API_KEY`에 설
 
 위치 입력은 주소 검색창, 작은 출처 링크, 접힌 확인용 지도를 하나의 영역으로 표시합니다. 중복 성공 안내는 생략하고 검색 실패·대략적 위치 등의 필요한 안내만 보여줍니다. 위치 확인 지도는 200~220px 크기로 격자·실시간 좌표 표시를 숨기며, 직접 좌표 입력은 추가로 펼칠 수 있습니다. 탐색용 지구의 격자·좌표 표시는 유지합니다.
 
-등록·주소 검색은 대한민국(kr)과 대만(tw)을 지원합니다. 국가별 좌표 범위와 시간대(Asia/Seoul, Asia/Taipei)를 DB와 앱에서 함께 검증하며 국가를 바꾸면 이전 주소·좌표가 초기화됩니다. 서버는 제한된 메모리 캐시(최대 256개, 1시간)와 인스턴스 단위 요청 제한(IP별 분당 12회, 전체 분당 120회)을 적용합니다. 다중 인스턴스에서 전체 사용량을 일괄 제한하려면 배포 환경의 공통 제한 장치를 추가해야 합니다. API 키나 제공자의 원본 오류 응답은 클라이언트로 반환하지 않습니다.
+등록·주소 검색은 대한민국(kr), 대만(tw), 프랑스(fr)를 지원합니다. 국가 목록은 `src/lib/countries.ts` 한 곳에 있고, 경로·분석·검증·사이트맵·지구본이 모두 이 목록을 따릅니다. 국가별 좌표 범위와 시간대(Asia/Seoul, Asia/Taipei, Europe/Paris)를 DB와 앱에서 함께 검증하며 국가를 바꾸면 이전 주소·좌표가 초기화됩니다. 서버는 제한된 메모리 캐시(최대 256개, 1시간)와 인스턴스 단위 요청 제한(IP별 분당 12회, 전체 분당 120회)을 적용합니다. 다중 인스턴스에서 전체 사용량을 일괄 제한하려면 배포 환경의 공통 제한 장치를 추가해야 합니다. API 키나 제공자의 원본 오류 응답은 클라이언트로 반환하지 않습니다.
 
 ## 데이터와 권한
 
@@ -126,7 +126,7 @@ src/lib/supabase/          타입·클라이언트·방문자 세션·쿠키 갱
 src/lib/drafts.ts          이전 브라우저 초안 읽기와 이미지 처리
 src/proxy.ts              방문자 쿠키 갱신
 supabase/migrations/      적용한 데이터베이스·RLS·Storage SQL
-public/assets/            Natural Earth 세계/한국/대만 지도 데이터
+public/assets/            Natural Earth 세계/한국/대만/프랑스(본토) 지도 데이터
 scripts/                  단위·실서버·실DB 검증
 docs/WORK_LOG.md           프로젝트 작업 기록
 ```
@@ -142,6 +142,12 @@ Vercel Cron이 매주 일요일 03:00(UTC)에 `/api/cron/analytics`를 호출해
 사용자 Codex 설정의 `supabase_festiva`는 공식 로컬 stdio MCP 0.15.0으로 이 프로젝트에만 연결됩니다. 실행 파일과 관리 인증정보는 저장소 밖 사용자 `.codex`에 보관합니다. 설정 변경 후에는 새 세션/앱 재시작이 필요합니다.
 
 운영 사이트는 Vercel 프로젝트 `world-map-imtc`(https://world-map-imtc.vercel.app)이며, `main`에 푸시하면 배포됩니다. 별도 도메인을 연결하면 `NEXT_PUBLIC_SITE_URL`을 그 주소로 바꾼 뒤 다시 배포합니다. `.openai/hosting.json`에는 기존 Sites 프로젝트 ID만 보존합니다. 지리 데이터는 Natural Earth 110m 세계/50m 한국·대만 데이터와 OpenFreeMap 벡터 타일·라틴 글리프(`tiles.openfreemap.org`, CSP `connect-src`에 허용)입니다. 그 밖의 외부 폰트나 런타임 CDN은 사용하지 않습니다.
+
+## France (Paris) data
+
+`/france` shows festivals, exhibitions and fairs from the City of Paris open data “Que faire à Paris” (https://opendata.paris.fr/explore/dataset/que-faire-a-paris-/, ODbL, no key). Titles and descriptions stay in the original French (`lang="fr"`); the modal shows the photographer credit (`source_image_credit`) under the poster and the source with an ODbL link, and the list ends with an ODbL notice. Region chips are the Paris arrondissements (`paris-01`…`paris-20`) plus `grand-paris`. Images are hotlinked from `https://cdn.paris.fr` (CSP `img-src`).
+
+`node scripts/import-paris.mjs` is a dry run: it keeps events with coordinates, an image and an end date, tagged Festival (≤180 days), exhibition (≤120 days) or fair/market (≤30 days), and drops workshops, talks and service listings (about 400 of ~3,000 upcoming records). `--sql FILE` writes an upsert for the Management API; `--apply` writes with `SUPABASE_IMPORT_SERVICE_KEY`, verifies public visibility and hides (`hidden`) upcoming Paris events that left the listing; a hidden event that reappears is published again, while admin deletions stay deleted. Events whose image check failed are never hidden. Fewer than 20 usable events, or fewer than 70% of the currently published ones, stops the run without writing. Dates are the UTC calendar days the listing uses (ends are stored as 23:59Z). `.github/workflows/paris-sync.yml` applies it every Monday 02:00 UTC (needs the same `NEXT_PUBLIC_SUPABASE_*` and `SUPABASE_IMPORT_*` secrets as the TourAPI sync).
 
 ## Taiwan seed data
 
@@ -159,7 +165,7 @@ Add UI copy in `src/lib/i18n/messages.ts` as Korean/English/Traditional Chinese 
 
 공개 탐색 화면에 오늘 방문자·누적 페이지 조회·누적 행사 조회를 작은 글씨로 표시합니다. PC 국가 지도에서는 좌상단 국가명에 이어 표시하고, 모바일에서는 검색·설정 패널을 열었을 때 표시합니다. 모바일 지도 상단은 뒤로가기·브랜드·검색·설정·행사 추가만 남기고, 검색·계정·언어·포스터 접기는 아이콘을 눌러 여는 상단 패널에 모았습니다. 지역 선택은 패널 밖, 상단 바 바로 아래에서 가로 스크롤로 항상 이용할 수 있습니다. 패널은 기존 상단 줄을 덮으며 닫기·바깥 클릭·Esc를 지원하고 검색 입력은 닫았다 열어도 유지합니다. 좌하단 좌표와 통계는 겹치지 않습니다. 관리자 페이지·암호 입력은 없으며 누구나 세 집계를 볼 수 있습니다. 한국 시간 기준이고 방문자는 브라우저 추정치입니다. 동시 접속자 수가 아닙니다. 집계가 표시되는 동안 약 1분 간격으로 갱신하며 조회 실패 시 숫자를 만들어 표시하지 않습니다.
 
-Public route navigation (`/`, `/korea`, `/taiwan`, normalized `/regions`) records a page view; language changes, prefetches and filter-only URL updates do not. An event view records only after opening the introduction modal; the database counts each public event once per session. Tracking cookies are HttpOnly: a one-year browser ID and a session ID expiring after thirty minutes without a collected hit. Requests are serialized to avoid assigning multiple identities before the initial cookies arrive. Localhost, Vercel previews, common bot agents, hidden pages and DNT/GPC opt-outs are excluded. Set `ANALYTICS_INCLUDE_LOCAL=true` only when explicitly testing ingestion, then remove it.
+Public route navigation (`/`, `/korea`, `/taiwan`, `/france`, normalized `/regions`) records a page view; language changes, prefetches and filter-only URL updates do not. An event view records only after opening the introduction modal; the database counts each public event once per session. Tracking cookies are HttpOnly: a one-year browser ID and a session ID expiring after thirty minutes without a collected hit. Requests are serialized to avoid assigning multiple identities before the initial cookies arrive. Localhost, Vercel previews, common bot agents, hidden pages and DNT/GPC opt-outs are excluded. Set `ANALYTICS_INCLUDE_LOCAL=true` only when explicitly testing ingestion, then remove it.
 
 Applied `202611100004_analytics.sql` and `202611100006_public_traffic.sql`. Raw analytics/settings tables remain inaccessible to clients. `/api/traffic` returns only three validated numeric totals through a key-protected RPC, with server/CDN caching; the former detailed dashboard RPC was removed. Only the SHA-256 hash of `ANALYTICS_WRITE_KEY` is stored in `analytics_settings`. Keep this server-only key in the hosting environment; rotating it requires updating the database hash too. No administrator password, service-role key or Google account is needed for these public counters.
 

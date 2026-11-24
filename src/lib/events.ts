@@ -24,6 +24,7 @@ export type FestivalEvent = {
   sourceProvider?: string | null;
   sourceReferenceDate?: string | null;
   sourceImageLicense?: string | null;
+  sourceImageCredit?: string | null;
   eventStatus?: string;
 };
 export function todayInCountry(country: CountryCode = "kr") {

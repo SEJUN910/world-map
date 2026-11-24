@@ -1,5 +1,15 @@
 # Work Log
 
+## 2026-11-24 - France (Paris) as a third country
+
+- Researched event open data for Japan, Hong Kong/Singapore, Thailand and Paris; only Paris "Que faire à Paris" (ODbL, no key, coordinates, images, photo credits) was ready. Planned by Antigravity (`.omc/plans/france.md`), approved as-is.
+- `countries.ts` is now the single country list (`iso`, `COUNTRY_CODES`, `COUNTRY_PATHS`, `countryByPath`); kr|tw hardcodes in the repository filter, sitemap, SEO, analytics, actions, admin, geocode, globe, site chrome and event form follow it.
+- Migration `202611240001_france_events.sql` (applied to the live DB): `fr` country/location checks, `source_image_credit`, `paris_qfap` branch of `events_source_owner_check`, analytics path/country checks. Tested first in a rolled-back transaction with all rows.
+- `scripts/import-paris.mjs` (dry run / `--sql` / `--apply`) + weekly `paris-sync.yml`. Selection measured on live data: 2,960 upcoming → 406 (festivals 151, exhibitions ~240, fairs ~25; plain concerts/plays and workshops left out). First load applied through the Management API.
+- `/france`: Paris arrondissement chips, French text marked `lang="fr"`, photo credit under the modal poster, ODbL source line and list footer notice, CSP `img-src` + `https://cdn.paris.fr`, France boundary (Natural Earth 50m, metropolitan) for the globe.
+- Review fixes: the event form offered France but validation only allowed kr|tw (now `COUNTRY_CODES`); listing dates are UTC calendar days (end 23:59Z), so Paris-time conversion had pushed 135 end dates a day late — now the UTC date, live rows re-upserted; sync retirements use `hidden` (revived when the event returns; admin `deleted` stays), never retire rows whose image check failed, and refuse to write if under 70% of published rows survive; NUL/surrogate/out-of-range entities dropped; missing dates skipped instead of crashing; image check fetches one byte with 4 workers; workflow `concurrency` group.
+- QA: France 27 PASS (list/map/modal/credit/region filter/no CSP issues/home select → /france/mobile/sitemap/no site header), split-layout 79 PASS, basemap 19 PASS.
+
 ## 2026-11-24 - Detailed basemap (OpenFreeMap)
 
 - User: zooming past country level showed nothing and no place names. Options compared (Google/Naver/Kakao rewrite vs MapLibre + vector tiles); user chose free OpenFreeMap. Planned by Antigravity (`.omc/plans/basemap.md`), approved as-is.

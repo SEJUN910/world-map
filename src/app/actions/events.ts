@@ -1,6 +1,7 @@
 "use server";
 import { countries } from "@/lib/countries";
 import { revalidatePath } from "next/cache";
+import { COUNTRY_PATHS } from "@/lib/countries";
 import { createClient } from "@/lib/supabase/server";
 import { ensureVisitor } from "@/lib/supabase/visitor";
 import { eventInputSchema, makeSlug } from "@/lib/event-validation";
@@ -8,8 +9,7 @@ import type { Json } from "@/lib/supabase/database.types";
 
 function refreshEvents(id: string) {
   revalidatePath("/");
-  revalidatePath("/korea");
-  revalidatePath("/taiwan");
+  for (const path of COUNTRY_PATHS) revalidatePath(path);
   revalidatePath("/me/events");
   revalidatePath(`/me/events/${id}`);
   revalidatePath("/events/[id]/[slug]", "page");

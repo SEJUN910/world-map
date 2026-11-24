@@ -32,7 +32,7 @@ async function context(country: CountryCode, params: ExplorerParams, regionPath?
   if (regionPath && !region) notFound();
   const path = !value.query && region && country === "kr" ? `/regions/${encodeURIComponent(region.code)}` : countries[country].path;
   const values = data.initialEvent ? { event: data.initialEvent.id } : { ...discoveryParams(value.filters), ...(value.region && path === countries[country].path ? { region: value.region } : {}), ...(value.page > 1 ? { page: value.page } : {}), ...(value.query ? { q: value.query } : {}) };
-  const title = data.initialEvent?.title || (region ? t("{region}의 축제와 행사", { region: region.name }) : t(country === "kr" ? "한국의 축제와 동네 행사" : "대만의 축제와 행사")) + (value.page > 1 ? ` · ${t("{page}페이지", { page: value.page })}` : "");
+  const title = data.initialEvent?.title || (region ? t("{region}의 축제와 행사", { region: region.name }) : t(({ kr: "한국의 축제와 동네 행사", tw: "대만의 축제와 행사", fr: "프랑스의 축제와 행사" } as const)[country])) + (value.page > 1 ? ` · ${t("{page}페이지", { page: value.page })}` : "");
   const description = data.initialEvent ? eventDescription(data.initialEvent) : t("{place}의 축제와 행사를 지도에서 찾아보세요. 포스터, 일정, 장소와 행사 소개를 확인하고 가까운 행사를 발견하세요.", { place: region?.name || t(countries[country].name) });
   return { ...value, data, locale, t, region, path: data.initialEvent ? countries[country].path : path, values, title, description };
 }

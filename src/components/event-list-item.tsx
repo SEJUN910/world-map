@@ -40,7 +40,7 @@ export function EventListItem({ event, selected = false, highlighted = false, on
           {badge && <span className={`event-badge event-badge--${badge.tone}`} suppressHydrationWarning>{t(badge.label, badge.values)}</span>}
           {event.region && <span>{event.region}</span>}
         </span>
-        <strong className="event-row__title">{event.title}</strong>
+        <strong className="event-row__title" lang={event.sourceName === "paris_qfap" ? "fr" : undefined}>{event.title}</strong>
         <span className="event-row__date">{t(eventDate(event))}</span>
         {place && <span className="event-row__place">{place}</span>}
       </span>

@@ -35,7 +35,7 @@ export function eventStructuredData(event: FestivalEvent, locale: Locale) {
     eventStatus: `https://schema.org/${event.eventStatus === "cancelled" ? "EventCancelled" : event.eventStatus === "postponed" ? "EventPostponed" : "EventScheduled"}`,
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
     image: absoluteUrl(`/images/events/${event.id}`),
-    location: { "@type": "Place", name: event.venue || event.address, address: { "@type": "PostalAddress", streetAddress: event.address || undefined, addressRegion: event.region || undefined, addressCountry: event.countryCode === "tw" ? "TW" : "KR" }, geo: { "@type": "GeoCoordinates", latitude: event.latitude, longitude: event.longitude } },
+    location: { "@type": "Place", name: event.venue || event.address, address: { "@type": "PostalAddress", streetAddress: event.address || undefined, addressRegion: event.region || undefined, addressCountry: countries[event.countryCode || "kr"].iso }, geo: { "@type": "GeoCoordinates", latitude: event.latitude, longitude: event.longitude } },
   };
 }
 export function collectionStructuredData(title: string, path: string, events: FestivalEvent[], locale: Locale, page = 1, values: Record<string, string | number | undefined> = {}) {

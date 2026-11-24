@@ -1,5 +1,5 @@
 import "server-only";
-import { isCountryCode, type CountryCode } from "./countries";
+import { COUNTRY_CODES, isCountryCode, type CountryCode } from "./countries";
 import {
   createClient as createSupabaseClient,
   type SupabaseClient,
@@ -15,7 +15,8 @@ import { applyDiscoveryFilters, emptyDiscoveryFilters, type DiscoveryFilters, ty
 import { eventHasEnded, SAVED_EVENTS_LIMIT } from "./saved-events";
 
 function activeSourceFilter() {
-  return `source_name.is.null,and(country_code.eq.kr,end_date.gte.${todayInCountry("kr")}),and(country_code.eq.tw,end_date.gte.${todayInCountry("tw")})`;
+  // Imported events disappear once they end, by the date in their own country.
+  return ["source_name.is.null", ...COUNTRY_CODES.map((code) => `and(country_code.eq.${code},end_date.gte.${todayInCountry(code)})`)].join(",");
 }
 
 export type CloudEvent = FestivalEvent & {
@@ -29,6 +30,7 @@ export type CloudEvent = FestivalEvent & {
   sourceProvider: string | null;
   sourceReferenceDate: string | null;
   sourceImageLicense: string | null;
+  sourceImageCredit: string | null;
 };
 export function publicClient() {
   const { url, publishableKey } = getSupabaseConfig();
@@ -86,6 +88,7 @@ async function mapEvents(
     sourceProvider: row.source_provider,
     sourceReferenceDate: row.source_reference_date,
     sourceImageLicense: row.source_image_license,
+    sourceImageCredit: row.source_image_credit ?? null,
   }));
 }
 export async function listEvents({

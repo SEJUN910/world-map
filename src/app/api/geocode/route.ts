@@ -1,4 +1,4 @@
-import { isCountryCode } from "@/lib/countries";
+import { isCountryCode, type CountryCode } from "@/lib/countries";
 import { NextResponse } from "next/server";
 import { addressResults } from "@/lib/geocoding";
 
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   const value = body as { text?: unknown; country?: unknown } | null;
   const query = typeof value?.text === "string" ? value.text.trim().replace(/\s+/g, " ") : "";
   if (query.length < 3 || query.length > 200 || !isCountryCode(value?.country)) return NextResponse.json({ error: "주소를 3~200자로 입력해주세요." }, { status: 400, headers });
-  const country = value!.country as "kr" | "tw";
+  const country = value!.country as CountryCode;
   const cacheKey = `${country}:${query}`;
   const key = process.env.GEOAPIFY_API_KEY?.trim();
   if (!key) return NextResponse.json({ error: "주소 검색이 아직 연결되지 않았어요. 위치 직접 지정하기를 이용해주세요." }, { status: 503, headers });
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
   }
 
   const url = new URL("https://api.geoapify.com/v1/geocode/search");
-  url.search = new URLSearchParams({ text: query, filter: `countrycode:${country}`, lang: country === "kr" ? "ko" : "en", limit: "5", format: "json", apiKey: key }).toString();
+  url.search = new URLSearchParams({ text: query, filter: `countrycode:${country}`, lang: country === "kr" ? "ko" : country === "fr" ? "fr" : "en", limit: "5", format: "json", apiKey: key }).toString();
   try {
     const response = await fetch(url, { signal: AbortSignal.timeout(8000), cache: "no-store" });
     if (!response.ok) throw new Error();

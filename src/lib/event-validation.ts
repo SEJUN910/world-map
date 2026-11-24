@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { DESCRIPTION_LIMIT, normalizeRichText, richTextPlain } from "./rich-text";
-import { pointInCountry } from "./countries";
+import { COUNTRY_CODES, pointInCountry } from "./countries";
 
 const date = z
   .string()
@@ -15,7 +15,7 @@ const date = z
 export const eventInputSchema = z
   .object({
     id: z.uuid(),
-    countryCode: z.enum(["kr", "tw"]).default("kr"),
+    countryCode: z.enum(COUNTRY_CODES).default("kr"),
     title: z.string().trim().min(1).max(100),
     description: z.string().trim().min(1, "행사 소개를 입력해주세요.").max(DESCRIPTION_LIMIT),
     descriptionContent: z.unknown().optional().transform((value, ctx) => {

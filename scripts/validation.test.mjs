@@ -144,6 +144,9 @@ test("geocoding results reject malformed, foreign and out-of-range locations", a
 test("Taiwan location validation rejects country-coordinate mismatches", () => {
   assert.equal(eventInputSchema.safeParse({ ...valid, countryCode: "tw", latitude: 25.0379, longitude: 121.5631 }).success, true);
   assert.equal(eventInputSchema.safeParse({ ...valid, countryCode: "tw" }).success, false);
+  assert.equal(eventInputSchema.safeParse({ ...valid, countryCode: "fr", latitude: 48.8566, longitude: 2.3522 }).success, true);
+  assert.equal(eventInputSchema.safeParse({ ...valid, countryCode: "fr" }).success, false);
+  assert.equal(eventInputSchema.safeParse({ ...valid, countryCode: "jp" }).success, false);
   assert.equal(eventInputSchema.safeParse({ ...valid, countryCode: "kr", latitude: 25.0379, longitude: 121.5631 }).success, false);
   assert.equal(eventInputSchema.safeParse({ ...valid, countryCode: "jp" }).success, false);
 });

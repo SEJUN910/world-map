@@ -1,0 +1,49 @@
+name: Paris Sync
+
+on:
+  schedule:
+    # Every Monday 02:00 UTC (03:00/04:00 in Paris)
+    - cron: "0 2 * * 1"
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Write to database (omit for dry-run)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# A manual run and the Monday run must not write at the same time.
+concurrency:
+  group: paris-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - run: npm ci
+
+      # The Paris open data needs no key. Scheduled runs always apply; manual runs
+      # apply only when the box is checked.
+      - name: Run Paris import (dry-run)
+        if: ${{ github.event_name == 'workflow_dispatch' && !inputs.apply }}
+        run: node scripts/import-paris.mjs
+
+      - name: Run Paris import (apply)
+        if: ${{ github.event_name == 'schedule' || inputs.apply }}
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_IMPORT_SERVICE_KEY: ${{ secrets.SUPABASE_IMPORT_SERVICE_KEY }}
+          SUPABASE_IMPORT_PROJECT_REF: ${{ secrets.SUPABASE_IMPORT_PROJECT_REF }}
+        run: node scripts/import-paris.mjs --apply

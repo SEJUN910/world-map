@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 import { adminDeleteEventAction, adminResolveReportAction } from "./actions";
 import Link from "next/link";
+import { countries, isCountryCode } from "@/lib/countries";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Admin", robots: { index: false, follow: false } };
@@ -113,7 +114,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             {typedEvents.map((e) => (
               <tr key={e.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
                 <td style={{ padding: "0.5rem" }}>
-                  <Link href={`/${e.country_code === "tw" ? "taiwan" : "korea"}?event=${e.id}`} target="_blank" style={{ color: "#1a56db" }}>{e.title}</Link>
+                  <Link href={`${countries[isCountryCode(e.country_code) ? e.country_code : "kr"].path}?event=${e.id}`} target="_blank" style={{ color: "#1a56db" }}>{e.title}</Link>
                 </td>
                 <td style={{ padding: "0.5rem" }}>{e.country_code?.toUpperCase()}</td>
                 <td style={{ padding: "0.5rem", color: e.publication_status === "published" ? "#090" : e.publication_status === "deleted" ? "#999" : "#a60" }}>{e.publication_status}</td>
