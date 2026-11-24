@@ -75,10 +75,12 @@ const skipped = new Map();
 const skip = (reason) => { skipped.set(reason, (skipped.get(reason) || 0) + 1); return null; };
 
 async function fetchListing() {
+  // Pages are not in a stable order (items repeat or go missing across pages), so the
+  // whole listing is fetched in one page; paging remains only as a fallback.
   const all = [];
   let total = Infinity;
   for (let page = 1; all.length < total; page++) {
-    const xml = await call("period2", { from: today.replaceAll("-", ""), to: until.replaceAll("-", ""), PageNo: page, numOfrows: 500 });
+    const xml = await call("period2", { from: today.replaceAll("-", ""), to: until.replaceAll("-", ""), PageNo: page, numOfrows: 3000 });
     total = Number((xml.match(/<totalCount>(\d+)<\/totalCount>/) || [])[1] ?? 0);
     const batch = items(xml);
     if (!batch.length) break;
