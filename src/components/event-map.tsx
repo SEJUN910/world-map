@@ -137,8 +137,8 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
             { id: "space", type: "background", paint: { "background-color": "#ffffff" } },
             ...(config ? [{ id: "basemap", type: "raster" as const, source: "basemap", paint: { "raster-saturation": -1, "raster-contrast": 0.05, "raster-brightness-min": 0.55, "raster-brightness-max": 1, "raster-opacity": 0.8 } }] : []),
             ...(!isPicker ? [
-              { id: "land-fill", type: "fill" as const, source: "land", paint: { "fill-color": "#eaf2ff", "fill-opacity": 0.85 } },
-              { id: "land-outline", type: "line" as const, source: "land", paint: { "line-color": "#7ba6e8", "line-width": 0.8, "line-opacity": 0.7 } },
+              { id: "land-fill", type: "fill" as const, source: "land", paint: { "fill-color": "#d9e6f7", "fill-opacity": 1 } },
+              { id: "land-outline", type: "line" as const, source: "land", paint: { "line-color": "#5d8bd0", "line-width": 0.9, "line-opacity": 0.85 } },
             ] : []),
           ],
         },
@@ -196,7 +196,7 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
         if (!instance) return;
         if (!isPicker) {
           instance.addSource("coordinate-grid", { type: "geojson", data: coordinateGrid(instance) });
-          instance.addLayer({ id: "coordinate-grid", type: "line", source: "coordinate-grid", paint: { "line-color": "#377ce5", "line-width": 0.8, "line-opacity": 0.38 } });
+          instance.addLayer({ id: "coordinate-grid", type: "line", source: "coordinate-grid", paint: { "line-color": "#377ce5", "line-width": 0.8, "line-opacity": 0.22 } });
         }
         updateCoordinates();
         if (!isPicker) ready.current?.((targetCountry) => {

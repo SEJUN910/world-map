@@ -1,5 +1,13 @@
 # Work Log
 
+## 2026-11-24 - Contrast pass
+
+- The design read too pale (secondary text `#7890af` ≈ 3.3:1, borders `#e5ecf5`, land barely different from sea). User chose to apply all six ideas.
+- Secondary text `#52657f` (≈ 5.9:1) at 12px, titles `#0f1f3a`; borders `#d3dce8`/`#c4d1e3`; gray list panel with white cards and an edge shadow.
+- One accent `#1f5fd1`: active region chip, selected row and "이 지역에서 검색" are solid blue with white text. Status badges more saturated.
+- Map: land `#d9e6f7` (opaque) with `#5d8bd0` outline, grid opacity 0.38 → 0.22 (also applies to the home globe). Site tools, zoom controls and coordinates get a white background and shadow.
+- QA: split-layout script 75 PASS; screenshots checked on desktop, mobile list and home globe.
+
 ## 2026-11-24 - Desktop split: list left, map right
 
 - Planned by Antigravity (`.omc/plans/desktop-split.md`), approved as-is.

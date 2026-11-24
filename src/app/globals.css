@@ -2306,3 +2306,36 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
 @media (max-width: 700px) {
   .country-page--split :is(.split-panel, .split-panel-toggle, .site-tools) { display: none; }
 }
+
+/* Contrast pass: darker text, visible surfaces, one strong accent, lifted map controls. */
+.event-row { border-color: #d3dce8; box-shadow: 0 1px 2px #0f1f3a0d; }
+.event-row.is-selected { border-color: #1f5fd1; background: #f3f7ff; box-shadow: 0 0 0 1px #1f5fd1; }
+.event-row.is-highlighted { border-color: #7fa6e6; box-shadow: 0 3px 12px #0f1f3a1f; }
+.event-row__title { color: #0f1f3a; }
+.event-row__meta, .event-row__date, .event-row__place { color: #52657f; font-size: 12px; }
+.event-row__actions .save-toggle, .event-row__map { color: #52657f; }
+.event-badge { font-size: 11px; }
+.event-badge--live { background: #d3f0de; color: #135c36; }
+.event-badge--closing { background: #ffe1cc; color: #9a3b07; }
+.event-badge--upcoming { background: #dce6ff; color: #1a3d9e; }
+.event-badge--ended { background: #e6e9ef; color: #4a5872; }
+.event-badge--inactive { background: #fbd9d7; color: #921d16; }
+.list-view__summary { color: #3b4d68; }
+.list-view__sort, .desktop-date-filter select, .desktop-date-filter input { border-color: #c4d1e3; color: #1f3a63; }
+.split-panel { background: #f4f6f9; border-right-color: #d3dce8; box-shadow: 2px 0 10px #0f1f3a14; z-index: 1; }
+.split-panel__top { background: #fff; border-bottom-color: #d3dce8; }
+.split-panel__heading .eyebrow { color: #52657f; font-size: 11px; }
+.split-panel .country-search { border-color: #c4d1e3; }
+.split-panel .country-search input::placeholder { color: #6b7c95; }
+.split-panel .region-chips :is(button, a), .country-page--atlas .region-chips :is(button, a) { border-color: #c4d1e3; background: #fff; color: #3b4d68; font-size: 12px; }
+.split-panel .region-chips :is(button, a).active, .country-page--atlas .region-chips :is(button, a).active { border-color: #1f5fd1; background: #1f5fd1; color: #fff; font-weight: 600; }
+.split-panel .empty-state h2 { color: #52657f; }
+.split-panel .pagination .button { background: #fff; border-color: #c4d1e3; color: #1f5fd1; }
+.list-view__page { color: #3b4d68; }
+.site-tools { background: #fff; color: #3b4d68; box-shadow: 0 2px 8px #0f1f3a1f; }
+.event-sheet__settings .site-tools { box-shadow: none; }
+.event-map .maplibregl-ctrl-group { box-shadow: 0 2px 8px #0f1f3a1f; }
+.atlas-search-area { border-color: #1f5fd1; background: #1f5fd1; color: #fff; font-weight: 600; box-shadow: 0 3px 12px #0f1f3a33; }
+.atlas-search-area:disabled { opacity: .7; }
+.event-map__coordinates { background: #fff; color: #3b5f95; box-shadow: 0 2px 8px #0f1f3a14; }
+.split-panel-toggle { border-color: #c4d1e3; color: #1f3a63; box-shadow: 2px 0 8px #0f1f3a1f; }
