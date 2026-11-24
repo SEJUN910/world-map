@@ -167,15 +167,13 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
       ? <MinimalMasthead back actions={<div className="atlas-mobile-actions atlas-mobile-country"><CountrySwitch country={country} heading={initialEvent ? "p" : "h1"} /></div>} />
       : <section id="atlas-catalog" className="split-panel" aria-label={t("행사 목록")} hidden={!catalogOpen}>
         <div className="split-panel__top">
-          <MinimalMasthead back />
-          <div className="split-panel__heading"><p className="eyebrow">{countries[country].english}</p><CountrySwitch country={country} heading={initialEvent ? "p" : "h1"} /></div>
+          <MinimalMasthead back actions={<CountrySwitch country={country} heading={initialEvent ? "p" : "h1"} />} />
           {searchForm}
           <div className="split-panel__filters">{dateFilter}{sortSelect}</div>
-          {regionChips}
-          <div className="list-view__summary">
-            <span>{t("총 {count}개", { count: total })}</span>
-            {filters.bounds && <button type="button" className="list-view__chip" onClick={() => apply(initialRegion, initialQuery, { ...filters, bounds: "" })}>{t("현재 지도 영역")} <span aria-hidden="true">×</span><span className="visually-hidden">{t("영역 해제")}</span></button>}
-          </div>
+        </div>
+        <div className="split-panel__summary">
+          <span>{t("총 {count}개", { count: total })}</span>
+          {filters.bounds && <button type="button" className="list-view__chip" onClick={() => apply(initialRegion, initialQuery, { ...filters, bounds: "" })}>{t("현재 지도 영역")} <span aria-hidden="true">×</span><span className="visually-hidden">{t("영역 해제")}</span></button>}
         </div>
         <div ref={listRef} className="split-panel__list" aria-busy={pending}>
           {events.length
@@ -193,6 +191,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
       {!isMobile && <button type="button" className="split-panel-toggle" aria-controls="atlas-catalog" aria-expanded={catalogOpen} aria-label={panelLabel} title={panelLabel} onClick={() => setCatalogOpen(value => !value)}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d={catalogOpen ? "m14 6-6 6 6 6" : "m10 6 6 6-6 6"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </button>}
+      {!isMobile && regionChips}
       <div className="country-split" aria-busy={pending}>
         <aside className="country-map" aria-label={t("지역 지도")}>
           {/* Fit once per region page; a bounds search must not rebuild the map and lose the user's viewport. */}

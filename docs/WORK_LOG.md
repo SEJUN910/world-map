@@ -1,5 +1,13 @@
 # Work Log
 
+## 2026-11-24 - Map-app style controls and list
+
+- User found the inputs too big and shared a map-app screenshot as the target (high contrast, clearly separated). Followed its layout cues, not its branding.
+- Desktop panel top 322px → 162px: country select moved into the header row (32px), one prominent search box (46px, 2px accent border), date/sort as 34px pills, region chips moved onto the map as floating white pills with shadow (active = solid accent).
+- List rows are flat: no card boxes, divider lines, title first in the accent colour at 16px bold, date `#222`, place/region `#767676`. Selected row gets an accent bar.
+- Neutral greys replace the blue-greys. Mobile sheet filters 44px → 36px pills; sheet rows use the same divider style.
+- QA: split-layout script 79 PASS (adds custom-date form placement and first region chip visible).
+
 ## 2026-11-24 - Contrast pass
 
 - The design read too pale (secondary text `#7890af` ≈ 3.3:1, borders `#e5ecf5`, land barely different from sea). User chose to apply all six ideas.
