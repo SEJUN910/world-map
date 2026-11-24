@@ -1,5 +1,10 @@
 # Work Log
 
+## 2026-11-24 - Serve from Seoul
+
+- `/korea` took ~1.1s to first byte: `x-vercel-id: icn1::iad1` showed pages rendered in Washington DC while Supabase is in Seoul (`ap-northeast-2`), so every auth/list/region/map query crossed the Pacific.
+- `vercel.json` now pins functions to `icn1`. Region chips no longer prefetch every region page on load (~15 background RSC requests).
+
 ## 2026-11-24 - Map-app style controls and list
 
 - User found the inputs too big and shared a map-app screenshot as the target (high contrast, clearly separated). Followed its layout cues, not its branding.

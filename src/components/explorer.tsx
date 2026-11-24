@@ -145,8 +145,8 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
     </form>}
   </div>;
   const regionChips = <nav className="region-chips" aria-label={t("지역 필터")}>
-    <Link href={pathFor("", initialQuery, { ...filters, bounds: "" })} className={!initialRegion ? "active" : ""} aria-current={!initialRegion ? "page" : undefined}>{t("전국")}</Link>
-    {options.map(item => <Link key={item.code} href={pathFor(item.code, initialQuery, { ...filters, bounds: "" })} className={initialRegion === item.code ? "active" : ""} aria-current={initialRegion === item.code ? "page" : undefined}>{item.name}</Link>)}
+    <Link prefetch={false} href={pathFor("", initialQuery, { ...filters, bounds: "" })} className={!initialRegion ? "active" : ""} aria-current={!initialRegion ? "page" : undefined}>{t("전국")}</Link>
+    {options.map(item => <Link key={item.code} prefetch={false} href={pathFor(item.code, initialQuery, { ...filters, bounds: "" })} className={initialRegion === item.code ? "active" : ""} aria-current={initialRegion === item.code ? "page" : undefined}>{item.name}</Link>)}
   </nav>;
   const pages = Math.max(1, Math.ceil(total / 24));
 
