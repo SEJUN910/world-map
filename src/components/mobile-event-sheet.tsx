@@ -10,7 +10,6 @@ import { useTranslations } from "./language-provider";
 import { EventListItem } from "./event-list-item";
 import { TrafficCounter } from "./traffic-counter";
 import { SourceNotice } from "./source-notice";
-import { CategoryChips } from "./category-chips";
 import { TagChips } from "./tag-chips";
 import type { EventTag } from "@/lib/event-tags";
 
@@ -49,12 +48,9 @@ export function MobileEventSheet(props: Props) {
   const dragging = useRef(false);
   // Snap 3 (full height) is the list view; lower snaps show the map.
   const [snap, setSnap] = useState(view === "list" ? 3 : 1);
-  // The lowest snap shows the fixed header; a tag chip row makes it taller.
-  const peek = tagChips.length ? 190 : 154;
+  // The lowest snap shows the heading and the first event (filters live in the body).
+  const peek = 172;
   const peekRef = useRef(peek); peekRef.current = peek;
-  // Re-snap only when the row appears or disappears (the first render has no snap points yet).
-  const shownPeek = useRef(peek);
-  useEffect(() => { if (shownPeek.current === peek) return; shownPeek.current = peek; if (snapRef.current === 1) sheet.current?.snapTo(1); }, [peek]);
   const snapRef = useRef(snap); snapRef.current = snap;
   const [showFilters, setShowFilters] = useState(false);
   const filtersOpen = useRef(false); filtersOpen.current = showFilters;
@@ -148,6 +144,13 @@ export function MobileEventSheet(props: Props) {
               <span>{t(view === "list" ? "지도보기" : "목록보기")}</span>
             </button>
           </div>
+          {snap === 1 && <div className="event-sheet__preview">
+            {loading ? <p className="event-sheet__notice" role="status">{t("불러오는 중…")}</p>
+              : items[0] ? <EventListItem event={items[0]} selected={items[0].id === selectedId} onOpen={() => onSelect(items[0].id)} onShowOnMap={onShowOnMap} distance={distanceOf?.(items[0].id)} />
+              : <p className="event-sheet__notice">{t("아직 발견하지 못했어요.")}</p>}
+          </div>}
+        </div>
+        <Sheet.Content id="event-sheet-body" disableDrag disableScroll={snap === 1} inert={snap === 1} style={{ opacity: "var(--sheet-body-opacity, 0)" }} scrollRef={scroll} scrollClassName="event-sheet__scroll" scrollStyle={{ padding: "0 16px", paddingBottom: "calc(max(24px, env(safe-area-inset-bottom), var(--keyboard-inset-height, 0px)) + 64px)" }} aria-busy={pending || loading}>
           <div className="event-sheet__filters">
             <select aria-label={t("정렬")} value={sort} disabled={pending || !!selectedIds} onChange={event => onSort(event.target.value as EventSort)}>
               <option value="latest">{t("최신 등록순")}</option><option value="soon">{t("일정 빠른 순")}</option><option value="ending">{t("종료 임박순")}</option>
@@ -163,10 +166,7 @@ export function MobileEventSheet(props: Props) {
               {!!activeCount && <small>{activeCount}</small>}
             </button>
           </div>
-          <CategoryChips value={filters.category} disabled={pending} onChange={category => onApply(region, query, { ...filters, category, tag: "" })} />
           <TagChips tags={tagChips} value={filters.tag} disabled={pending} onChange={tag => onApply(region, query, { ...filters, tag })} />
-        </div>
-        <Sheet.Content id="event-sheet-body" disableDrag disableScroll={snap === 1} inert={snap === 1} style={{ opacity: "var(--sheet-body-opacity, 0)" }} scrollRef={scroll} scrollClassName="event-sheet__scroll" scrollStyle={{ padding: "0 16px", paddingBottom: "calc(max(24px, env(safe-area-inset-bottom), var(--keyboard-inset-height, 0px)) + 64px)" }} aria-busy={pending || loading}>
           {showFilters ? <div className="event-sheet__settings">
             <form onSubmit={event => {
               event.preventDefault();
@@ -180,7 +180,7 @@ export function MobileEventSheet(props: Props) {
             </form>
             <TrafficCounter inline />
           </div> : <>
-            {selectedIds && <div className="event-sheet__selection"><span>{selectionLabel || t("지도에서 선택한 위치")}</span><button type="button" onClick={onSelectionClear}>{t("전체 목록")}</button></div>}
+            {selectedIds && <div className="event-sheet__selection"><span>{selectionLabel ? "" : t("지도에서 선택한 위치")}</span><button type="button" onClick={onSelectionClear}>{t("전체 목록")}</button></div>}
             {filters.bounds && !selectedIds && <div className="event-sheet__selection"><span>{t("현재 지도 영역")}</span><button type="button" onClick={() => onApply(region, query, { ...filters, bounds: "" })}>{t("영역 해제")}</button></div>}
             {loading ? <p className="event-sheet__notice" role="status">{t("불러오는 중…")}</p> : error ? <div className="event-sheet__notice" role="alert"><p>{t("행사를 불러오지 못했어요.")}</p><button type="button" onClick={() => setRetry(value => value + 1)}>{t("다시 시도")}</button></div> : items.length ? <div className="event-sheet__list">
               {items.map(event => <EventListItem key={event.id} event={event} selected={event.id === selectedId} onOpen={() => onSelect(event.id)} onShowOnMap={onShowOnMap} distance={distanceOf?.(event.id)} />)}

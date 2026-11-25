@@ -1,5 +1,10 @@
 # Work Log
 
+## 2026-11-25 - Mobile overhaul, stage 3: sheet
+
+- Category chips moved to a fixed row under the search (header area 144px + safe area). The collapsed sheet (172px) shows the heading with map/list and a compact first event (48×64 thumb, one-line title, date), tappable; filters (sort/date/region/settings) and tag chips moved into the sheet body as a sideways-scrolling row so labels are never cut ("최신 등록순"). Nearby/selection bar no longer repeats the heading label.
+- Checks: 360×664 tour (no overlaps except header containment); regression split 79, nearby 33, tags 21, category 16, header/search 10 (QA selectors moved to the new places: chips on top, tags/settings after opening the sheet).
+
 ## 2026-11-25 - Mobile overhaul, stage 2: header, menu, search
 
 - Phone header slimmed to 48px: ← · wordmark · country · + (40px circle) · ≡ menu (`MobileMenu`: saved, account, language — moved out of the sheet settings). Always-visible search row (52px, 16px input, × clears) under the header; the settings panel keeps only custom dates and reset/apply. `--atlas-mobile-header-height` (100px + safe area) is set on :root so the portalled sheet's top follows it.

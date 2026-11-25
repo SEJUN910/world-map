@@ -282,6 +282,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
           <input aria-label={t("행사명, 지역, 장소 검색")} placeholder={t("행사, 지역, 장소 검색")} type="search" enterKeyHint="search" maxLength={100} value={query} onChange={event => setQuery(event.target.value)} />
           {(query || initialQuery) && <button type="button" aria-label={t("검색어 지우기")} onClick={() => { setQuery(""); if (initialQuery) apply(initialRegion, "", filters); }}>×</button>}
         </form>
+        <div className="atlas-mobile-chips"><CategoryChips value={filters.category} disabled={pending} onChange={category => apply(initialRegion, initialQuery, { ...filters, category, tag: "" })} /></div>
       </>
       : <section id="atlas-catalog" className="split-panel" aria-label={t("행사 목록")} hidden={!catalogOpen}>
         <div className="split-panel__top">

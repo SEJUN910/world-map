@@ -2496,7 +2496,7 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
 .atlas-mobile-search, .mobile-menu { display: none; }
 @media (max-width: 700px) {
   /* Header 48px + search row 52px. Everything below the top reads this. */
-  :root, .country-page--atlas { --atlas-mobile-header-height: calc(100px + env(safe-area-inset-top)); }
+  :root, .country-page--atlas { --atlas-mobile-header-height: calc(144px + env(safe-area-inset-top)); }
   .country-page--atlas > .home-masthead { grid-template-columns: 36px minmax(0, 1fr) auto 40px 40px; gap: 4px; height: calc(48px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 8px 0; border-bottom: 0; }
   .country-page--atlas .home-wordmark { font-size: 22px; }
   .country-page--atlas .home-back { width: 36px; height: 40px; }
@@ -2514,4 +2514,32 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
   .atlas-mobile-search input::-webkit-search-cancel-button { display: none; }
   .atlas-mobile-search input:focus { outline: 2px solid #8fb2ea; outline-offset: 0; background: #fff; }
   .atlas-mobile-search button { position: absolute; right: 16px; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #5d7598; font-size: 20px; cursor: pointer; }
+}
+
+/* ── Mobile overhaul, stage 3: category chips on top, first event in the collapsed sheet, scrollable filters. ── */
+.atlas-mobile-chips { display: none; }
+@media (max-width: 700px) {
+  .atlas-mobile-search { border-bottom: 0; }
+  .atlas-mobile-chips { position: fixed; z-index: 6; left: 0; right: 0; top: calc(100px + env(safe-area-inset-top)); display: block; height: 44px; padding: 0 12px 8px; background: #fff; border-bottom: 1px solid #e5ecf5; }
+  .atlas-mobile-chips .category-chips { margin: 0; }
+  .atlas-mobile-chips .category-chips button { height: 34px; padding: 0 14px; font-size: 13px; }
+  /* Collapsed sheet: heading + one compact event (thumb 48×64, title one line, date). */
+  .event-sheet__fixed { padding-bottom: 6px; }
+  .event-sheet__heading { margin-bottom: 2px; }
+  .event-sheet__preview { margin: 0 -16px; }
+  .event-sheet__preview .event-row { border-bottom: 0; }
+  .event-sheet__preview .event-row__body { gap: 12px; padding: 6px 0 6px 16px; }
+  .event-sheet__preview .event-row__thumb { flex-basis: 48px; width: 48px; height: 64px; }
+  .event-sheet__preview .event-row__thumb img, .event-sheet__preview .poster-placeholder { width: 48px; height: 64px; font-size: 9px; }
+  .event-sheet__preview .event-row__title { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 15px; }
+  .event-sheet__preview .event-row__place { display: none; }
+  .event-sheet__preview .event-sheet__notice { margin: 16px 0; text-align: center; }
+  /* Filters scroll sideways so no label is cut ("최신 등록순"). */
+  .event-sheet__scroll .event-sheet__filters { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px 10px; padding: 0 16px 2px; scrollbar-width: none; }
+  .event-sheet__scroll .event-sheet__filters::-webkit-scrollbar { display: none; }
+  .event-sheet__scroll .event-sheet__filters select { flex: 0 0 auto; width: auto; max-width: none; padding-right: 26px; }
+  .event-sheet__scroll .event-sheet__filters > button { flex: 0 0 36px; }
+  .event-sheet__scroll .tag-chips { margin: 0 -16px 8px; padding: 0 16px; }
+  .event-sheet__selection > span:empty { display: none; }
+  .event-sheet__selection:has(> span:empty) { justify-content: flex-end; }
 }
