@@ -5,6 +5,8 @@
 - TourAPI `firstimage2` is a 300x200 copy squashed out of the poster's aspect ratio (PNG ones still 98-137KB), and all 43 active TourAPI images are KOGL Type 3, so TourAPI stays original.
 - Taiwan "Pingtung Luoshanfeng Art Festival" official image is 8000x6000 / 14.7MB, past Vercel's optimizer limit, and the only image in the feed. User chose a reduced copy on this site (OGDL-1.0 allows modification): `public/assets/posters/Event_A15010000H_081870.jpg` (1200x900, 119KB), `localPoster` in `data/taiwan-events.json`, import validates path/JPEG/size.
 - Migration `202611250001_taiwan_local_poster.sql` lets the taiwan_tourism branch also accept `/assets/posters/Event_<id>.jpg`; tested in a rolled-back transaction (live constraint equals 202611240004, local path accepted, traversal and other sources rejected).
+- Deployed (6472995), confirmed the copy and its w=192 webp (3KB) live, then applied the migration and switched the row's `source_image_url` in one transaction. `/taiwan` now references the local thumb and no longer the 14.7MB URL; `/images/events/1a857158-…` redirects to the 119KB copy.
+- Also: `/me/saved` sign-in button capped at 320px and centred (was full page width); checked at 1905px and 390px on production (6c58924).
 - `isResizablePoster` accepts that path; `images.localPatterns` allows only `/assets/posters/**` without a query (other local paths 400). `/images/events/[id]` resolves the local path against the request URL.
 
 ## 2026-11-25 - Lighter posters
