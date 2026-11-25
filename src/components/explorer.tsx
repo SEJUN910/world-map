@@ -207,6 +207,8 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
     setViewportBounds(bounds);
     if (userChanged) setViewportDirty(true);
   }, []);
+  // Anything narrowing the list (used to offer a way back from an empty result).
+  const filtered = !!(initialRegion || initialQuery || filters.when !== "all" || filters.bounds || filters.category);
   function pathFor(region: string, text: string, nextFilters: DiscoveryFilters, targetPage = 1, nextSort: EventSort = sort) {
     const path = country === "kr" && region && !text.trim() ? `/regions/${encodeURIComponent(region)}` : countries[country].path;
     return localizedPath(path, locale, {
@@ -301,7 +303,8 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
           </> : <>
           {events.length
             ? <div className="split-panel__rows">{events.map(event => <EventListItem key={event.id} event={event} selected={selectedId === event.id} highlighted={highlightedId === event.id} onHover={handleCardHighlight} onShowOnMap={showOnMap} />)}</div>
-            : <div className="empty-state"><span aria-hidden="true">✳</span><h2>{t("아직 발견하지 못했어요.")}</h2></div>}
+            : <div className="empty-state"><span aria-hidden="true">✳</span><h2>{t("아직 발견하지 못했어요.")}</h2>
+              {filtered && <Link className="button button-secondary empty-state__reset" href={pathFor("", "", emptyDiscoveryFilters)} onClick={() => setQuery("")}>{t("검색·필터 지우기")}</Link>}</div>}
           {(page > 1 || page * 24 < total) && <nav className="pagination" aria-label={t("행사 목록 페이지")}>
             {page > 1 && <Link className="button button-secondary" href={pageHref(page - 1)}>{t("← 이전")}</Link>}
             <span className="list-view__page">{t("{current} / {total} 페이지", { current: page, total: pages })}</span>

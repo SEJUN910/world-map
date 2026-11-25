@@ -2445,3 +2445,21 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
 .map-notice .map-notice__close { min-height: 32px; width: 32px; padding: 0; border: 0; color: #667; font-size: 18px; }
 .is-mobile-atlas .map-notice { top: auto; bottom: calc(var(--mobile-sheet-height, 144px) + 72px); }
 .event-row__distance { flex: 0 0 auto; color: #1f5fd1; font-weight: 600; }
+
+/* Quick polish (2026-11-25 flow review). */
+/* Detail: room between the directions/calendar row and the description; official link first and filled. */
+.detail-actions { margin-bottom: 24px; }
+.poster-modal__actions a.poster-modal__official { display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: 999px; background: var(--color-primary, #2865c5); color: #fff; text-decoration: none; }
+.poster-modal__actions a.poster-modal__official:hover { background: #2055ad; text-decoration: none; }
+@media (max-width: 700px) { .poster-modal__actions a.poster-modal__official { min-height: 40px; } }
+/* Region chips fade out at the edge instead of being cut, so they read as scrollable. */
+.split-map .region-chips, .country-page--atlas .region-chips { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); }
+/* The coordinate readout is decoration: keep it on the home globe, not over country maps. */
+.country-page .event-map__coordinates { display: none; }
+/* Home: the add button says what it does; a circle on narrow phones. */
+.minimal-home .home-add--labeled { width: auto; padding: 0 16px 0 12px; gap: 6px; display: inline-flex; border-radius: 22px; white-space: nowrap; font-size: 14px; font-weight: 600; }
+@media (max-width: 480px) { .minimal-home .home-add--labeled { width: 44px; padding: 0; justify-content: center; } .home-add__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; } }
+/* The visit counter overlapped the wordmark on phones. */
+@media (max-width: 640px) { .traffic-counter:not(.traffic-counter--inline) { display: none; } }
+.empty-state .empty-state__reset { margin-top: 16px; display: inline-flex; }
+.event-sheet__empty .button { margin-top: 12px; }

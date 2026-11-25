@@ -179,7 +179,8 @@ export function MobileEventSheet(props: Props) {
             {filters.bounds && !selectedIds && <div className="event-sheet__selection"><span>{t("현재 지도 영역")}</span><button type="button" onClick={() => onApply(region, query, { ...filters, bounds: "" })}>{t("영역 해제")}</button></div>}
             {loading ? <p className="event-sheet__notice" role="status">{t("불러오는 중…")}</p> : error ? <div className="event-sheet__notice" role="alert"><p>{t("행사를 불러오지 못했어요.")}</p><button type="button" onClick={() => setRetry(value => value + 1)}>{t("다시 시도")}</button></div> : items.length ? <div className="event-sheet__list">
               {items.map(event => <EventListItem key={event.id} event={event} selected={event.id === selectedId} onOpen={() => onSelect(event.id)} onShowOnMap={onShowOnMap} distance={distanceOf?.(event.id)} />)}
-            </div> : <div className="event-sheet__empty"><span aria-hidden="true">✳</span><p>{t("아직 발견하지 못했어요.")}</p></div>}
+            </div> : <div className="event-sheet__empty"><span aria-hidden="true">✳</span><p>{t("아직 발견하지 못했어요.")}</p>
+              {(region || query || filters.when !== "all" || filters.bounds || filters.category) && <button type="button" className="button button-secondary" onClick={() => { setText(""); onApply("", "", { when: "all", from: "", to: "", bounds: "", category: "", tag: "" }); }}>{t("검색·필터 지우기")}</button>}</div>}
             {!loading && !error && <nav className="event-sheet__pages" aria-label={t("행사 목록 페이지")}>
               {selectedIds ? <>
                 {groupPage > 0 && <button type="button" onClick={() => setGroupPage(value => value - 1)}>{t("← 이전")}</button>}

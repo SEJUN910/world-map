@@ -481,4 +481,5 @@ export const messages: [string, string, string][] = [
   ["현재 위치가 {current} 밖에 있어요. {target} 지도로 이동할까요?", "You appear to be outside {current}. Switch to the {target} map?", "您目前似乎不在{current}，要切換至{target}地圖嗎？"],
   ["{country} 지도로 이동", "Go to {country} map", "前往{country}地圖"],
   ["현재 위치는 아직 지원하지 않는 지역이에요.", "Your current location is not in a supported region yet.", "您目前的位置尚未開放支援。"],
+  ["검색·필터 지우기", "Clear search and filters", "清除搜尋與篩選"],
 ];

@@ -1,5 +1,12 @@
 # Work Log
 
+## 2026-11-25 - Flow/design review and quick polish
+
+- Screenshot tour of production (PC 1366 and mobile 390): home, country, list, detail, settings, empty search, saved, my events, create, Taiwan, English. Findings: home explains nothing and stays blank until the globe draws (~8 s first visit, ~2 s after), France hidden behind the globe, visit counter overlapping the wordmark on phones; mobile search behind the settings icon; empty results with no way out; the add button an unlabelled "+"; inconsistent navigation between map and /me pages; detail actions crowding the description; region chips cut off; coordinate readout covering the mobile view switch; English/Taiwan region chip languages mixed.
+- Quick polish (user chose the recommended batch; planning skipped as small fixes): detail actions spaced from the description and the official link first as a filled pill; region chips fade at the edge; coordinate readout hidden on country maps (kept on the home globe); home add button labelled "행사 올리기" (circle ≤480px, class-based, no :has()); empty results offer "검색·필터 지우기" (desktop link, mobile sheet button); fixed visit counter hidden on phones.
+- Checks: `npm test` 71; local production-build QA (`qa-polish2.mjs`) 17/17; regression split 79, group 18, nearby 33, search/actions 23, tags 22 (the QA browser now uses SwiftShader: hardware WebGL in headless Chrome stalled on this machine). Review: no blocking findings; applied class instead of :has(), narrower fade without padding, margin specificity.
+- Next from the review: home redesign (one-line intro, loading state, country shortcuts incl. Paris, today/this weekend), mobile search box, consistent navigation, region chip languages.
+
 ## 2026-11-25 - Near me
 
 - Planned by Antigravity (`.omc/plans/nearby.md`), user chose "as planned". Map control `data-locate-me` (country pages; globe reset icon changed from ◎ to a globe), geolocation only on tap (phones GPS then network fallback, desktop network), blue dot + accuracy circle under event markers, fly by accuracy, nearest events from the current map points within 10/30/50 km through the selection list (desktop panel and mobile sheet, distance per row). Region pages, area searches and shared event links hand the position over (module memory, 10 s, cleared by timer) to the whole-country view; another supported country gets a "go to that map" notice; unsupported places a notice. `Permissions-Policy: geolocation=(self)`. Position never stored, put in a URL or sent.

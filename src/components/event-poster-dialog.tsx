@@ -104,10 +104,10 @@ export function EventPosterDialog({ event, opener, onDismiss, initiallyOpen = fa
                 </p>
               )}
               <div className="poster-modal__actions">
+                {event.officialUrl && <a className="poster-modal__official" href={event.officialUrl} target="_blank" rel="noopener noreferrer">{t("공식 안내 ↗")}</a>}
                 <SaveEventButton id={event.id} variant="label" />
                 <ShareEventButton event={event} />
                 {onShowOnMap && <button type="button" className="share-event__button" onClick={() => onShowOnMap(event)}>{t("지도에서 보기")}</button>}
-                {event.officialUrl && <a href={event.officialUrl} target="_blank" rel="noopener noreferrer">{t("공식 안내 ↗")}</a>}
               </div>
               <ReportEvent id={event.id} />
             </div>
