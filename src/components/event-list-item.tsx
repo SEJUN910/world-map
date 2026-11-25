@@ -10,13 +10,15 @@ import { fallBackToOriginal, posterSrc } from "@/lib/poster-image";
 
 // One row of the list view (mobile sheet and desktop list): thumbnail, progress
 // badge, title, dates and place, with save and "show on map" actions.
-export function EventListItem({ event, selected = false, highlighted = false, onHover, onOpen, onShowOnMap }: {
+export function EventListItem({ event, selected = false, highlighted = false, onHover, onOpen, onShowOnMap, distance }: {
   event: FestivalEvent;
   selected?: boolean;
   highlighted?: boolean;
   onHover?: (id: string | null) => void;
   onOpen?: (event: FestivalEvent) => void;
   onShowOnMap?: (event: FestivalEvent) => void;
+  /** "Near me" distance, already formatted ("850m"). */
+  distance?: string;
 }) {
   const { t } = useTranslations();
   const link = useRef<HTMLAnchorElement>(null);
@@ -42,6 +44,7 @@ export function EventListItem({ event, selected = false, highlighted = false, on
           {badge && <span className={`event-badge event-badge--${badge.tone}`} suppressHydrationWarning>{t(badge.label, badge.values)}</span>}
           {event.category && event.category !== "other" && <span className="event-row__category">{t(CATEGORY_LABELS[event.category])}</span>}
           {event.region && <span>{event.region}</span>}
+          {distance && <span className="event-row__distance">{t("약 {distance}", { distance })}</span>}
         </span>
         <strong className="event-row__title" lang={event.sourceName === "paris_qfap" ? "fr" : undefined}>{event.title}</strong>
         <span className="event-row__date">{t(eventDate(event))}</span>

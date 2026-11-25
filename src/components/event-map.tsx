@@ -1,4 +1,5 @@
 "use client";
+import { accuracyCircle, type Position } from "@/lib/nearby";
 import { useTranslations } from "@/components/language-provider";
 
 import { countries, isCountryCode, pointInCountry, type CountryCode } from "@/lib/countries";
@@ -14,10 +15,11 @@ import type { MapBounds } from "@/lib/discovery-filters";
 import { BASEMAP_ATTACH_ZOOM, BASEMAP_BACKGROUND, BASEMAP_FADE, BASEMAP_GLYPHS, BASEMAP_LABEL_LAYERS, BASEMAP_SOURCE, LOCAL_IDEOGRAPH_FONTS, basemapLayers, basemapSource, fadeOut, labelField } from "@/lib/map-style";
 
 // Changing `nonce` re-centres the map on the coordinates, even for the same event.
-export type MapFocusTarget = { latitude: number; longitude: number; nonce: number };
+// zoom: exact zoom to fly to (e.g. "near me"); otherwise at least 10.
+export type MapFocusTarget = { latitude: number; longitude: number; nonce: number; zoom?: number };
 export type EventMapPoint = { countryCode?: CountryCode; id: string; slug: string; title: string; latitude: number; longitude: number };
 type Coordinates = { latitude: number; longitude: number };
-type Props = ({ points: EventMapPoint[]; fitToPoints?: boolean; point?: never; onPick?: never } | { points?: never; fitToPoints?: never; point: Coordinates | null; onPick: (point: Coordinates) => void }) & { country?: CountryCode; overview?: boolean; onReady?: (focusCountry: (country: CountryCode) => void) => void; onCountryFocused?: () => void; onSelectEvents?: (ids: string[]) => void; onSelectGroup?: (ids: string[]) => void; selectedEventId?: string; onViewportChange?: (bounds: MapBounds, userChanged: boolean) => void; onEventHighlight?: (id: string | null) => void; highlightedId?: string | null; onCountryClick?: (country: CountryCode) => void; focusTarget?: MapFocusTarget | null };
+type Props = ({ points: EventMapPoint[]; fitToPoints?: boolean; point?: never; onPick?: never } | { points?: never; fitToPoints?: never; point: Coordinates | null; onPick: (point: Coordinates) => void }) & { country?: CountryCode; overview?: boolean; onReady?: (focusCountry: (country: CountryCode) => void) => void; onCountryFocused?: () => void; onSelectEvents?: (ids: string[]) => void; onSelectGroup?: (ids: string[]) => void; selectedEventId?: string; onViewportChange?: (bounds: MapBounds, userChanged: boolean) => void; onEventHighlight?: (id: string | null) => void; highlightedId?: string | null; onCountryClick?: (country: CountryCode) => void; focusTarget?: MapFocusTarget | null; onLocate?: () => void; locating?: boolean; userLocation?: Position | null };
 
 function globeZoom(element: HTMLElement) {
   return Math.log2(Math.min(element.clientWidth * 0.8, element.clientHeight * 0.65, 740) * Math.PI / 512);
@@ -58,7 +60,9 @@ function coordinateGrid(map: MapLibreMap): FeatureCollection<LineString> {
   return { type: "FeatureCollection", features };
 }
 
-export function EventMap({ points, point, onPick, fitToPoints = false, country = "kr", overview = false, onReady, onCountryFocused, onSelectEvents, onSelectGroup, selectedEventId, onViewportChange, onEventHighlight, highlightedId, onCountryClick, focusTarget }: Props) {
+export function EventMap({ points, point, onPick, fitToPoints = false, country = "kr", overview = false, onReady, onCountryFocused, onSelectEvents, onSelectGroup, selectedEventId, onViewportChange, onEventHighlight, highlightedId, onCountryClick, focusTarget, onLocate, locating = false, userLocation = null }: Props) {
+  const locate = useRef(onLocate);
+  locate.current = onLocate;
   const { t, locale } = useTranslations();
   const localeRef = useRef(locale);
   localeRef.current = locale;
@@ -171,13 +175,25 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
       if (!isPicker) {
         const control = document.createElement("div");
         control.className = "maplibregl-ctrl maplibregl-ctrl-group";
+        // "Near me" (country pages only), above "whole globe". Static SVG markup, no user data.
+        if (!overview && locate.current) {
+          const near = document.createElement("button");
+          near.type = "button";
+          near.dataset.locateMe = "true";
+          near.className = "map-locate";
+          near.title = t("내 주변 보기");
+          near.setAttribute("aria-label", near.title);
+          near.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="6.5" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+          near.onclick = () => locate.current?.();
+          control.appendChild(near);
+        }
         const button = document.createElement("button");
         button.type = "button";
         button.dataset.globeReset = "true";
+        button.className = "map-globe-reset";
         button.title = t("지구 전체 보기");
         button.setAttribute("aria-label", button.title);
-        button.textContent = "◎";
-        button.style.cssText = "font-size:22px;color:#2865c5";
+        button.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 12h17M12 3.5c-2.6 2.4-3.9 5.2-3.9 8.5s1.3 6.1 3.9 8.5M12 3.5c2.6 2.4 3.9 5.2 3.9 8.5s-1.3 6.1-3.9 8.5" stroke="currentColor" stroke-width="1.4"/></svg>';
         button.onclick = () => {
           if (instance && container.current) instance.flyTo({ zoom: globeZoom(container.current), duration: 1200, pitch: 0, bearing: 0 });
         };
@@ -382,6 +398,12 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
           instance.addSource("events", { type: "geojson", data: collection(latestPoints.current), cluster: true, clusterMaxZoom: 15, clusterRadius: 40 });
           instance.addLayer({ id: "event-clusters", type: "circle", source: "events", filter: ["has", "point_count"], paint: { "circle-color": "#f39451", "circle-radius": ["step", ["get", "point_count"], 9, 10, 13, 50, 17], "circle-stroke-width": 2, "circle-stroke-color": "#ffffff", "circle-opacity": 1 } });
           instance.addLayer({ id: "event-points", type: "circle", source: "events", filter: ["!", ["has", "point_count"]], paint: { "circle-color": "#f39451", "circle-radius": 5, "circle-stroke-width": 2, "circle-stroke-color": "#ffffff", "circle-opacity": 1 } });
+          // The visitor's position ("near me"), under the event markers so they stay clickable.
+          instance.addSource("user-location", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+          instance.addLayer({ id: "user-accuracy", type: "fill", source: "user-location", filter: ["==", ["geometry-type"], "Polygon"], paint: { "fill-color": "#2865c5", "fill-opacity": 0.12 } }, "event-clusters");
+          instance.addLayer({ id: "user-accuracy-line", type: "line", source: "user-location", filter: ["==", ["geometry-type"], "Polygon"], paint: { "line-color": "#2865c5", "line-opacity": 0.35, "line-width": 1 } }, "event-clusters");
+          instance.addLayer({ id: "user-halo", type: "circle", source: "user-location", filter: ["==", ["geometry-type"], "Point"], paint: { "circle-color": "#1f5fd1", "circle-opacity": 0.18, "circle-radius": 13 } }, "event-clusters");
+          instance.addLayer({ id: "user-dot", type: "circle", source: "user-location", filter: ["==", ["geometry-type"], "Point"], paint: { "circle-color": "#1f5fd1", "circle-radius": 7, "circle-stroke-width": 2.5, "circle-stroke-color": "#ffffff" } }, "event-clusters");
           setPosterMap(instance);
           let hoverPopup: InstanceType<typeof lib.Popup> | undefined;
           let hoverGeneration = 0;
@@ -542,8 +564,26 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
   useEffect(() => {
     if (!focusTarget || !posterMap) return;
     posterMap.stop();
-    posterMap.flyTo({ center: [focusTarget.longitude, focusTarget.latitude], zoom: Math.max(posterMap.getZoom(), 10), duration: 700 });
+    posterMap.flyTo({ center: [focusTarget.longitude, focusTarget.latitude], zoom: focusTarget.zoom ?? Math.max(posterMap.getZoom(), 10), duration: 700 });
   }, [focusTarget?.nonce, posterMap]);
+
+  useEffect(() => {
+    const source = posterMap?.getSource("user-location") as GeoJSONSource | undefined;
+    if (!source) return;
+    const circle = userLocation && accuracyCircle(userLocation);
+    source.setData({ type: "FeatureCollection", features: userLocation ? [
+      ...(circle ? [circle] : []),
+      { type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [userLocation.longitude, userLocation.latitude] } },
+    ] : [] });
+  }, [userLocation, posterMap]);
+
+  useEffect(() => {
+    const button = container.current?.querySelector<HTMLButtonElement>("[data-locate-me]");
+    if (!button) return;
+    button.setAttribute("aria-busy", String(locating));
+    button.classList.toggle("is-locating", locating);
+    button.classList.toggle("is-active", !!userLocation);
+  }, [locating, userLocation, posterMap]);
 
   useEffect(() => {
     if (map.current?.getLayer("event-points")) map.current.setPaintProperty("event-points", "circle-color", ["case", ["==", ["get", "id"], selectedEventId || ""], "#2865c5", "#f39451"]);
@@ -551,7 +591,7 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
 
   useEffect(() => {
     const root = container.current;
-    for (const [selector, label] of [[".maplibregl-ctrl-zoom-in", t("확대")], [".maplibregl-ctrl-zoom-out", t("축소")], ["[data-globe-reset]", t("지구 전체 보기")]]) {
+    for (const [selector, label] of [[".maplibregl-ctrl-zoom-in", t("확대")], [".maplibregl-ctrl-zoom-out", t("축소")], ["[data-globe-reset]", t("지구 전체 보기")], ["[data-locate-me]", t("내 주변 보기")]]) {
       const button = root?.querySelector<HTMLElement>(selector);
       if (button) { button.title = label; button.setAttribute("aria-label", label); }
     }

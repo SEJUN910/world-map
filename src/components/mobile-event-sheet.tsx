@@ -26,6 +26,8 @@ type Props = {
   view: ExplorerView; onViewChange: (view: ExplorerView) => void;
   sort: EventSort; onSort: (sort: EventSort) => void;
   onShowOnMap: (event: FestivalEvent) => void;
+  // "Near me": heading for the selection and the distance of each row.
+  selectionLabel?: string; distanceOf?: (id: string) => string | undefined;
 };
 function TrackHeight({ onHeight }: { onHeight: Props["onHeight"] }) {
   const { yInverted } = Sheet.useContext();
@@ -35,7 +37,7 @@ function TrackHeight({ onHeight }: { onHeight: Props["onHeight"] }) {
 }
 
 export function MobileEventSheet(props: Props) {
-  const { country, events, total, page, regions, region, query, filters, pending, tagChips, selectedIds, selectedId, onSelect, onApply, onSelectionClear, pageHref, onHeight, view, onViewChange, sort, onSort, onShowOnMap } = props;
+  const { country, events, total, page, regions, region, query, filters, pending, tagChips, selectedIds, selectedId, onSelect, onApply, onSelectionClear, pageHref, onHeight, view, onViewChange, sort, onSort, onShowOnMap, selectionLabel, distanceOf } = props;
   const { t } = useTranslations();
   const reduced = useReducedMotion();
   const sheet = useRef<SheetRef>(null);
@@ -137,7 +139,7 @@ export function MobileEventSheet(props: Props) {
             }}><span aria-hidden="true" /><span className="visually-hidden">{levels[snap]}</span></button>
         </Sheet.Header>
         <div className="event-sheet__fixed">
-          <div className="event-sheet__heading"><strong>{selectedIds ? t("선택한 위치의 행사") : t("행사 목록")}</strong>
+          <div className="event-sheet__heading"><strong>{selectedIds ? selectionLabel || t("선택한 위치의 행사") : t("행사 목록")}</strong>
             <span>{t("총 {count}개", { count: selectedIds ? selectedIds.length : total })}</span>
           </div>
           <div className="event-sheet__filters">
@@ -173,10 +175,10 @@ export function MobileEventSheet(props: Props) {
             </form>
             <SiteTools /><TrafficCounter inline />
           </div> : <>
-            {selectedIds && <div className="event-sheet__selection"><span>{t("지도에서 선택한 위치")}</span><button type="button" onClick={onSelectionClear}>{t("전체 목록")}</button></div>}
+            {selectedIds && <div className="event-sheet__selection"><span>{selectionLabel || t("지도에서 선택한 위치")}</span><button type="button" onClick={onSelectionClear}>{t("전체 목록")}</button></div>}
             {filters.bounds && !selectedIds && <div className="event-sheet__selection"><span>{t("현재 지도 영역")}</span><button type="button" onClick={() => onApply(region, query, { ...filters, bounds: "" })}>{t("영역 해제")}</button></div>}
             {loading ? <p className="event-sheet__notice" role="status">{t("불러오는 중…")}</p> : error ? <div className="event-sheet__notice" role="alert"><p>{t("행사를 불러오지 못했어요.")}</p><button type="button" onClick={() => setRetry(value => value + 1)}>{t("다시 시도")}</button></div> : items.length ? <div className="event-sheet__list">
-              {items.map(event => <EventListItem key={event.id} event={event} selected={event.id === selectedId} onOpen={() => onSelect(event.id)} onShowOnMap={onShowOnMap} />)}
+              {items.map(event => <EventListItem key={event.id} event={event} selected={event.id === selectedId} onOpen={() => onSelect(event.id)} onShowOnMap={onShowOnMap} distance={distanceOf?.(event.id)} />)}
             </div> : <div className="event-sheet__empty"><span aria-hidden="true">✳</span><p>{t("아직 발견하지 못했어요.")}</p></div>}
             {!loading && !error && <nav className="event-sheet__pages" aria-label={t("행사 목록 페이지")}>
               {selectedIds ? <>

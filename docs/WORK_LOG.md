@@ -1,5 +1,11 @@
 # Work Log
 
+## 2026-11-25 - Near me
+
+- Planned by Antigravity (`.omc/plans/nearby.md`), user chose "as planned". Map control `data-locate-me` (country pages; globe reset icon changed from ◎ to a globe), geolocation only on tap (phones GPS then network fallback, desktop network), blue dot + accuracy circle under event markers, fly by accuracy, nearest events from the current map points within 10/30/50 km through the selection list (desktop panel and mobile sheet, distance per row). Region pages, area searches and shared event links hand the position over (module memory, 10 s, cleared by timer) to the whole-country view; another supported country gets a "go to that map" notice; unsupported places a notice. `Permissions-Policy: geolocation=(self)`. Position never stored, put in a URL or sent.
+- Checks: `npm test` 71; local production-build QA (`qa-nearby.mjs`, emulated position) 33/33 — header, list with sorted distances, filters kept, denied/approximate/rough/unsupported notices, France→Korea hand-off, region/area/event-link widening, late answer after switching to France does nothing, mobile sheet, no lat/lng in any request, home globe without the button. Regression: split 79, basemap 19, group 18, search/actions 23, tags 22, polish 10.
+- Review: no leak; fixed late answers acting on a newer page (callbacks through refs, pending answers dropped when the view changes), shared event links searching one point, notices now translate on render. Known limit: bounding-box country detection.
+
 ## 2026-11-25 - Wider search, directions and calendar
 
 - From the feature audit (search missed tags/descriptions: 뮤지컬 13 vs 70 tagged, 무료 0; no directions or calendar). Planned by Antigravity (`.omc/plans/search-and-actions.md`; the first ask returned empty and was re-asked), user chose "as planned".

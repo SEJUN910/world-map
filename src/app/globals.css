@@ -2430,3 +2430,18 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
 .tag-chips button:focus-visible { outline: 2px solid #1f5fd1; outline-offset: 1px; }
 .split-panel__top .tag-chips { margin-top: -6px; }
 .event-row__category { flex: 0 0 auto; color: #222; font-weight: 600; }
+
+/* "Near me" button, its notices and distances. */
+.maplibregl-ctrl-group button.map-locate, .maplibregl-ctrl-group button.map-globe-reset { display: grid; place-items: center; color: #2865c5; }
+.maplibregl-ctrl-group button.map-locate.is-active { color: #1f5fd1; background: #eef3fd; }
+.maplibregl-ctrl-group button.map-locate.is-locating svg { animation: map-locate-pulse 1s ease-in-out infinite; }
+@keyframes map-locate-pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .maplibregl-ctrl-group button.map-locate.is-locating svg { animation: none; opacity: .5; } }
+.is-mobile-atlas .maplibregl-ctrl-group button { width: 40px; height: 40px; }
+.map-notice { position: absolute; z-index: 3; left: 50%; top: 72px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; width: max-content; max-width: min(520px, calc(100% - 32px)); margin: 0; padding: 10px 12px 10px 16px; border: 1px solid #dce7f2; border-radius: 14px; background: #fff; color: #233; font-size: 13px; line-height: 1.45; box-shadow: 0 4px 16px #182c4c24; }
+.map-notice p { margin: 0; }
+.map-notice.is-alert { border-color: #f1d2cc; }
+.map-notice button { flex: 0 0 auto; min-height: 32px; padding: 0 12px; border: 1px solid #cfdcf1; border-radius: 999px; background: #fff; color: var(--color-primary); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.map-notice .map-notice__close { min-height: 32px; width: 32px; padding: 0; border: 0; color: #667; font-size: 18px; }
+.is-mobile-atlas .map-notice { top: auto; bottom: calc(var(--mobile-sheet-height, 144px) + 72px); }
+.event-row__distance { flex: 0 0 auto; color: #1f5fd1; font-weight: 600; }

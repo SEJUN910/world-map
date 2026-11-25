@@ -22,6 +22,7 @@ import { CategoryChips } from "./category-chips";
 import { TagChips } from "./tag-chips";
 import { useGroupEvents } from "./use-group-events";
 import type { EventTag } from "@/lib/event-tags";
+import { APPROXIMATE_METERS, NO_DISTANCE_METERS, countryAt, formatDistance, handOffPosition, nearbyEvents, takeHandedOffPosition, zoomForAccuracy, type Position } from "@/lib/nearby";
 const MobileEventSheet = dynamic(() => import("./mobile-event-sheet").then(module => module.MobileEventSheet), { ssr: false });
 
 export function Explorer({ country = "kr", events, mapPoints, total, regions, initialRegion = "", initialQuery = "", page = 1, initialEvent = null, filters = emptyDiscoveryFilters, initialView = "map", sort = "latest", tagChips = [] }: {
@@ -114,6 +115,94 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
   }, []);
   const group = useGroupEvents(isMobile ? null : selectedIds, events);
   useEffect(() => { listRef.current?.scrollTo({ top: 0 }); }, [group.groupPage]);
+  // "Near me": the position stays in this component (never stored or sent). The
+  // nearby list reuses the selection list, so it ends like a map group does.
+  const [userLocation, setUserLocation] = useState<Position | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [nearby, setNearby] = useState<{ ids: string[]; radiusKm: number; distances: Map<string, string> | null } | null>(null);
+  // Notices are translated when shown, so switching the UI language updates them.
+  type Notice = { text: (tr: typeof t) => string; alert?: boolean; action?: { label: (tr: typeof t) => string; run: () => void } };
+  const [notice, setNotice] = useState<Notice | null>(null);
+  const locateRequest = useRef(0);
+  const nearbyActive = !!nearby && nearby.ids === selectedIds;
+  const partialView = !!(initialRegion || filters.bounds || initialEvent);
+  useEffect(() => {
+    if (!notice || notice.action) return;
+    const timer = setTimeout(() => setNotice(null), 6000);
+    return () => clearTimeout(timer);
+  }, [notice]);
+  function showNearby(position: Position) {
+    const here = countryAt(position);
+    if (here !== country) {
+      setNotice(here
+        ? { text: (tr) => tr("현재 위치가 {current} 밖에 있어요. {target} 지도로 이동할까요?", { current: tr(countries[country].name), target: tr(countries[here].name) }), action: { label: (tr) => tr("{country} 지도로 이동", { country: tr(countries[here].name) }), run: () => { handOffPosition(position); setNotice(null); router.push(localizedPath(countries[here].path, locale)); } } }
+        : { text: (tr) => tr("현재 위치는 아직 지원하지 않는 지역이에요.") });
+      return;
+    }
+    // A region page, an area search or a shared event link only has part of the
+    // country's events: look in the whole country.
+    if (partialView) {
+      handOffPosition(position);
+      startTransition(() => router.push(pathFor("", initialQuery, { ...filters, bounds: "" }), { scroll: false }));
+      return;
+    }
+    setUserLocation(position);
+    setFocus({ latitude: position.latitude, longitude: position.longitude, nonce: Date.now(), zoom: zoomForAccuracy(position.accuracy) });
+    const result = nearbyEvents(latestPoints.current, position);
+    if (!result.items.length) {
+      setNearby(null); setSelectedIds(null);
+      setNotice({ text: (tr) => tr("반경 {km}km 안에 행사가 없어요.", { km: result.radiusKm }) });
+      return;
+    }
+    const ids = result.items.map(item => item.id);
+    setNearby({ ids, radiusKm: result.radiusKm, distances: position.accuracy > NO_DISTANCE_METERS ? null : new Map(result.items.map(item => [item.id, formatDistance(item.meters)])) });
+    setSelectedIds(ids); setSelectedId(""); setHighlightedId(null); setCatalogOpen(true);
+    listRef.current?.scrollTo({ top: 0 });
+    setNotice(position.accuracy > APPROXIMATE_METERS ? { text: (tr) => tr("대략적인 위치로 이동했어요. 지도를 움직여 원하는 곳을 찾아보세요.") } : null);
+  }
+  // A late answer must act on the current page, not the one where the button was pressed.
+  const showNearbyRef = useRef(showNearby); showNearbyRef.current = showNearby;
+  function locate() {
+    if (typeof navigator === "undefined" || !("geolocation" in navigator) || !window.isSecureContext) {
+      setNotice({ text: (tr) => tr("이 브라우저에서는 위치 기능을 사용할 수 없어요."), alert: true });
+      return;
+    }
+    // A second tap while looking restarts; the older answer is ignored.
+    const request = ++locateRequest.current;
+    setLocating(true); setNotice(null);
+    const done = (found: GeolocationPosition) => {
+      if (request !== locateRequest.current) return;
+      setLocating(false);
+      showNearbyRef.current({ latitude: found.coords.latitude, longitude: found.coords.longitude, accuracy: found.coords.accuracy });
+    };
+    const fail = (error: GeolocationPositionError) => {
+      if (request !== locateRequest.current) return;
+      setLocating(false);
+      const retry = { label: (tr: typeof t) => tr("다시 시도"), run: () => { setNotice(null); locateRef.current(); } };
+      setNotice(error.code === error.PERMISSION_DENIED
+        ? { text: (tr) => tr("위치 접근이 거부되었어요. 브라우저 설정에서 위치 권한을 허용해 주세요."), alert: true }
+        : error.code === error.TIMEOUT
+          ? { text: (tr) => tr("위치를 찾는 데 시간이 오래 걸리고 있어요. 잠시 후 다시 시도해 주세요."), alert: true, action: retry }
+          : { text: (tr) => tr("현재 위치를 확인할 수 없어요. 기기의 위치 설정과 네트워크를 확인해 주세요."), alert: true, action: retry });
+    };
+    // Phones try GPS first and fall back to a quicker network fix; desktops go straight to the network fix.
+    const network = () => navigator.geolocation.getCurrentPosition(done, fail, { enableHighAccuracy: false, timeout: 8000, maximumAge: 300_000 });
+    if (window.matchMedia("(pointer: coarse)").matches) navigator.geolocation.getCurrentPosition(done, (error) => { if (error.code === error.PERMISSION_DENIED) fail(error); else if (request === locateRequest.current) network(); }, { enableHighAccuracy: true, timeout: 8000, maximumAge: 60_000 });
+    else network();
+  }
+  const locateRef = useRef(locate); locateRef.current = locate;
+  // Leaving this view (another country, region, area or event, or unmounting)
+  // drops a pending answer and any notice tied to the old view.
+  useEffect(() => () => { locateRequest.current++; setLocating(false); setNotice(null); }, [country, initialRegion, filters.bounds, initialEvent?.id]);
+  // Arriving with a position in hand: from another country's page or a region page
+  // (a new mount), or on this page after an area search was dropped (same mount).
+  // Declared after the reset effect so its state wins.
+  useEffect(() => {
+    if (partialView) return;
+    const position = takeHandedOffPosition();
+    if (position) showNearby(position);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialRegion, filters.bounds, initialEvent?.id]);
   const onViewportChange = useCallback((bounds: MapBounds, userChanged: boolean) => {
     setViewportBounds(bounds);
     if (userChanged) setViewportDirty(true);
@@ -193,7 +282,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
         </div>
         <div className={`split-panel__summary${selectedIds ? " is-selection" : ""}`}>
           {selectedIds ? <>
-            <span><strong>{t("선택한 위치의 행사")}</strong> · {t("총 {count}개", { count: selectedIds.length })}</span>
+            <span><strong>{nearbyActive ? t("내 주변 행사") : t("선택한 위치의 행사")}</strong>{nearbyActive && <> · {t("반경 {km}km", { km: nearby!.radiusKm })}</>} · {t("총 {count}개", { count: selectedIds.length })}</span>
             <button type="button" className="list-view__chip" onClick={() => { setSelectedIds(null); setSelectedId(""); listRef.current?.scrollTo({ top: 0 }); listRef.current?.focus({ preventScroll: true }); }}>{t("전체 목록")}</button>
           </> : <span>{t("총 {count}개", { count: total })}</span>}
           {filters.bounds && <button type="button" className="list-view__chip" onClick={() => apply(initialRegion, initialQuery, { ...filters, bounds: "" })}>{t("현재 지도 영역")} <span aria-hidden="true">×</span><span className="visually-hidden">{t("영역 해제")}</span></button>}
@@ -203,7 +292,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
             {group.loading ? <p className="split-panel__notice" role="status">{t("불러오는 중…")}</p>
               : group.error ? <div className="split-panel__notice" role="alert"><p>{t("행사를 불러오지 못했어요.")}</p><button type="button" className="button button-secondary" onClick={group.retry}>{t("다시 시도")}</button></div>
               : !group.groupEvents.length ? <p className="split-panel__notice">{t("아직 발견하지 못했어요.")}</p>
-              : <div className="split-panel__rows">{group.groupEvents.map(event => <EventListItem key={event.id} event={event} selected={selectedId === event.id} highlighted={highlightedId === event.id} onHover={handleCardHighlight} onShowOnMap={showOnMap} />)}</div>}
+              : <div className="split-panel__rows">{group.groupEvents.map(event => <EventListItem key={event.id} event={event} selected={selectedId === event.id} highlighted={highlightedId === event.id} onHover={handleCardHighlight} onShowOnMap={showOnMap} distance={nearbyActive ? nearby!.distances?.get(event.id) : undefined} />)}</div>}
             {selectedIds.length > 24 && <nav className="pagination" aria-label={t("행사 목록 페이지")}>
               {group.groupPage > 0 && <button type="button" className="button button-secondary" onClick={() => { group.setGroupPage(value => value - 1); listRef.current?.focus({ preventScroll: true }); }}>{t("← 이전")}</button>}
               <span className="list-view__page">{t("{current} / {total} 페이지", { current: group.groupPage + 1, total: Math.ceil(selectedIds.length / 24) })}</span>
@@ -233,15 +322,24 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
           {/* Fit once per region page; a bounds search must not rebuild the map and lose the user's viewport. */}
           <EventMap country={country} points={mapPoints} fitToPoints={!!initialRegion}
             onSelectEvents={isMobile ? selectMapEvents : undefined} onSelectGroup={isMobile ? undefined : selectDesktopGroup} selectedEventId={selectedId} onViewportChange={onViewportChange} focusTarget={focus}
-            onEventHighlight={isMobile ? undefined : handleMapHighlight} highlightedId={isMobile ? undefined : highlightedId} />
+            onEventHighlight={isMobile ? undefined : handleMapHighlight} highlightedId={isMobile ? undefined : highlightedId}
+            onLocate={locate} locating={locating} userLocation={userLocation} />
           {searchAreaButton}
+          {locating && <p className="map-notice" role="status">{t("내 위치 찾는 중…")}</p>}
+          {!locating && notice && <div className={`map-notice${notice.alert ? " is-alert" : ""}`} role={notice.alert ? "alert" : "status"}>
+            <p>{notice.text(t)}</p>
+            {notice.action && <button type="button" onClick={notice.action.run}>{notice.action.label(t)}</button>}
+            <button type="button" className="map-notice__close" aria-label={t("닫기")} onClick={() => setNotice(null)}>×</button>
+          </div>}
           {total > mapPoints.length && <p className="map-help">{t("지도에는 최대 5,000개의 행사만 표시돼요.")}</p>}
         </aside>
       </div>
     </div>
     {isMobile ? <>
       <MobileEventSheet country={country} events={events} total={total} page={page} regions={options} region={initialRegion} query={initialQuery} filters={filters} pending={pending} tagChips={tagChips}
-        selectedIds={selectedIds} selectedId={selectedId} onSelect={setSelectedId} onSelectionClear={() => { setSelectedIds(null); setSelectedId(""); }}
+        selectedIds={selectedIds} selectedId={selectedId} onSelect={setSelectedId}
+        selectionLabel={nearbyActive ? `${t("내 주변 행사")} · ${t("반경 {km}km", { km: nearby!.radiusKm })}` : undefined}
+        distanceOf={nearbyActive && nearby!.distances ? (id) => nearby!.distances!.get(id) : undefined} onSelectionClear={() => { setSelectedIds(null); setSelectedId(""); }}
         onApply={apply} pageHref={pageHref} onHeight={onHeight}
         view={view} onViewChange={changeView} sort={sort} onSort={applySort} onShowOnMap={showOnMap} />
       {createPortal(<button type="button" className={`atlas-view-switch${view === "list" ? " is-list" : ""}`} onClick={() => changeView(view === "list" ? "map" : "list")}>
