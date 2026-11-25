@@ -1,5 +1,10 @@
 # Work Log
 
+## 2026-11-25 - Mobile overhaul, stage 2: header, menu, search
+
+- Phone header slimmed to 48px: ← · wordmark · country · + (40px circle) · ≡ menu (`MobileMenu`: saved, account, language — moved out of the sheet settings). Always-visible search row (52px, 16px input, × clears) under the header; the settings panel keeps only custom dates and reset/apply. `--atlas-mobile-header-height` (100px + safe area) is set on :root so the portalled sheet's top follows it.
+- Checks: `qa-m2.mjs` 10/10 (search visible and applies, × clears, menu opens/closes inside the screen, settings without search/tools, no horizontal scroll); regression split 79, nearby 33, tags 22, category 16.
+
 ## 2026-11-25 - Mobile overhaul, stage 1: map slots
 
 - User: "모바일이 엉망이야" (Galaxy, KakaoTalk in-app, ~360×664; credits expanded over the map, two pills stacked over clusters). Planned by Antigravity (`.omc/plans/mobile-overhaul.md`, 5 stages), user chose "stage by stage to the end".

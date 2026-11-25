@@ -7,7 +7,6 @@ import { todayInCountry, type FestivalEvent } from "@/lib/events";
 import type { CountryCode } from "@/lib/countries";
 import { validDate, type DateChoice, type DiscoveryFilters, type EventSort, type ExplorerView } from "@/lib/discovery-filters";
 import { useTranslations } from "./language-provider";
-import { SiteTools } from "./site-tools";
 import { EventListItem } from "./event-list-item";
 import { TrafficCounter } from "./traffic-counter";
 import { SourceNotice } from "./source-notice";
@@ -120,7 +119,7 @@ export function MobileEventSheet(props: Props) {
       }} disableDismiss disableScrollLocking
       prefersReducedMotion={!!reduced} tweenConfig={{ ease: "easeOut", duration: 0.26 }}
       onDragStart={() => { dragging.current = true; }} onDragEnd={() => { setTimeout(() => { dragging.current = false; }, 0); }}
-      style={{ zIndex: 5, top: "calc(65px + max(12px, env(safe-area-inset-top)))" }}>
+      style={{ zIndex: 5, top: "var(--atlas-mobile-header-height, 100px)" }}>
       <TrackHeight onHeight={trackHeight} />
       <Sheet.Container ref={container} className="event-sheet" role="region" aria-label={t("행사 목록")} data-snap={snap}
         onKeyDown={event => {
@@ -175,12 +174,11 @@ export function MobileEventSheet(props: Props) {
               setFormError(""); setShowFilters(false);
               onApply(region, text, { ...filters, when: custom ? "custom" : filters.when, from: custom ? from : "", to: custom ? to : "" });
             }}>
-              <label>{t("검색")}<input type="search" placeholder={t("행사, 지역, 장소 검색")} value={text} maxLength={100} onChange={event => setText(event.target.value)} /></label>
               {custom && <div className="event-sheet__dates"><label>{t("시작일")}<input type="date" value={from} onChange={event => setFrom(event.target.value)} required /></label><label>{t("종료일")}<input type="date" value={to} min={from} onChange={event => setTo(event.target.value)} required /></label></div>}
               {formError && <p role="alert">{formError}</p>}
               <div className="event-sheet__apply"><button type="button" onClick={() => { setShowFilters(false); setText(""); setCustom(false); onApply("", "", { when: "all", from: "", to: "", bounds: "", category: filters.category, tag: filters.tag }); }}>{t("초기화")}</button><button type="submit" disabled={pending}>{t("적용")}</button></div>
             </form>
-            <SiteTools /><TrafficCounter inline />
+            <TrafficCounter inline />
           </div> : <>
             {selectedIds && <div className="event-sheet__selection"><span>{selectionLabel || t("지도에서 선택한 위치")}</span><button type="button" onClick={onSelectionClear}>{t("전체 목록")}</button></div>}
             {filters.bounds && !selectedIds && <div className="event-sheet__selection"><span>{t("현재 지도 영역")}</span><button type="button" onClick={() => onApply(region, query, { ...filters, bounds: "" })}>{t("영역 해제")}</button></div>}

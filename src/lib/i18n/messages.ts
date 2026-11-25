@@ -483,4 +483,6 @@ export const messages: [string, string, string][] = [
   ["현재 위치는 아직 지원하지 않는 지역이에요.", "Your current location is not in a supported region yet.", "您目前的位置尚未開放支援。"],
   ["검색·필터 지우기", "Clear search and filters", "清除搜尋與篩選"],
   ["지도 출처", "Map credits", "地圖來源"],
+  ["메뉴", "Menu", "選單"],
+  ["검색어 지우기", "Clear search", "清除搜尋"],
 ];

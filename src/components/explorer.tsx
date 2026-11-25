@@ -14,6 +14,7 @@ import { MinimalMasthead } from "./minimal-masthead";
 import { LinkedEventDialog } from "./event-poster-dialog";
 import { TrafficCounter } from "./traffic-counter";
 import { SiteTools } from "./site-tools";
+import { MobileMenu } from "./mobile-menu";
 import { useMobileAtlas } from "./mobile-atlas-controls";
 import { CountrySwitch } from "./country-switch";
 import { SourceNotice } from "./source-notice";
@@ -273,7 +274,15 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
   return <div ref={root} className={isMobile ? "country-page country-page--atlas is-mobile-atlas has-event-sheet" : `country-page country-page--split${catalogOpen ? "" : " is-panel-closed"}`}>
     {initialEvent && <LinkedEventDialog key={initialEvent.id} event={initialEvent} />}
     {isMobile
-      ? <MinimalMasthead back actions={<div className="atlas-mobile-actions atlas-mobile-country"><CountrySwitch country={country} heading={initialEvent ? "p" : "h1"} /></div>} />
+      ? <>
+        <MinimalMasthead back actions={<div className="atlas-mobile-actions atlas-mobile-country"><CountrySwitch country={country} heading={initialEvent ? "p" : "h1"} /></div>} after={<MobileMenu />} />
+        {/* Always-visible search on phones (it used to hide behind the settings icon). */}
+        <form className="atlas-mobile-search" role="search" onSubmit={event => { event.preventDefault(); (event.currentTarget.querySelector("input") as HTMLInputElement | null)?.blur(); apply(initialRegion, query, filters); }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" strokeWidth="1.6"/><path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+          <input aria-label={t("행사명, 지역, 장소 검색")} placeholder={t("행사, 지역, 장소 검색")} type="search" enterKeyHint="search" maxLength={100} value={query} onChange={event => setQuery(event.target.value)} />
+          {(query || initialQuery) && <button type="button" aria-label={t("검색어 지우기")} onClick={() => { setQuery(""); if (initialQuery) apply(initialRegion, "", filters); }}>×</button>}
+        </form>
+      </>
       : <section id="atlas-catalog" className="split-panel" aria-label={t("행사 목록")} hidden={!catalogOpen}>
         <div className="split-panel__top">
           <MinimalMasthead back actions={<CountrySwitch country={country} heading={initialEvent ? "p" : "h1"} />} />
