@@ -7,6 +7,12 @@ test("double-encoded titles decode once fully; bad code points are dropped", () 
   assert.equal(decodeEntities("A &amp;amp; B"), "A & B");
   assert.equal(decodeEntities("x&#0;y&#99999999;z&#xD800;"), "xyz");
   assert.equal(decodeEntities("&#44032;&#x2014;&nbsp;"), "가— ");
+  // Named entities seen in live data, case-sensitive accents, double encoding.
+  assert.equal(decodeEntities("김소현&times;손준호"), "김소현×손준호");
+  assert.equal(decodeEntities("&laquo;Caf&eacute;&raquo; &ndash; &Eacute;t&eacute;"), "«Café» – Été");
+  assert.equal(decodeEntities("La promesse &amp;#58; repartir"), "La promesse : repartir");
+  assert.equal(decodeEntities("&AMP; &Lt; &unknown; &constructor; &toString;"), "& &Lt; &unknown; &constructor; &toString;");
+  assert.equal(decodeEntities("&middot;&hellip;&rsquo;&euro;&trade;"), "·…’€™");
 });
 
 test("province spellings map to the names the TourAPI import stores", () => {

@@ -1,5 +1,11 @@
 # Work Log
 
+## 2026-11-25 - HTML entities in imported text
+
+- Live data had raw entities in 10 published rows: culture info `&times;`, `&eacute;`, `&Eacute;`, `&laquo;`, `&raquo;`, `&ndash;` (decoder only knew a dozen names, case-insensitively) and Paris `&#58;` (listing double-encodes; Paris decoded once).
+- New `scripts/html-entities.mjs`: full Latin-1 named set plus common typographic ones, case-sensitive (only amp/lt/gt/quot/nbsp also in all caps), `Object.hasOwn` lookup, repeated rounds, no NUL/surrogates. Culture info re-exports it; Paris decodes descriptions, titles and venue names with 2 rounds.
+- Paris dry run `--sql`: 464 upserts, no entity left. Existing rows fixed in SQL with the exact 7 entities found (checked list first), 0 remaining; `/korea?q=김소현` shows "김소현×손준호". `npm test` 54.
+
 ## 2026-11-25 - Tag filter
 
 - User asked whether the tag filter existed: tags were stored with the category filter but had no UI. Planned by Antigravity (`.omc/plans/tag-filter.md`), user chose "as planned"; deviation: no GIN index (~1,250 events).

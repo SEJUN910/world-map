@@ -1,18 +1,8 @@
 // Pure helpers for scripts/import-cultureinfo.mjs (tested in cultureinfo.test.mjs).
 
-const NAMED = { amp: "&", lt: "<", gt: ">", quot: "\"", apos: "'", nbsp: " ", middot: "·", hellip: "…", lsquo: "‘", rsquo: "’", ldquo: "“", rdquo: "”" };
-/** Decodes HTML entities, by default repeatedly: the listing double-encodes ("&amp;lt;"). Only real characters survive. */
-export function decodeEntities(value, rounds = 3) {
-  let text = String(value ?? "");
-  for (let round = 0; round < rounds && /&(#x[0-9a-f]{1,8}|#\d{1,10}|[a-z]+);/i.test(text); round++) {
-    text = text.replace(/&(#x[0-9a-f]{1,8}|#\d{1,10}|[a-z]+);/gi, (match, code) => {
-      if (code[0] !== "#") return NAMED[code.toLowerCase()] ?? match;
-      const point = code[1].toLowerCase() === "x" ? parseInt(code.slice(2), 16) : Number(code.slice(1));
-      return point >= 1 && point <= 0x10ffff && (point < 0xd800 || point > 0xdfff) ? String.fromCodePoint(point) : "";
-    });
-  }
-  return text.replace(/\u0000/g, "");
-}
+// Decodes HTML entities, by default repeatedly: the listing double-encodes ("&amp;lt;").
+import { decodeEntities } from "./html-entities.mjs";
+export { decodeEntities };
 
 /**
  * Plain text from an XML element's raw content. The XML layer is decoded once (or

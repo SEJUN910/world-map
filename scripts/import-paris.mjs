@@ -6,6 +6,7 @@
 import { createHash } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { createClient } from "@supabase/supabase-js";
+import { decodeEntities } from "./html-entities.mjs";
 
 const apply = process.argv.includes("--apply");
 const sqlIndex = process.argv.indexOf("--sql");
@@ -55,18 +56,11 @@ function ruleFor(record) {
 const clean = (value) => String(value ?? "").replace(/\s+/g, " ").trim();
 const slug = (value) => clean(value).normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0, 80) || "event";
 const cut = (value, max) => value.length <= max ? value : `${value.slice(0, max - 1).replace(/\s+\S*$/, "")}…`;
-const ENTITIES = { amp: "&", lt: "<", gt: ">", quot: "\"", apos: "'", nbsp: " ", rsquo: "’", lsquo: "‘", rdquo: "”", ldquo: "“", laquo: "«", raquo: "»", hellip: "…", ndash: "–", mdash: "—", eacute: "é", egrave: "è", ecirc: "ê", agrave: "à", acirc: "â", ccedil: "ç", ocirc: "ô", ucirc: "û", ugrave: "ù", icirc: "î", iuml: "ï", euml: "ë", oelig: "œ", Eacute: "É", Agrave: "À", Ccedil: "Ç", euro: "€", deg: "°" };
 function plainText(html) {
-  return String(html ?? "")
+  // Tags out first, then entities; some text arrives encoded twice ("&amp;#58;").
+  return decodeEntities(String(html ?? "")
     .replace(/<\s*(br|\/p|\/div|\/li|\/h[1-6])\b[^>]*>/gi, "\n")
-    .replace(/<[^>]*>/g, "")
-    .replace(/&(#x[0-9a-f]{1,6}|#\d{1,7}|[a-z]+);/gi, (match, code) => {
-      if (code[0] !== "#") return ENTITIES[code] ?? match;
-      const point = code[1].toLowerCase() === "x" ? parseInt(code.slice(2), 16) : Number(code.slice(1));
-      // Only real characters: no NUL (Postgres rejects it), surrogates or out-of-range values.
-      return point >= 1 && point <= 0x10ffff && (point < 0xd800 || point > 0xdfff) ? String.fromCodePoint(point) : "";
-    })
-    .replace(/\u0000/g, "")
+    .replace(/<[^>]*>/g, ""), 2)
     .split("\n").map((line) => line.replace(/[ \t ]+/g, " ").trim()).filter(Boolean).join("\n");
 }
 const tagsOf = (record) => clean(record.qfap_tags).split(";").map((tag) => tag.trim()).filter(Boolean);
@@ -109,7 +103,7 @@ function selected(record) {
 function toRow(record) {
   const id = clean(record.id);
   if (!/^\d{1,20}$/.test(id)) return skip("invalid source ID");
-  const title = cut(clean(record.title), 100);
+  const title = cut(clean(decodeEntities(record.title, 2)), 100);
   const image = clean(record.cover_url);
   const latitude = Number(record.lat_lon?.lat), longitude = Number(record.lat_lon?.lon);
   if (!title) return skip("missing title");
@@ -121,7 +115,7 @@ function toRow(record) {
   const street = clean(record.address_street);
   const city = [clean(record.address_zipcode), clean(record.address_city)].filter(Boolean).join(" ");
   const address = cut([street, city].filter(Boolean).join(", "), 200);
-  const venue = cut(clean(record.address_name) || street || city, 120);
+  const venue = cut(clean(decodeEntities(record.address_name, 2)) || street || city, 120);
   if (!venue || !address) return skip("missing venue or address");
   const place = region(record.address_zipcode);
   const price = [clean(record.price_type), plainText(record.price_detail)].filter(Boolean).join(" — ");
