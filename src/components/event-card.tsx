@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { eventDate, eventPath, type FestivalEvent } from "@/lib/events";
 import { EventPosterDialog } from "./event-poster-dialog";
 import { SaveEventButton } from "./saved-events";
+import { fallBackToOriginal, posterSrc } from "@/lib/poster-image";
 export function EventCard({ event, highlighted, onHover, onShowOnMap }: { event: FestivalEvent; highlighted?: boolean; onHover?: (id: string | null) => void; onShowOnMap?: (event: FestivalEvent) => void }) {
   const { t } = useTranslations();
   const link = useRef<HTMLAnchorElement>(null);
@@ -25,7 +26,8 @@ export function EventCard({ event, highlighted, onHover, onShowOnMap }: { event:
         <div className="poster-frame">
           {event.poster ? (
             <img
-              src={event.poster}
+              src={posterSrc(event.poster, "card")}
+              {...fallBackToOriginal(event.poster)}
               alt={`${event.title} ${event.sourceName === "tourapi" ? t("대표 이미지") : t("포스터")}`}
               className={event.sourceName === "tourapi" ? "source-image" : undefined}
               width={480}

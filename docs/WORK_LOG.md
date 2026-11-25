@@ -1,5 +1,13 @@
 # Work Log
 
+## 2026-11-25 - Lighter posters
+
+- Measured originals: culture.go.kr 35KB-1.3MB (up to 1190x1684), cdn.paris.fr 350KB-1MB (1200x750, no smaller variant on the CDN), tong.visitkorea.or.kr 28-507KB, while list thumbnails are 84x112 and markers 48x48.
+- Planned by Antigravity (`.omc/plans/poster-images.md`). User chose "public images only, TourAPI stays original" (KOGL Type 3 forbids alteration); the user-upload thumbnail part (DB/RLS/action changes) is deferred.
+- `next.config.ts` images: remotePatterns from `src/lib/poster-hosts.ts` (culture.go.kr, cdn.paris.fr, **.gov.tw, **.taiwan.net.tw), webp only, quality 70, widths 192/384, 31-day cache. `posterSrc()` (getImageProps) gives list rows and map markers the same w=192 URL and cards w=384; the detail dialog keeps the original. List/card images and map markers retry once with the original on failure (markers hide after that), including failures before hydration (ref check).
+- Local QA on a production build (scratchpad `qa-posters.mjs`, all pass): list thumbs webp, median 4-7KB, max 13KB; Paris first screen 37 images 138KB in total; cards max 12KB; TourAPI rows still original; fallback works when `/_next/image` returns 500. Regression: `qa-split` 79, `qa-category` 16, `qa-france` 27; `npm test` 52.
+- Remaining weight: TourAPI originals (13 images ~2MB on the festival filter). A follow-up could use TourAPI's own smaller `firstimage2` (provider thumbnail, not an alteration).
+
 ## 2026-11-24 - Sync secrets registered
 
 - User registered the five GitHub secrets (TOUR_API_SERVICE_KEY, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SUPABASE_IMPORT_PROJECT_REF, SUPABASE_IMPORT_SERVICE_KEY).

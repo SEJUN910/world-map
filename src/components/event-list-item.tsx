@@ -6,6 +6,7 @@ import { useTranslations } from "./language-provider";
 import { EventPosterDialog } from "./event-poster-dialog";
 import { SaveEventButton } from "./saved-events";
 import { CATEGORY_LABELS } from "@/lib/event-categories";
+import { fallBackToOriginal, posterSrc } from "@/lib/poster-image";
 
 // One row of the list view (mobile sheet and desktop list): thumbnail, progress
 // badge, title, dates and place, with save and "show on map" actions.
@@ -33,7 +34,7 @@ export function EventListItem({ event, selected = false, highlighted = false, on
     }}>
       <span className="event-row__thumb">
         {event.poster
-          ? <img src={event.poster} alt="" width={84} height={112} loading="lazy" className={event.sourceName === "tourapi" ? "source-image" : undefined} />
+          ? <img src={posterSrc(event.poster, "thumb")} {...fallBackToOriginal(event.poster)} alt="" width={84} height={112} loading="lazy" className={event.sourceName === "tourapi" ? "source-image" : undefined} />
           : <span className="poster-placeholder">{t("포스터 준비 중")}</span>}
       </span>
       <span className="event-row__text">

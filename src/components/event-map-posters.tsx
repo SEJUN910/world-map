@@ -6,6 +6,7 @@ import type { GeoJSONSource, Map as MapLibreMap } from "maplibre-gl";
 import { eventDate, eventPath, type FestivalEvent } from "@/lib/events";
 import type { EventMapPoint } from "./event-map";
 import { EventPosterDialog } from "./event-poster-dialog";
+import { markerFallback, posterSrc } from "@/lib/poster-image";
 
 export type MapPosterGroup = { clusterIds: number[]; eventIds: string[]; count: number; titles: string[] };
 
@@ -193,7 +194,7 @@ export function EventMapPosters({ map, points, onOpenGroup, onHoverGroup, onLeav
               opener.current = click.currentTarget;
               setSelected(event);
             }}>
-            <img src={event.poster} width={48} height={48} alt="" decoding="async" onError={(e) => { e.currentTarget.closest<HTMLElement>(".map-poster")!.style.display = "none"; }} />
+            <img src={posterSrc(event.poster, "thumb")} width={48} height={48} alt="" decoding="async" onError={markerFallback(event.poster)} />
             {(groups.current.get(event.id)?.count || 0) > 1 && <span className="map-poster__count" aria-hidden="true">{groups.current.get(event.id)!.count}</span>}
             <span className="map-poster__info">
               {(groups.current.get(event.id)?.count || 0) > 1 && <strong>{groups.current.get(event.id)!.count}{t("개 행사 · 클릭하여 목록 보기")}</strong>}
