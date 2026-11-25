@@ -1,5 +1,10 @@
 # Work Log
 
+## 2026-11-25 - Mobile overhaul review fixes
+
+- Review of stages 1–5: no high findings. Fixed: "search this area" hidden behind a notice only on phones (desktop unchanged); home placeholder hidden when the map shows its own error; phone credits state reset when the map is recreated; collapsed-sheet preview shows the load error with retry instead of "nothing found". Kept on purpose: the globe placeholder on desktop too (the blank first load was a flow-review finding). Known: filters/date/area indicators are only visible once the sheet is raised.
+- Checks: `npm test` 71; qa-m5 10, qa-m4 13, qa-m2 10, split 79, nearby 33, group 18 (one timeout, passed on rerun), tags 21.
+
 ## 2026-11-25 - Mobile overhaul, stage 5: detail and sizes
 
 - Phones: the event detail fills the screen with a sticky 52px top bar (language left, 44×44 close right) so nothing floats over the poster; poster ≤42dvh, title 22px, body 15px, captions 12px, every action ≥44px tall; list metadata no smaller than 12px. PC detail unchanged.

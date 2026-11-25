@@ -2467,9 +2467,8 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
 /* ── Mobile overhaul, stage 1: one thing per map slot (see .omc/plans/mobile-overhaul.md). ── */
 /* Basemap credits: our own ⓘ (phones). Bottom-left of the map, above the sheet on country pages. */
 .map-credits { position: absolute; z-index: 2; left: 12px; bottom: 16px; display: flex; flex-direction: column-reverse; align-items: flex-start; gap: 6px; }
-.map-credits__toggle { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 1px solid #d8e2f0; border-radius: 50%; background: #fffffff2; color: #445; font: 600 13px/1 Georgia, serif; font-style: italic; cursor: pointer; box-shadow: 0 1px 4px #0000001f; }
+.map-credits__toggle { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 1px solid #d8e2f0; border-radius: 50%; background: #fffffff2; color: #445; position: relative; font: 600 13px/1 Georgia, serif; font-style: italic; cursor: pointer; box-shadow: 0 1px 4px #0000001f; }
 .map-credits__toggle::after { content: ""; position: absolute; inset: -8px; }
-.map-credits__toggle { position: relative; }
 .map-credits__list { display: flex; flex-wrap: wrap; gap: 4px 10px; max-width: calc(100vw - 32px); margin: 0; padding: 8px 10px; border-radius: 10px; background: #fffffff5; box-shadow: 0 2px 10px #0000002a; font-size: 12px; }
 .map-credits__list a { color: #344; }
 .home-globe .map-credits { bottom: 64px; left: 16px; }
@@ -2548,6 +2547,8 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
 .home-globe__placeholder { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; align-content: center; gap: 14px; pointer-events: none; }
 .home-globe__placeholder span { width: min(62vw, 62vh, 460px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #f3f7fe, #dde8f8 70%); box-shadow: inset 0 0 0 1px #d2def0; animation: home-globe-pulse 1.6s ease-in-out infinite; }
 .home-globe__placeholder p { margin: 0; color: #6a80a3; font-size: 13px; }
+/* The map's own error and retry replace the placeholder. */
+.home-globe:has(.event-map-fallback) .home-globe__placeholder { display: none; }
 @keyframes home-globe-pulse { 50% { opacity: .6; } }
 @media (prefers-reduced-motion: reduce) { .home-globe__placeholder span { animation: none; } }
 .home-dock { display: none; }

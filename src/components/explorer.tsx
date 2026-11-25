@@ -263,7 +263,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
   const sortSelect = <select className="list-view__sort" aria-label={t("정렬")} value={sort} disabled={pending || (!isMobile && !!selectedIds)} onChange={event => applySort(event.target.value as EventSort)}>
     <option value="latest">{t("최신 등록순")}</option><option value="soon">{t("일정 빠른 순")}</option><option value="ending">{t("종료 임박순")}</option>
   </select>;
-  const searchAreaButton = viewportDirty && viewportBounds && !locating && !notice && <button type="button" className="atlas-search-area" disabled={pending} onClick={() => apply(initialRegion, initialQuery, { ...filters, bounds: viewportBounds.map(n => Number(n.toFixed(5))).join(",") })}>{t("이 지역에서 검색")}</button>;
+  const searchAreaButton = viewportDirty && viewportBounds && !(isMobile && (locating || notice)) && <button type="button" className="atlas-search-area" disabled={pending} onClick={() => apply(initialRegion, initialQuery, { ...filters, bounds: viewportBounds.map(n => Number(n.toFixed(5))).join(",") })}>{t("이 지역에서 검색")}</button>;
   const panelLabel = t(catalogOpen ? "목록 접기" : "목록 펼치기");
 
   // Desktop: a list panel on the left and the map on the right, like a map app.

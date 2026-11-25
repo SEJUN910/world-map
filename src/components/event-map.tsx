@@ -565,7 +565,7 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
       }
     }
     void start().catch((error) => { if (!disposed && error.name !== "AbortError") setFailed(true); });
-    return () => { disposed = true; cleanupHover?.(); cleanupBasemap?.(); hoverGroup.current = null; leaveGroup.current = null; controller.abort(); observer?.disconnect(); marker.current?.remove(); marker.current = null; setPosterMap(null); openGroup.current = null; instance?.remove(); map.current = null; };
+    return () => { disposed = true; setPhoneCredits(false); setCreditsOpen(false); cleanupHover?.(); cleanupBasemap?.(); hoverGroup.current = null; leaveGroup.current = null; controller.abort(); observer?.disconnect(); marker.current?.remove(); marker.current = null; setPosterMap(null); openGroup.current = null; instance?.remove(); map.current = null; };
   }, [isPicker, fitToPoints, overview, country, retry]);
 
   // posterMap is set once the map has loaded, so a target given before that

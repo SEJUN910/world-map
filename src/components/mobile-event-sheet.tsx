@@ -146,6 +146,7 @@ export function MobileEventSheet(props: Props) {
           </div>
           {snap === 1 && <div className="event-sheet__preview">
             {loading ? <p className="event-sheet__notice" role="status">{t("불러오는 중…")}</p>
+              : error ? <div className="event-sheet__notice" role="alert"><p>{t("행사를 불러오지 못했어요.")}</p><button type="button" onClick={() => setRetry(value => value + 1)}>{t("다시 시도")}</button></div>
               : items[0] ? <EventListItem event={items[0]} selected={items[0].id === selectedId} onOpen={() => onSelect(items[0].id)} onShowOnMap={onShowOnMap} distance={distanceOf?.(items[0].id)} />
               : <p className="event-sheet__notice">{t("아직 발견하지 못했어요.")}</p>}
           </div>}
