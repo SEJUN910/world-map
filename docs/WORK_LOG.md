@@ -1,5 +1,11 @@
 # Work Log
 
+## 2026-11-25 - Polish: all-regions label, basemap retry
+
+- The first region chip / mobile region option reads "전국" for Korea and "전체" for Paris and Taiwan.
+- Basemap: after falling back to the globe, it retries on `online` or on a map move once 30s/60s/120s have passed (3 in a row; a loaded tile resets the count; the home globe only past the attach zoom). Planning skipped as small fixes.
+- Local production-build QA: `qa-polish.mjs` 10/10 (labels on desktop/mobile for kr/fr/tw; blocked tiles fall back, `online` re-attaches, a move within the backoff does not); move after 31s retries (zoom button 3/3; a drag-based version passed only intermittently — the headless drag sometimes produced no move). Regression: basemap 19, split 79, group 18, France 27, tags 22. Review: no blocking findings; retry count now resets on success.
+
 ## 2026-11-25 - Desktop map groups fill the list panel
 
 - Planned by Antigravity (`.omc/plans/desktop-cluster-list.md`), user chose "as planned". On desktop, a cluster circle, grouped poster or the hover popup's "전체 N개 보기" now replaces the left list with that group (map order, 24 per page, client pager, URL unchanged) instead of opening EventClusterDialog; "전체 목록" restores the list; a folded panel opens; sort is locked while a group is shown; map moves and "지도에서 보기" keep it, filter changes clear it. Single points still open the detail. Mobile sheet and the home globe modal unchanged.

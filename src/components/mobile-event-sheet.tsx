@@ -148,7 +148,7 @@ export function MobileEventSheet(props: Props) {
               <option value="all">{t("기간 전체")}</option><option value="today">{t("오늘")}</option><option value="weekend">{t("이번 주말")}</option><option value="month">{t("이번 달")}</option><option value="custom">{t("기간 선택")}</option>
             </select>
             <select aria-label={t("지역 필터")} value={region} disabled={pending} onChange={event => onApply(event.target.value, query, { ...filters, bounds: "" })}>
-              <option value="">{t("전국")}</option>{regions.map(item => <option key={item.code} value={item.code}>{item.name}</option>)}
+              <option value="">{t(country === "kr" ? "전국" : "전체")}</option>{regions.map(item => <option key={item.code} value={item.code}>{item.name}</option>)}
             </select>
             <button type="button" className={showFilters || activeCount ? "is-active" : ""} aria-label={t("검색 및 지도 설정")} aria-expanded={showFilters} onClick={openFilters}>
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 17h16" stroke="currentColor" strokeWidth="1.5"/><circle cx="9" cy="7" r="2.5" fill="white" stroke="currentColor" strokeWidth="1.5"/><circle cx="15" cy="17" r="2.5" fill="white" stroke="currentColor" strokeWidth="1.5"/></svg>

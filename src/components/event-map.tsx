@@ -107,6 +107,7 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
     let observer: ResizeObserver | undefined;
     let instance: MapLibreMap | undefined;
     let cleanupHover: (() => void) | undefined;
+    let cleanupBasemap: (() => void) | undefined;
     const controller = new AbortController();
     setFailed(false);
     // Set while a country flight runs, so hover and clicks cannot start a second one.
@@ -208,8 +209,10 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
           instance.addSource("coordinate-grid", { type: "geojson", data: coordinateGrid(instance) });
           instance.addLayer({ id: "coordinate-grid", type: "line", source: "coordinate-grid", paint: { "line-color": "#377ce5", "line-width": 0.8, "line-opacity": 0.22 } });
           // Detailed basemap (roads, water, place names) under the grid and the event layers.
-          // If the tile server fails, it is removed and the world.json globe comes back.
-          let attached = false, gaveUp = false, tilesLoaded = false, tileErrors = 0;
+          // If the tile server fails, it is removed and the world.json globe comes back,
+          // then retried (up to 3 times in a row; a loaded tile resets the count) when the browser is back online or on a map move
+          // once a backoff of 30s, 60s, 120s has passed.
+          let attached = false, gaveUp = false, tilesLoaded = false, tileErrors = 0, retries = 0, retryAt = 0;
           let basemapAttribution: InstanceType<typeof lib.AttributionControl> | undefined;
           const restoreGlobe = () => {
             if (!instance) return;
@@ -244,7 +247,7 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
             if (compact) instance.once("idle", () => instance?.getContainer().querySelector(".maplibregl-ctrl-attrib.maplibregl-compact")?.classList.remove("maplibregl-compact-show"));
           };
           instance.on("data", (event) => {
-            if (event.dataType === "source" && (event as { sourceId?: string }).sourceId === BASEMAP_SOURCE && (event as { tile?: unknown }).tile) { tilesLoaded = true; tileErrors = 0; }
+            if (event.dataType === "source" && (event as { sourceId?: string }).sourceId === BASEMAP_SOURCE && (event as { tile?: unknown }).tile) { tilesLoaded = true; tileErrors = 0; retries = 0; }
           });
           instance.on("error", (event) => {
             if (disposed) return;
@@ -253,8 +256,22 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
             if (gaveUp) return;
             tileErrors++;
             // Unreachable from the start (blocked, down, TileJSON failed) or failing repeatedly in a row.
-            if (!tilesLoaded || tileErrors >= 3) { gaveUp = true; restoreGlobe(); }
+            if (!tilesLoaded || tileErrors >= 3) {
+              gaveUp = true; attached = false; restoreGlobe();
+              retryAt = Date.now() + 30_000 * 2 ** retries;
+            }
           });
+          const retryBasemap = (force: boolean) => {
+            if (!instance || disposed || !gaveUp || retries >= 3 || !navigator.onLine || (!force && Date.now() < retryAt)) return;
+            if (overview && instance.getZoom() < BASEMAP_ATTACH_ZOOM) return;
+            retries++; gaveUp = false; tilesLoaded = false; tileErrors = 0;
+            attachBasemap();
+          };
+          const retryOnMove = () => retryBasemap(false);
+          const retryOnline = () => retryBasemap(true);
+          instance.on("moveend", retryOnMove);
+          window.addEventListener("online", retryOnline);
+          cleanupBasemap = () => window.removeEventListener("online", retryOnline);
           if (overview) {
             // The home globe makes no tile requests until the user zooms towards a country.
             const attachWhenClose = () => {
@@ -517,7 +534,7 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
       }
     }
     void start().catch((error) => { if (!disposed && error.name !== "AbortError") setFailed(true); });
-    return () => { disposed = true; cleanupHover?.(); hoverGroup.current = null; leaveGroup.current = null; controller.abort(); observer?.disconnect(); marker.current?.remove(); marker.current = null; setPosterMap(null); openGroup.current = null; instance?.remove(); map.current = null; };
+    return () => { disposed = true; cleanupHover?.(); cleanupBasemap?.(); hoverGroup.current = null; leaveGroup.current = null; controller.abort(); observer?.disconnect(); marker.current?.remove(); marker.current = null; setPosterMap(null); openGroup.current = null; instance?.remove(); map.current = null; };
   }, [isPicker, fitToPoints, overview, country, retry]);
 
   // posterMap is set once the map has loaded, so a target given before that
