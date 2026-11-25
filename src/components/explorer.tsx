@@ -19,12 +19,14 @@ import { useMobileAtlas } from "./mobile-atlas-controls";
 import { CountrySwitch } from "./country-switch";
 import { SourceNotice } from "./source-notice";
 import { CategoryChips } from "./category-chips";
+import { TagChips } from "./tag-chips";
+import type { EventTag } from "@/lib/event-tags";
 const MobileEventSheet = dynamic(() => import("./mobile-event-sheet").then(module => module.MobileEventSheet), { ssr: false });
 
-export function Explorer({ country = "kr", events, mapPoints, total, regions, initialRegion = "", initialQuery = "", page = 1, initialEvent = null, filters = emptyDiscoveryFilters, initialView = "map", sort = "latest" }: {
+export function Explorer({ country = "kr", events, mapPoints, total, regions, initialRegion = "", initialQuery = "", page = 1, initialEvent = null, filters = emptyDiscoveryFilters, initialView = "map", sort = "latest", tagChips = [] }: {
   country?: CountryCode; events: FestivalEvent[]; mapPoints: EventMapPoint[]; total: number;
   regions: { code: string; name: string }[]; initialRegion?: string; initialQuery?: string; page?: number;
-  initialEvent?: FestivalEvent | null; filters?: DiscoveryFilters; initialView?: ExplorerView; sort?: EventSort;
+  initialEvent?: FestivalEvent | null; filters?: DiscoveryFilters; initialView?: ExplorerView; sort?: EventSort; tagChips?: EventTag[];
 }) {
   const { t, locale } = useTranslations();
   const router = useRouter();
@@ -68,7 +70,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
     setSelectedIds(null); setSelectedId(""); setViewportDirty(false); setFocus(null);
     listRef.current?.scrollTo({ top: 0 });
     setFrom(filters.from || todayInCountry(country)); setTo(filters.to || todayInCountry(country));
-  }, [country, initialRegion, initialQuery, filters.when, filters.from, filters.to, filters.bounds, filters.category, page]);
+  }, [country, initialRegion, initialQuery, filters.when, filters.from, filters.to, filters.bounds, filters.category, filters.tag, page]);
   const changeView = useCallback((next: ExplorerView) => {
     if (viewRef.current === next) return;
     viewRef.current = next;
@@ -171,7 +173,8 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
         <div className="split-panel__top">
           <MinimalMasthead back actions={<CountrySwitch country={country} heading={initialEvent ? "p" : "h1"} />} />
           {searchForm}
-          <CategoryChips value={filters.category} disabled={pending} onChange={category => apply(initialRegion, initialQuery, { ...filters, category })} />
+          <CategoryChips value={filters.category} disabled={pending} onChange={category => apply(initialRegion, initialQuery, { ...filters, category, tag: "" })} />
+          <TagChips tags={tagChips} value={filters.tag} disabled={pending} onChange={tag => apply(initialRegion, initialQuery, { ...filters, tag })} />
           <div className="split-panel__filters">{dateFilter}{sortSelect}</div>
         </div>
         <div className="split-panel__summary">
@@ -208,7 +211,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
       </div>
     </div>
     {isMobile ? <>
-      <MobileEventSheet country={country} events={events} total={total} page={page} regions={options} region={initialRegion} query={initialQuery} filters={filters} pending={pending}
+      <MobileEventSheet country={country} events={events} total={total} page={page} regions={options} region={initialRegion} query={initialQuery} filters={filters} pending={pending} tagChips={tagChips}
         selectedIds={selectedIds} selectedId={selectedId} onSelect={setSelectedId} onSelectionClear={() => { setSelectedIds(null); setSelectedId(""); }}
         onApply={apply} pageHref={pageHref} onHeight={onHeight}
         view={view} onViewChange={changeView} sort={sort} onSort={applySort} onShowOnMap={showOnMap} />

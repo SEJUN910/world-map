@@ -144,13 +144,14 @@ export async function listEvents({
 
 // The map must not inherit the poster grid's 24-item pagination. Fetch only
 // public marker fields, in bounded batches, without generating image URLs.
-export async function listEventMapPoints({ country, region = "", query = "", filters = emptyDiscoveryFilters }: { country?: CountryCode; region?: string; query?: string; filters?: DiscoveryFilters } = {}) {
+// withTags also returns each point's tags (used to count tag chips; strip before sending to the client).
+export async function listEventMapPoints({ country, region = "", query = "", filters = emptyDiscoveryFilters, withTags = false }: { country?: CountryCode; region?: string; query?: string; filters?: DiscoveryFilters; withTags?: boolean } = {}) {
   const client = publicClient();
-  const result: { id: string; slug: string; title: string; latitude: number; longitude: number; countryCode?: CountryCode }[] = [];
+  const result: { id: string; slug: string; title: string; latitude: number; longitude: number; countryCode?: CountryCode; tags?: string[] }[] = [];
   const term = query.trim().slice(0, 100).replace(/[\\%_,()."']/g, " ");
   for (let offset = 0; offset < 5000; offset += 1000) {
     let request = client.from("events")
-      .select("id,slug,title,latitude,longitude,country_code")
+      .select("id,slug,title,latitude,longitude,country_code,tags")
       .eq("publication_status", "published")
       .or(activeSourceFilter())
       .order("created_at", { ascending: false }).order("id");
@@ -160,7 +161,7 @@ export async function listEventMapPoints({ country, region = "", query = "", fil
     request = applyDiscoveryFilters(request, filters, country || "kr");
     const { data, error } = await request.range(offset, offset + 999);
     if (error) throw new Error("지도 위치를 불러오지 못했어요.");
-    result.push(...(data || []).map((row) => ({ ...row, countryCode: isCountryCode(row.country_code) ? row.country_code : "kr" as const })));
+    result.push(...(data || []).map(({ tags, ...row }) => ({ ...row, countryCode: isCountryCode(row.country_code) ? row.country_code : "kr" as const, ...(withTags ? { tags } : {}) })));
     if (!data || data.length < 1000) break;
   }
   return result;

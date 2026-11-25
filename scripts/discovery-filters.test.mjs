@@ -5,8 +5,10 @@ import ts from "typescript";
 const compile = source => `data:text/javascript;base64,${Buffer.from(ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText).toString("base64")}`;
 const file = name => readFile(new URL(`../src/lib/${name}.ts`, import.meta.url), "utf8");
 const countries = compile(await file("countries"));
+const eventTags = compile(await file("event-tags"));
+const { selectVisibleTags, countTags } = await import(eventTags);
 const events = compile((await file("events")).replace('"./countries"', JSON.stringify(countries)));
-const { normalizeDiscoveryFilters, discoveryDateRange, parseBounds, discoveryParams, applyDiscoveryFilters } = await import(compile((await file("discovery-filters")).replace('"./event-categories"', JSON.stringify(compile(await file("event-categories")))).replace('"./events"', JSON.stringify(events))));
+const { normalizeDiscoveryFilters, discoveryDateRange, parseBounds, discoveryParams, applyDiscoveryFilters } = await import(compile((await file("discovery-filters")).replace('"./event-categories"', JSON.stringify(compile(await file("event-categories")))).replace('"./event-tags"', JSON.stringify(eventTags)).replace('"./events"', JSON.stringify(events))));
 const filter = when => normalizeDiscoveryFilters({ when });
 
 test("weekends include Sunday and cross year boundaries; month includes only remaining days", () => {
@@ -48,4 +50,31 @@ test("category filter accepts only known categories, travels in URLs and filters
   const request = { lte: (...args) => (calls.push(["lte", ...args]), request), gte: (...args) => (calls.push(["gte", ...args]), request), or: (...args) => (calls.push(["or", ...args]), request), eq: (...args) => (calls.push(["eq", ...args]), request) };
   applyDiscoveryFilters(request, normalizeDiscoveryFilters({ category: "festival" }), "kr");
   assert.deepEqual(calls, [["eq", "category", "festival"]]);
+});
+
+test("tag filter needs a category and a known tag, travels in URLs and narrows the query", () => {
+  assert.equal(normalizeDiscoveryFilters({ category: "performance", tag: "musical" }).tag, "musical");
+  for (const input of [{ tag: "concert" }, { category: "performance", tag: "exhibition" }, { category: "performance", tag: "festival" }, { category: "performance", tag: "invalid_tag!" }, { category: "performance", tag: "Concert" }, { category: "performance", tag: ["concert"] }, { category: "performance", tag: "__proto__" }, { category: "bogus", tag: "concert" }])
+    assert.equal(normalizeDiscoveryFilters(input).tag, "", JSON.stringify(input));
+  assert.deepEqual(discoveryParams(normalizeDiscoveryFilters({ category: "performance", tag: "theater" })), { category: "performance", tag: "theater" });
+  const calls = [];
+  const request = { lte: (...args) => (calls.push(["lte", ...args]), request), gte: (...args) => (calls.push(["gte", ...args]), request), or: (...args) => (calls.push(["or", ...args]), request), eq: (...args) => (calls.push(["eq", ...args]), request), contains: (...args) => (calls.push(["contains", ...args]), request) };
+  applyDiscoveryFilters(request, normalizeDiscoveryFilters({ category: "performance", tag: "gugak" }), "kr");
+  assert.deepEqual(calls, [["eq", "category", "performance"], ["contains", "tags", ["gugak"]]]);
+});
+
+test("tag chips: labelled, at least 2 events, not on every event, top 8, two or more", () => {
+  const korea = { concert: 320, theater: 112, musical: 70, dance: 33, gugak: 20 };
+  assert.deepEqual(selectVisibleTags(korea, 555, ""), ["concert", "theater", "musical", "dance", "gugak"]);
+  assert.deepEqual(selectVisibleTags({ exhibition: 207 }, 207, ""), []);
+  assert.deepEqual(selectVisibleTags({ festival: 44 }, 44, ""), []);
+  const paris = { exhibition: 188, "contemporary-art": 83, photo: 58, painting: 30, theater: 24, kids: 15, nature: 12, literature: 12, walk: 11, history: 10, comics: 9, dance: 9, musical: 1, unknown: 50 };
+  assert.deepEqual(selectVisibleTags(paris, 188, ""), ["contemporary-art", "photo", "painting", "theater", "kids", "literature", "nature", "walk"]);
+  // A tag on every event cannot narrow; a single remaining chip is hidden.
+  assert.deepEqual(selectVisibleTags({ concert: 10, dance: 3 }, 10, ""), []);
+  // An active tag outside the list stays visible so it can be cleared.
+  assert.deepEqual(selectVisibleTags(paris, 188, "comics"), ["comics", "contemporary-art", "photo", "painting", "theater", "kids", "literature", "nature", "walk"]);
+  assert.deepEqual(selectVisibleTags({}, 0, "musical"), ["musical"]);
+  assert.deepEqual(selectVisibleTags(korea, 555, "dance"), ["concert", "theater", "musical", "dance", "gugak"]);
+  assert.deepEqual(countTags([{ tags: ["a", "b"] }, { tags: ["a", "a"] }, { tags: null }, {}]), { a: 2, b: 1 });
 });

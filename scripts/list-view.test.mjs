@@ -7,7 +7,7 @@ const file = name => readFile(new URL(`../src/lib/${name}.ts`, import.meta.url),
 const countries = compile(await file("countries"));
 const eventsUrl = compile((await file("events")).replace('"./countries"', JSON.stringify(countries)));
 const { eventBadge } = await import(eventsUrl);
-const { normalizeSort, normalizeView, viewParams } = await import(compile((await file("discovery-filters")).replace('"./event-categories"', JSON.stringify(compile(await file("event-categories")))).replace('"./events"', JSON.stringify(eventsUrl))));
+const { normalizeSort, normalizeView, viewParams } = await import(compile((await file("discovery-filters")).replace('"./event-categories"', JSON.stringify(compile(await file("event-categories")))).replace('"./event-tags"', JSON.stringify(compile(await file("event-tags")))).replace('"./events"', JSON.stringify(eventsUrl))));
 const badge = (startDate, endDate, eventStatus = "scheduled") => {
   const result = eventBadge({ startDate, endDate, eventStatus }, "2026-11-23");
   return result && (result.values ? result.label.replace("{days}", result.values.days) : result.label);

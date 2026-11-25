@@ -1,5 +1,13 @@
 # Work Log
 
+## 2026-11-25 - Tag filter
+
+- User asked whether the tag filter existed: tags were stored with the category filter but had no UI. Planned by Antigravity (`.omc/plans/tag-filter.md`), user chose "as planned"; deviation: no GIN index (~1,250 events).
+- `src/lib/event-tags.ts` (labels, `isEventTag`, `selectVisibleTags`, `countTags`), `TagChips`, `DiscoveryFilters.tag` (needs a category; `.contains("tags", [tag])` on list and markers), chip counts from `listEventMapPoints({ withTags: true })` without the tag (reused as the marker query when no tag is set; tags stripped before reaching the client), 25 translations, mobile lowest snap 144→180px with the row.
+- Checks: `npm test` 54; local production build QA (scratchpad `qa-tags.mjs`) 22/22 — Korea performance chips 콘서트·연극·뮤지컬·무용·국악, musical 70 of 555, region keeps tag, category change drops it, Korea exhibition no row, Paris exhibition 8 chips, invalid tags ignored, noindex + canonical, mobile row inside the lowest sheet and below the view switch, reset keeps tag; sheet 144→180→144 when the row appears/disappears. Regression: split 79, category 16, France 27.
+- Review: no blocking findings; fixed a mount-time snap warning.
+- Noticed: a culture-info title shows a raw `&times;` ("김소현&times;손준호") — `decodeEntities` lacks named entities beyond the basic ones.
+
 ## 2026-11-25 - TourAPI thumbnails checked, Taiwan poster reduced
 
 - TourAPI `firstimage2` is a 300x200 copy squashed out of the poster's aspect ratio (PNG ones still 98-137KB), and all 43 active TourAPI images are KOGL Type 3, so TourAPI stays original.

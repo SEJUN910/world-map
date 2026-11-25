@@ -12,10 +12,12 @@ import { EventListItem } from "./event-list-item";
 import { TrafficCounter } from "./traffic-counter";
 import { SourceNotice } from "./source-notice";
 import { CategoryChips } from "./category-chips";
+import { TagChips } from "./tag-chips";
+import type { EventTag } from "@/lib/event-tags";
 
 type Props = {
   country: CountryCode; events: FestivalEvent[]; total: number; page: number;
-  regions: { code: string; name: string }[]; region: string; query: string; filters: DiscoveryFilters; pending: boolean;
+  regions: { code: string; name: string }[]; region: string; query: string; filters: DiscoveryFilters; pending: boolean; tagChips: EventTag[];
   selectedIds: string[] | null; selectedId: string;
   onSelectionClear: () => void; onSelect: (id: string) => void;
   onApply: (region: string, query: string, filters: DiscoveryFilters) => void;
@@ -33,19 +35,25 @@ function TrackHeight({ onHeight }: { onHeight: Props["onHeight"] }) {
 }
 
 export function MobileEventSheet(props: Props) {
-  const { country, events, total, page, regions, region, query, filters, pending, selectedIds, selectedId, onSelect, onApply, onSelectionClear, pageHref, onHeight, view, onViewChange, sort, onSort, onShowOnMap } = props;
+  const { country, events, total, page, regions, region, query, filters, pending, tagChips, selectedIds, selectedId, onSelect, onApply, onSelectionClear, pageHref, onHeight, view, onViewChange, sort, onSort, onShowOnMap } = props;
   const { t } = useTranslations();
   const reduced = useReducedMotion();
   const sheet = useRef<SheetRef>(null);
   const container = useRef<HTMLDivElement>(null);
   const trackHeight = useCallback((height: number) => {
     onHeight(height);
-    container.current?.style.setProperty("--sheet-body-opacity", height > 154 ? "1" : "0");
+    container.current?.style.setProperty("--sheet-body-opacity", height > peekRef.current + 10 ? "1" : "0");
   }, [onHeight]);
   const scroll = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   // Snap 3 (full height) is the list view; lower snaps show the map.
   const [snap, setSnap] = useState(view === "list" ? 3 : 1);
+  // The lowest snap shows the fixed header; a tag chip row makes it taller.
+  const peek = tagChips.length ? 180 : 144;
+  const peekRef = useRef(peek); peekRef.current = peek;
+  // Re-snap only when the row appears or disappears (the first render has no snap points yet).
+  const shownPeek = useRef(peek);
+  useEffect(() => { if (shownPeek.current === peek) return; shownPeek.current = peek; if (snapRef.current === 1) sheet.current?.snapTo(1); }, [peek]);
   const snapRef = useRef(snap); snapRef.current = snap;
   const [showFilters, setShowFilters] = useState(false);
   const filtersOpen = useRef(false); filtersOpen.current = showFilters;
@@ -103,7 +111,7 @@ export function MobileEventSheet(props: Props) {
   }
   return <>
     <Sheet ref={sheet} isOpen onClose={() => sheet.current?.snapTo(1)} detent="full"
-      snapPoints={[0, 144, 0.5, 1]} initialSnap={view === "list" ? 3 : 1} onSnap={index => {
+      snapPoints={[0, peek, 0.5, 1]} initialSnap={view === "list" ? 3 : 1} onSnap={index => {
         const next = Math.max(1, index); setSnap(next);
         // Opening the filter panel expands the sheet but is not a switch to the list view.
         if (next !== 3 || !filtersOpen.current) onViewChange(next === 3 ? "list" : "map");
@@ -147,7 +155,8 @@ export function MobileEventSheet(props: Props) {
               {!!activeCount && <small>{activeCount}</small>}
             </button>
           </div>
-          <CategoryChips value={filters.category} disabled={pending} onChange={category => onApply(region, query, { ...filters, category })} />
+          <CategoryChips value={filters.category} disabled={pending} onChange={category => onApply(region, query, { ...filters, category, tag: "" })} />
+          <TagChips tags={tagChips} value={filters.tag} disabled={pending} onChange={tag => onApply(region, query, { ...filters, tag })} />
         </div>
         <Sheet.Content id="event-sheet-body" disableDrag disableScroll={snap === 1} inert={snap === 1} style={{ opacity: "var(--sheet-body-opacity, 0)" }} scrollRef={scroll} scrollClassName="event-sheet__scroll" scrollStyle={{ padding: "0 16px", paddingBottom: "calc(max(24px, env(safe-area-inset-bottom), var(--keyboard-inset-height, 0px)) + 64px)" }} aria-busy={pending || loading}>
           {showFilters ? <div className="event-sheet__settings">
@@ -160,7 +169,7 @@ export function MobileEventSheet(props: Props) {
               <label>{t("검색")}<input type="search" placeholder={t("행사, 지역, 장소 검색")} value={text} maxLength={100} onChange={event => setText(event.target.value)} /></label>
               {custom && <div className="event-sheet__dates"><label>{t("시작일")}<input type="date" value={from} onChange={event => setFrom(event.target.value)} required /></label><label>{t("종료일")}<input type="date" value={to} min={from} onChange={event => setTo(event.target.value)} required /></label></div>}
               {formError && <p role="alert">{formError}</p>}
-              <div className="event-sheet__apply"><button type="button" onClick={() => { setShowFilters(false); setText(""); setCustom(false); onApply("", "", { when: "all", from: "", to: "", bounds: "", category: filters.category }); }}>{t("초기화")}</button><button type="submit" disabled={pending}>{t("적용")}</button></div>
+              <div className="event-sheet__apply"><button type="button" onClick={() => { setShowFilters(false); setText(""); setCustom(false); onApply("", "", { when: "all", from: "", to: "", bounds: "", category: filters.category, tag: filters.tag }); }}>{t("초기화")}</button><button type="submit" disabled={pending}>{t("적용")}</button></div>
             </form>
             <SiteTools /><TrafficCounter inline />
           </div> : <>

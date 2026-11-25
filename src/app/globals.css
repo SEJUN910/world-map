@@ -2404,4 +2404,13 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
 .category-chips button:disabled { opacity: .6; cursor: wait; }
 .category-chips button:focus-visible { outline: 2px solid #1f5fd1; outline-offset: 1px; }
 .event-sheet__fixed .category-chips { margin-top: 8px; }
+/* Second level under the category chips: smaller, outlined when active. */
+.tag-chips { display: flex; flex-wrap: nowrap; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-top: 6px; }
+.tag-chips::-webkit-scrollbar { display: none; }
+.tag-chips button { flex: 0 0 auto; height: 28px; padding: 0 12px; border: 1px solid #e0e0e0; border-radius: 14px; background: #f6f6f6; color: #444; font: inherit; font-size: 12px; font-weight: 500; cursor: pointer; }
+.tag-chips button:hover:not(:disabled) { border-color: #9a9a9a; }
+.tag-chips button[aria-pressed="true"] { border-color: #1f5fd1; background: #eef3fd; color: #1f5fd1; font-weight: 600; }
+.tag-chips button:disabled { opacity: .6; cursor: wait; }
+.tag-chips button:focus-visible { outline: 2px solid #1f5fd1; outline-offset: 1px; }
+.split-panel__top .tag-chips { margin-top: -6px; }
 .event-row__category { flex: 0 0 auto; color: #222; font-weight: 600; }
