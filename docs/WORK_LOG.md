@@ -1,5 +1,10 @@
 # Work Log
 
+## 2026-11-25 - Mobile overhaul, stage 4: home
+
+- Phones: wordmark top-left and tools top-right (they used to collide with the coordinates at the bottom); the globe sits between the top bar and a bottom dock with a one-line intro, one-tap country buttons with event counts (대한민국 806 · 대만 3 · 프랑스 401) plus "다른 나라 요청", and a labelled "＋ 행사 올리기"; coordinates, zoom, the select and the bare + are hidden. All sizes: a light globe placeholder ("지도 불러오는 중…") until the map is ready, instead of a blank page. The request dialog returns focus to whichever control opened it. PC layout otherwise unchanged.
+- Checks: `qa-m4.mjs` 13/13 (placeholder then globe, no overlaps, one screen without scroll, shortcuts and counts, request dialog, France shortcut, PC dock hidden and select kept); regression split 79, nearby 33, polish 17.
+
 ## 2026-11-25 - Mobile overhaul, stage 3: sheet
 
 - Category chips moved to a fixed row under the search (header area 144px + safe area). The collapsed sheet (172px) shows the heading with map/list and a compact first event (48×64 thumb, one-line title, date), tappable; filters (sort/date/region/settings) and tag chips moved into the sheet body as a sideways-scrolling row so labels are never cut ("최신 등록순"). Nearby/selection bar no longer repeats the heading label.

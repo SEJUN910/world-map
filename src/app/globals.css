@@ -2543,3 +2543,33 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
   .event-sheet__selection > span:empty { display: none; }
   .event-sheet__selection:has(> span:empty) { justify-content: flex-end; }
 }
+
+/* ── Mobile overhaul, stage 4: home. ── */
+.home-globe__placeholder { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; align-content: center; gap: 14px; pointer-events: none; }
+.home-globe__placeholder span { width: min(62vw, 62vh, 460px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #f3f7fe, #dde8f8 70%); box-shadow: inset 0 0 0 1px #d2def0; animation: home-globe-pulse 1.6s ease-in-out infinite; }
+.home-globe__placeholder p { margin: 0; color: #6a80a3; font-size: 13px; }
+@keyframes home-globe-pulse { 50% { opacity: .6; } }
+@media (prefers-reduced-motion: reduce) { .home-globe__placeholder span { animation: none; } }
+.home-dock { display: none; }
+@media (max-width: 700px) {
+  /* Top bar: wordmark left, tools right (they used to sit on the coordinates at the bottom). */
+  .minimal-home > .home-masthead { top: calc(10px + env(safe-area-inset-top)); left: 16px; transform: none; }
+  .minimal-home .home-wordmark { font-size: 28px; }
+  .minimal-home .home-add, .minimal-home .home-country-select { display: none; }
+  body:has(.minimal-home) .site-tools { top: calc(10px + env(safe-area-inset-top)); bottom: auto; right: 10px; }
+  .home-globe { inset: calc(62px + env(safe-area-inset-top)) 0 calc(236px + env(safe-area-inset-bottom)) 0; }
+  .home-globe .event-map__coordinates { display: none; }
+  .home-globe .maplibregl-ctrl-top-right { display: none; }
+  .home-globe .map-credits { bottom: 8px; left: 12px; }
+  .home-globe__placeholder span { width: min(70vw, 300px); }
+  .home-dock { position: fixed; z-index: 4; left: 0; right: 0; bottom: 0; display: grid; gap: 6px; padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); border-top: 1px solid #e5ecf5; border-radius: 20px 20px 0 0; background: #fff; box-shadow: 0 -6px 20px #182c4c14; }
+  .home-dock h2 { margin: 0; color: #12233f; font-size: 17px; font-weight: 700; }
+  .home-dock > p { margin: 0 0 6px; color: #60759a; font-size: 13px; }
+  .home-dock__countries { display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px; padding: 2px 16px 4px; scrollbar-width: none; }
+  .home-dock__countries::-webkit-scrollbar { display: none; }
+  .home-dock__countries button { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 16px; border: 1px solid #d5e0ee; border-radius: 22px; background: #fff; color: #1d2b44; font: inherit; font-size: 14px; cursor: pointer; }
+  .home-dock__countries button strong { font-weight: 700; }
+  .home-dock__countries button small { color: #2865c5; font-size: 12px; font-weight: 700; }
+  .home-dock__countries .home-dock__request { border-style: dashed; color: #60759a; }
+  .home-dock .home-dock__add { justify-content: center; min-height: 48px; margin-top: 6px; border-radius: 24px; font-size: 15px; }
+}

@@ -485,4 +485,8 @@ export const messages: [string, string, string][] = [
   ["지도 출처", "Map credits", "地圖來源"],
   ["메뉴", "Menu", "選單"],
   ["검색어 지우기", "Clear search", "清除搜尋"],
+  ["지도로 만나는 우리 동네 행사", "Local events on a map", "在地圖上探索身邊活動"],
+  ["작은 동네 행사부터 지역 축제까지", "From small neighbourhood events to regional festivals", "從社區小活動到地方節慶"],
+  ["다른 나라 요청", "Request a country", "申請其他國家"],
+  ["＋ 행사 올리기", "＋ Post an event", "＋ 上傳活動"],
 ];
