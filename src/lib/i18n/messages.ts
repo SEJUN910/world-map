@@ -458,4 +458,13 @@ export const messages: [string, string, string][] = [
   ["야간", "Night", "夜間"],
   ["스포츠", "Sports", "運動"],
   ["과학", "Science", "科學"],
+  ["길찾기", "Directions", "路線"],
+  ["캘린더에 추가", "Add to calendar", "加入行事曆"],
+  ["네이버 지도", "Naver Map", "Naver 地圖"],
+  ["카카오맵", "KakaoMap", "KakaoMap"],
+  ["Google 지도", "Google Maps", "Google 地圖"],
+  ["Google 캘린더", "Google Calendar", "Google 日曆"],
+  ["일정 파일 (.ics)", "Calendar file (.ics)", "行事曆檔案 (.ics)"],
+  ["방문할 날", "Day of your visit", "造訪日期"],
+  ["행사 기간 안의 날짜를 골라주세요.", "Pick a date within the event.", "請選擇活動期間內的日期。"],
 ];

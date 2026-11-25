@@ -1,5 +1,13 @@
 # Work Log
 
+## 2026-11-25 - Wider search, directions and calendar
+
+- From the feature audit (search missed tags/descriptions: 뮤지컬 13 vs 70 tagged, 무료 0; no directions or calendar). Planned by Antigravity (`.omc/plans/search-and-actions.md`; the first ask returned empty and was re-asked), user chose "as planned".
+- Search: `src/lib/event-search.ts`, one PostgREST `or` per word (AND across ≤4 words): title/region/venue/address, tag or category by exact label in ko/en/zh (reverse index from TAG_LABELS + messages; "기타" excluded), description only for CJK ≥2 / Latin ≥4 chars, 무료/free/免費 also 'gratuit'. Unsafe and control characters stripped after NFKC; multi-word labels matched as whole words.
+- Detail: `src/lib/event-actions.ts` + `EventDetailActions` under the facts. Directions by coordinates — Korea Naver/Kakao/Google (Naver `p/directions/-/lng,lat,name,,/-/transit` checked in a browser: desktop fills the destination, mobile hands it to Naver's route search), elsewhere Google. Calendar: Google link + .ics (RFC 5545, VALUE=DATE, exclusive end, 75-octet folding); ≤7 remaining days → that range, longer → one picked day; none when undated/ended/cancelled/postponed.
+- Checks: `npm test` 66; local production-build QA (`qa-search-actions.mjs`) 24/24 — 뮤지컬 72 ≥ 70 tagged, musical/音樂劇 same, 무료 221 (kr) / 238 (fr), 서울 뮤지컬 40, art in Paris 62 of 401, special chars safe, noindex kept, three Korean links, Google-only abroad, .ics download, day picker, mobile 40px buttons. Regression: split 79, tags 22, group 18, France 27, category 16. Review: no blocking findings; fixed control characters, whole-word phrases, extra spaces, stray CR in .ics, malformed dates, longer blob lifetime, keyed actions per event.
+- Known limit: the .ics download may do nothing inside some in-app browsers (KakaoTalk/Instagram webviews); Google Calendar works there.
+
 ## 2026-11-25 - Polish: all-regions label, basemap retry
 
 - The first region chip / mobile region option reads "전국" for Korea and "전체" for Paris and Taiwan.

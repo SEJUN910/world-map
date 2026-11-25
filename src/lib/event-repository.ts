@@ -12,6 +12,7 @@ import { isEventId, todayInCountry } from "./events";
 import { isEventCategory } from "./event-categories";
 import { cache } from "react";
 import { normalizeRichText } from "./rich-text";
+import { applySearch } from "./event-search";
 import { applyDiscoveryFilters, emptyDiscoveryFilters, type DiscoveryFilters, type EventSort } from "./discovery-filters";
 import { eventHasEnded, SAVED_EVENTS_LIMIT } from "./saved-events";
 
@@ -121,17 +122,8 @@ export async function listEvents({
   }
   request = request.order("id");
   if (region) request = request.eq("region_code", region);
-  // Escape PostgREST filter grammar and SQL LIKE wildcards. All values remain parameters.
-  if (query.trim()) {
-    const term = query
-      .trim()
-      .slice(0, 100)
-      .replace(/[\\%_,()."']/g, " ");
-    if (term.trim())
-      request = request.or(
-        `title.ilike.%${term}%,region.ilike.%${term}%,venue.ilike.%${term}%`,
-      );
-  }
+  // Words, tags, categories and long-enough description matches (src/lib/event-search.ts).
+  request = applySearch(request, query);
   request = applyDiscoveryFilters(request, filters, country);
   const { data, error, count } = await request.range(
     (page - 1) * pageSize,
@@ -148,7 +140,6 @@ export async function listEvents({
 export async function listEventMapPoints({ country, region = "", query = "", filters = emptyDiscoveryFilters, withTags = false }: { country?: CountryCode; region?: string; query?: string; filters?: DiscoveryFilters; withTags?: boolean } = {}) {
   const client = publicClient();
   const result: { id: string; slug: string; title: string; latitude: number; longitude: number; countryCode?: CountryCode; tags?: string[] }[] = [];
-  const term = query.trim().slice(0, 100).replace(/[\\%_,()."']/g, " ");
   for (let offset = 0; offset < 5000; offset += 1000) {
     let request = client.from("events")
       .select("id,slug,title,latitude,longitude,country_code,tags")
@@ -157,7 +148,7 @@ export async function listEventMapPoints({ country, region = "", query = "", fil
       .order("created_at", { ascending: false }).order("id");
     if (country) request = request.eq("country_code", country);
     if (region) request = request.eq("region_code", region);
-    if (term.trim()) request = request.or(`title.ilike.%${term}%,region.ilike.%${term}%,venue.ilike.%${term}%`);
+    request = applySearch(request, query);
     request = applyDiscoveryFilters(request, filters, country || "kr");
     const { data, error } = await request.range(offset, offset + 999);
     if (error) throw new Error("지도 위치를 불러오지 못했어요.");

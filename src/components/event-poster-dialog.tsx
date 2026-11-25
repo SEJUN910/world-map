@@ -1,4 +1,5 @@
 "use client";
+import { EventDetailActions } from "./event-detail-actions";
 import { useTranslations } from "@/components/language-provider";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -85,6 +86,7 @@ export function EventPosterDialog({ event, opener, onDismiss, initiallyOpen = fa
                 {(event.venue || event.address) && <div><dt>{t("장소")}</dt><dd>{event.venue}{event.address && <small>{event.address}</small>}</dd></div>}
                 {event.region && <div><dt>{t("지역")}</dt><dd>{event.region}</dd></div>}
               </dl>
+              <EventDetailActions key={event.id} event={event} />
               {/* Some imported listings carry no description; the official link covers them. */}
               {(event.description.trim() || event.descriptionContent) && <div className="poster-modal__description" lang={textLang}>
                 <h3>{t("행사 소개")}</h3>
