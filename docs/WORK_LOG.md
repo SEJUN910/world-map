@@ -1,5 +1,11 @@
 # Work Log
 
+## 2026-11-25 - Mobile overhaul, stage 1: map slots
+
+- User: "모바일이 엉망이야" (Galaxy, KakaoTalk in-app, ~360×664; credits expanded over the map, two pills stacked over clusters). Planned by Antigravity (`.omc/plans/mobile-overhaul.md`, 5 stages), user chose "stage by stage to the end".
+- Stage 1: basemap credits on phones are our own ⓘ button (MapLibre's compact control re-opened in in-app browsers); zoom buttons and the whole-globe button hidden on phones; "near me" moved bottom-right above the sheet; "search this area" and notices share the top-centre slot (never both); the floating map/list pill moved into the sheet heading; map buttons step aside while the sheet is tall; "search this area" cleared after near-me flies. Collapsed sheet heights 154/190 px for the taller heading.
+- Checks: 360×664 tour (no unexpected overlaps); regression split 79, nearby 33, group 18, tags 22, category 16; `npm test` 71.
+
 ## 2026-11-25 - Flow/design review and quick polish
 
 - Screenshot tour of production (PC 1366 and mobile 390): home, country, list, detail, settings, empty search, saved, my events, create, Taiwan, English. Findings: home explains nothing and stays blank until the globe draws (~8 s first visit, ~2 s after), France hidden behind the globe, visit counter overlapping the wordmark on phones; mobile search behind the settings icon; empty results with no way out; the add button an unlabelled "+"; inconsistent navigation between map and /me pages; detail actions crowding the description; region chips cut off; coordinate readout covering the mobile view switch; English/Taiwan region chip languages mixed.

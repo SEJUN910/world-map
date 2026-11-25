@@ -1,6 +1,5 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -94,6 +93,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
   // there needs the sheet height too.
   const onHeight = useCallback((height: number) => {
     const value = `${Math.max(144, height)}px`;
+    root.current?.classList.toggle("is-sheet-tall", height > window.innerHeight * 0.48);
     root.current?.style.setProperty("--mobile-sheet-height", value);
     document.documentElement.style.setProperty("--mobile-sheet-height", value);
   }, []);
@@ -146,7 +146,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
       startTransition(() => router.push(pathFor("", initialQuery, { ...filters, bounds: "" }), { scroll: false }));
       return;
     }
-    setUserLocation(position);
+    setUserLocation(position); setViewportDirty(false);
     setFocus({ latitude: position.latitude, longitude: position.longitude, nonce: Date.now(), zoom: zoomForAccuracy(position.accuracy) });
     const result = nearbyEvents(latestPoints.current, position);
     if (!result.items.length) {
@@ -262,7 +262,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
   const sortSelect = <select className="list-view__sort" aria-label={t("정렬")} value={sort} disabled={pending || (!isMobile && !!selectedIds)} onChange={event => applySort(event.target.value as EventSort)}>
     <option value="latest">{t("최신 등록순")}</option><option value="soon">{t("일정 빠른 순")}</option><option value="ending">{t("종료 임박순")}</option>
   </select>;
-  const searchAreaButton = viewportDirty && viewportBounds && <button type="button" className="atlas-search-area" disabled={pending} onClick={() => apply(initialRegion, initialQuery, { ...filters, bounds: viewportBounds.map(n => Number(n.toFixed(5))).join(",") })}>{t("이 지역에서 검색")}</button>;
+  const searchAreaButton = viewportDirty && viewportBounds && !locating && !notice && <button type="button" className="atlas-search-area" disabled={pending} onClick={() => apply(initialRegion, initialQuery, { ...filters, bounds: viewportBounds.map(n => Number(n.toFixed(5))).join(",") })}>{t("이 지역에서 검색")}</button>;
   const panelLabel = t(catalogOpen ? "목록 접기" : "목록 펼치기");
 
   // Desktop: a list panel on the left and the map on the right, like a map app.
@@ -345,12 +345,6 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
         distanceOf={nearbyActive && nearby!.distances ? (id) => nearby!.distances!.get(id) : undefined} onSelectionClear={() => { setSelectedIds(null); setSelectedId(""); }}
         onApply={apply} pageHref={pageHref} onHeight={onHeight}
         view={view} onViewChange={changeView} sort={sort} onSort={applySort} onShowOnMap={showOnMap} />
-      {createPortal(<button type="button" className={`atlas-view-switch${view === "list" ? " is-list" : ""}`} onClick={() => changeView(view === "list" ? "map" : "list")}>
-        {view === "list"
-          ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4Zm0 0v14m6-12v14" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /></svg>
-          : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>}
-        <span>{t(view === "list" ? "지도보기" : "목록보기")}</span>
-      </button>, document.body)}
     </> : <SiteTools atlas />}
   </div>;
 }

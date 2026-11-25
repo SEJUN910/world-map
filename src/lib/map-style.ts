@@ -16,10 +16,15 @@ export const BASEMAP_FADE: [number, number] = [4, 5];
 /** On the home globe the basemap is attached only once the user zooms this far in. */
 export const BASEMAP_ATTACH_ZOOM = 3.5;
 
+export const BASEMAP_CREDITS = [
+  { label: "OpenFreeMap", href: "https://openfreemap.org" },
+  { label: "© OpenMapTiles", href: "https://www.openmaptiles.org/" },
+  { label: "© OpenStreetMap", href: "https://www.openstreetmap.org/copyright" },
+] as const;
 export const basemapSource: SourceSpecification = {
   type: "vector",
   url: `${OPENFREEMAP_ORIGIN}/planet`,
-  attribution: '<a href="https://openfreemap.org" target="_blank" rel="noopener noreferrer">OpenFreeMap</a> <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener noreferrer">© OpenMapTiles</a> <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a>',
+  attribution: BASEMAP_CREDITS.map(({ label, href }) => `<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`).join(" "),
 };
 
 /** Place names in the UI language, falling back to the local name. */

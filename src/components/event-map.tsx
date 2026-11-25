@@ -12,7 +12,7 @@ import { EventMapPosters, type MapPosterGroup } from "./event-map-posters";
 import { eventPath, type FestivalEvent } from "@/lib/events";
 import { EventPosterDialog } from "./event-poster-dialog";
 import type { MapBounds } from "@/lib/discovery-filters";
-import { BASEMAP_ATTACH_ZOOM, BASEMAP_BACKGROUND, BASEMAP_FADE, BASEMAP_GLYPHS, BASEMAP_LABEL_LAYERS, BASEMAP_SOURCE, LOCAL_IDEOGRAPH_FONTS, basemapLayers, basemapSource, fadeOut, labelField } from "@/lib/map-style";
+import { BASEMAP_ATTACH_ZOOM, BASEMAP_BACKGROUND, BASEMAP_FADE, BASEMAP_GLYPHS, BASEMAP_LABEL_LAYERS, BASEMAP_SOURCE, LOCAL_IDEOGRAPH_FONTS, basemapLayers, basemapSource, fadeOut, labelField, BASEMAP_CREDITS } from "@/lib/map-style";
 
 // Changing `nonce` re-centres the map on the coordinates, even for the same event.
 // zoom: exact zoom to fly to (e.g. "near me"); otherwise at least 10.
@@ -90,6 +90,10 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
   latestPoint.current = point;
   pick.current = onPick;
   const [failed, setFailed] = useState(false);
+  // Phones show the basemap credits behind an ⓘ button of our own: MapLibre's compact
+  // control re-opened itself in in-app browsers (KakaoTalk) and covered the map.
+  const [phoneCredits, setPhoneCredits] = useState(false);
+  const [creditsOpen, setCreditsOpen] = useState(false);
   const [posterMap, setPosterMap] = useState<MapLibreMap | null>(null);
   const [openedEvent, setOpenedEvent] = useState<FestivalEvent | null>(null);
   const eventOpener = useRef<HTMLAnchorElement | null>(null);
@@ -172,6 +176,9 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
       });
       if (config) instance.addControl(new lib.AttributionControl({ compact: false }), "bottom-right");
       instance.addControl(new lib.NavigationControl({ showCompass: false, visualizePitch: false }), "top-right");
+      // Phones pinch to zoom, so the zoom buttons are hidden there (CSS, by this class).
+      instance.getContainer().querySelector(".maplibregl-ctrl-zoom-in")?.parentElement?.classList.add("map-zoom");
+      instance.on("movestart", () => setCreditsOpen(false));
       if (!isPicker) {
         const control = document.createElement("div");
         control.className = "maplibregl-ctrl maplibregl-ctrl-group";
@@ -240,6 +247,7 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
             instance.setPaintProperty("coordinate-grid", "line-opacity", 0.22);
             if (instance.getLayer("country-fill")) instance.setPaintProperty("country-fill", "fill-opacity", 0.9);
             if (basemapAttribution) instance.removeControl(basemapAttribution);
+            setPhoneCredits(false); setCreditsOpen(false);
             basemapAttribution = undefined;
             basemapActive = false;
             updateGrid();
@@ -257,10 +265,11 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
             const compact = window.matchMedia("(max-width: 700px)").matches;
             // The home globe's country fill would cover the detail; keep it faint (it is still the click target).
             if (instance.getLayer("country-fill")) instance.setPaintProperty("country-fill", "fill-opacity", fadeOut(0.9, 0.08));
-            basemapAttribution = new lib.AttributionControl({ compact });
-            instance.addControl(basemapAttribution, "bottom-right");
-            // MapLibre opens a compact attribution until the first drag; on a phone it would cover the map buttons.
-            if (compact) instance.once("idle", () => instance?.getContainer().querySelector(".maplibregl-ctrl-attrib.maplibregl-compact")?.classList.remove("maplibregl-compact-show"));
+            if (compact) setPhoneCredits(true);
+            else {
+              basemapAttribution = new lib.AttributionControl({ compact: false });
+              instance.addControl(basemapAttribution, "bottom-right");
+            }
           };
           instance.on("data", (event) => {
             if (event.dataType === "source" && (event as { sourceId?: string }).sourceId === BASEMAP_SOURCE && (event as { tile?: unknown }).tile) { tilesLoaded = true; tileErrors = 0; retries = 0; }
@@ -623,6 +632,10 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
       <div ref={container} className={`event-map${isPicker ? " event-map--picker" : ""}`} role="region" aria-label={isPicker ? t("행사 위치 선택 지도") : t("행사 지도")} />
       {!isPicker && posterMap && <EventMapPosters map={posterMap} points={points || []} selectedEventId={selectedEventId} onSelectEvent={onSelectEvents ? event => selection.current?.([event.id]) : undefined} onOpenGroup={(group) => openGroup.current?.(group)} onHoverGroup={(group, position) => hoverGroup.current?.(group, position)} onLeaveGroup={() => leaveGroup.current?.()} onEventHighlight={onEventHighlightRef.current} highlightedId={highlightedId} />}
       {!isPicker && <output ref={coordinates} className="event-map__coordinates" aria-hidden="true" />}
+      {phoneCredits && <div className="map-credits">
+        <button type="button" className="map-credits__toggle" aria-expanded={creditsOpen} aria-label={t("지도 출처")} title={t("지도 출처")} onClick={() => setCreditsOpen((value) => !value)}>i</button>
+        {creditsOpen && <p className="map-credits__list">{BASEMAP_CREDITS.map(({ label, href }) => <a key={href} href={href} target="_blank" rel="noopener noreferrer">{label}</a>)}</p>}
+      </div>}
       {!isPicker && <span className="event-map__reticle" aria-hidden="true" />}
       {clusterIds && <EventClusterDialog ids={clusterIds} onDismiss={() => setClusterIds(null)} />}
       {openedEvent && <EventPosterDialog event={openedEvent} opener={eventOpener} onDismiss={() => setOpenedEvent(null)} />}

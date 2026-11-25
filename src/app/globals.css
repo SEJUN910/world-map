@@ -2463,3 +2463,31 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
 @media (max-width: 640px) { .traffic-counter:not(.traffic-counter--inline) { display: none; } }
 .empty-state .empty-state__reset { margin-top: 16px; display: inline-flex; }
 .event-sheet__empty .button { margin-top: 12px; }
+
+/* ── Mobile overhaul, stage 1: one thing per map slot (see .omc/plans/mobile-overhaul.md). ── */
+/* Basemap credits: our own ⓘ (phones). Bottom-left of the map, above the sheet on country pages. */
+.map-credits { position: absolute; z-index: 2; left: 12px; bottom: 16px; display: flex; flex-direction: column-reverse; align-items: flex-start; gap: 6px; }
+.map-credits__toggle { display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 1px solid #d8e2f0; border-radius: 50%; background: #fffffff2; color: #445; font: 600 13px/1 Georgia, serif; font-style: italic; cursor: pointer; box-shadow: 0 1px 4px #0000001f; }
+.map-credits__toggle::after { content: ""; position: absolute; inset: -8px; }
+.map-credits__toggle { position: relative; }
+.map-credits__list { display: flex; flex-wrap: wrap; gap: 4px 10px; max-width: calc(100vw - 32px); margin: 0; padding: 8px 10px; border-radius: 10px; background: #fffffff5; box-shadow: 0 2px 10px #0000002a; font-size: 12px; }
+.map-credits__list a { color: #344; }
+.home-globe .map-credits { bottom: 64px; left: 16px; }
+@media (max-width: 700px) {
+  /* Pinch zooms; the whole-globe button duplicates ← on country pages. */
+  .is-mobile-atlas .country-map .map-zoom, .is-mobile-atlas .country-map [data-globe-reset], .home-globe .map-zoom { display: none; }
+  /* "Near me" bottom-right, right above the sheet (thumb reach). */
+  .is-mobile-atlas .country-map .maplibregl-ctrl-top-right { top: auto; right: 12px; bottom: calc(var(--mobile-sheet-height, 144px) + 12px); }
+  .is-mobile-atlas .country-map .maplibregl-ctrl-group { border-radius: 50%; box-shadow: 0 2px 8px #0000002e; }
+  .is-mobile-atlas .country-map .maplibregl-ctrl-group button.map-locate { width: 44px; height: 44px; border-radius: 50%; }
+  .is-mobile-atlas .country-map .map-credits { left: 12px; bottom: calc(var(--mobile-sheet-height, 144px) + 20px); }
+  /* Top-centre slot: a notice or "search this area", never both, never over the clusters at the bottom. */
+  .is-mobile-atlas .atlas-search-area, .is-mobile-atlas .map-notice { top: calc(var(--atlas-mobile-header-height, 69px) + 12px); bottom: auto; }
+  .is-mobile-atlas .map-notice { width: calc(100% - 24px); max-width: 420px; }
+  /* While the sheet covers most of the screen the map buttons step aside. */
+  .is-sheet-tall .country-map :is(.maplibregl-ctrl-top-right, .map-credits, .atlas-search-area) { opacity: 0; pointer-events: none; }
+  /* Map ⇄ list in the sheet heading. */
+  .event-sheet__heading { display: flex; align-items: center; gap: 8px; }
+  .event-sheet__heading > span { margin-left: auto; }
+  .event-sheet__heading .atlas-view-switch { position: static; transform: none; min-height: 36px; padding: 0 14px; gap: 6px; border-radius: 18px; background: var(--color-ink); color: #fff; font-size: 13px; font-weight: 600; box-shadow: none; }
+}

@@ -51,7 +51,7 @@ export function MobileEventSheet(props: Props) {
   // Snap 3 (full height) is the list view; lower snaps show the map.
   const [snap, setSnap] = useState(view === "list" ? 3 : 1);
   // The lowest snap shows the fixed header; a tag chip row makes it taller.
-  const peek = tagChips.length ? 180 : 144;
+  const peek = tagChips.length ? 190 : 154;
   const peekRef = useRef(peek); peekRef.current = peek;
   // Re-snap only when the row appears or disappears (the first render has no snap points yet).
   const shownPeek = useRef(peek);
@@ -141,6 +141,13 @@ export function MobileEventSheet(props: Props) {
         <div className="event-sheet__fixed">
           <div className="event-sheet__heading"><strong>{selectedIds ? selectionLabel || t("선택한 위치의 행사") : t("행사 목록")}</strong>
             <span>{t("총 {count}개", { count: selectedIds ? selectedIds.length : total })}</span>
+            {/* Map ⇄ list lives here, not floating over the map or the rows. */}
+            <button type="button" className="atlas-view-switch" onClick={() => onViewChange(view === "list" ? "map" : "list")}>
+              {view === "list"
+                ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4Zm0 0v14m6-12v14" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" /></svg>
+                : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>}
+              <span>{t(view === "list" ? "지도보기" : "목록보기")}</span>
+            </button>
           </div>
           <div className="event-sheet__filters">
             <select aria-label={t("정렬")} value={sort} disabled={pending || !!selectedIds} onChange={event => onSort(event.target.value as EventSort)}>
