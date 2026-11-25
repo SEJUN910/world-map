@@ -2451,7 +2451,7 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
 .detail-actions { margin-bottom: 24px; }
 .poster-modal__actions a.poster-modal__official { display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: 999px; background: var(--color-primary, #2865c5); color: #fff; text-decoration: none; }
 .poster-modal__actions a.poster-modal__official:hover { background: #2055ad; text-decoration: none; }
-@media (max-width: 700px) { .poster-modal__actions a.poster-modal__official { min-height: 40px; } }
+@media (max-width: 700px) { .poster-modal__actions a.poster-modal__official { min-height: 44px; } }
 /* Region chips fade out at the edge instead of being cut, so they read as scrollable. */
 .split-map .region-chips, .country-page--atlas .region-chips { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); }
 /* The coordinate readout is decoration: keep it on the home globe, not over country maps. */
@@ -2572,4 +2572,22 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
   .home-dock__countries button small { color: #2865c5; font-size: 12px; font-weight: 700; }
   .home-dock__countries .home-dock__request { border-style: dashed; color: #60759a; }
   .home-dock .home-dock__add { justify-content: center; min-height: 48px; margin-top: 6px; border-radius: 24px; font-size: 15px; }
+}
+
+/* ── Mobile overhaul, stage 5: detail full screen with its own top bar; type and touch sizes. ── */
+@media (max-width: 700px) {
+  .poster-modal__panel { inset: 0; width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; padding-bottom: env(safe-area-inset-bottom); }
+  /* Top bar: language left, close right (they used to float over the poster). */
+  .poster-modal__header { position: sticky; top: 0; right: auto; z-index: 3; display: flex; align-items: center; height: calc(52px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 60px 0 12px; border: 0; border-bottom: 1px solid #e5ecf5; border-radius: 0; background: #fff; }
+  .poster-modal__close { top: calc(4px + env(safe-area-inset-top)); right: 6px; z-index: 4; width: 44px; height: 44px; background: transparent; }
+  .poster-modal__image { padding: 12px 16px; }
+  .poster-modal__image img { max-height: 42dvh; }
+  .poster-modal__info { padding: 20px 16px 28px; }
+  .poster-modal__info :is(h1, h2) { font-size: 22px; line-height: 1.3; }
+  .poster-modal__facts, .poster-modal__description { font-size: 15px; }
+  .poster-modal__eyebrow, .poster-modal__source, .poster-modal__credit { font-size: 12px; }
+  .poster-modal__actions { gap: 8px; }
+  .poster-modal__actions > *, .poster-modal__actions .share-event__button, .detail-actions .share-event__button { min-height: 44px; }
+  /* Lists: no metadata under 12px on phones. */
+  .event-row__meta, .event-row__date, .event-row__place, .event-sheet__heading > span { font-size: 12px; }
 }

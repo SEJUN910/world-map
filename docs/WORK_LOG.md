@@ -1,5 +1,10 @@
 # Work Log
 
+## 2026-11-25 - Mobile overhaul, stage 5: detail and sizes
+
+- Phones: the event detail fills the screen with a sticky 52px top bar (language left, 44×44 close right) so nothing floats over the poster; poster ≤42dvh, title 22px, body 15px, captions 12px, every action ≥44px tall; list metadata no smaller than 12px. PC detail unchanged.
+- Checks: `qa-m5.mjs` 10/10 (full screen, close 44×44 in the bar, poster below the bar, no text <12px, actions ≥44px, bar sticks while scrolling, close works, PC centred); regression split 79, search/actions 23, nearby 33.
+
 ## 2026-11-25 - Mobile overhaul, stage 4: home
 
 - Phones: wordmark top-left and tools top-right (they used to collide with the coordinates at the bottom); the globe sits between the top bar and a bottom dock with a one-line intro, one-tap country buttons with event counts (대한민국 806 · 대만 3 · 프랑스 401) plus "다른 나라 요청", and a labelled "＋ 행사 올리기"; coordinates, zoom, the select and the bare + are hidden. All sizes: a light globe placeholder ("지도 불러오는 중…") until the map is ready, instead of a blank page. The request dialog returns focus to whichever control opened it. PC layout otherwise unchanged.
