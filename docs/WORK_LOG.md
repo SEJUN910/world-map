@@ -1,5 +1,11 @@
 # Work Log
 
+## 2026-11-25 - Desktop map groups fill the list panel
+
+- Planned by Antigravity (`.omc/plans/desktop-cluster-list.md`), user chose "as planned". On desktop, a cluster circle, grouped poster or the hover popup's "전체 N개 보기" now replaces the left list with that group (map order, 24 per page, client pager, URL unchanged) instead of opening EventClusterDialog; "전체 목록" restores the list; a folded panel opens; sort is locked while a group is shown; map moves and "지도에서 보기" keep it, filter changes clear it. Single points still open the detail. Mobile sheet and the home globe modal unchanged.
+- `EventMap.onSelectGroup` (groups only; mobile `onSelectEvents` keeps priority), `useGroupEvents` (reuses list rows, fetches the rest from `/api/map-posters`, aborts older requests; page and rows are keyed to the selection so a new group never shows the previous page or rows for a frame), empty notice, focus moves to the list on clear/page.
+- Local production-build QA (scratchpad `qa-group.mjs`) 18/18: Paris grouped poster (3), Korea Seoul cluster (512 events, 22 pages, page 2 loads other rows), clear, fold, category change, single poster. Regression: split 79, category 16 (one timing flake, 3/3 on rerun), France 27, tags 22, posters 23 (cards check now looks at the group list's w=192 thumbs). `npm test` 54. Review: no blocking findings; one-frame page/rows glitch, empty notice, focus and stale highlight fixed.
+
 ## 2026-11-25 - HTML entities in imported text
 
 - Live data had raw entities in 10 published rows: culture info `&times;`, `&eacute;`, `&Eacute;`, `&laquo;`, `&raquo;`, `&ndash;` (decoder only knew a dozen names, case-insensitively) and Paris `&#58;` (listing double-encodes; Paris decoded once).

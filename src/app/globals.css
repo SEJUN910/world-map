@@ -2296,6 +2296,12 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
 .split-panel__rows { display: grid; }
 .split-panel .empty-state { min-height: 220px; }
 .split-panel .empty-state h2 { color: #555; font-size: 16px; }
+/* A map group shown in the list: tinted bar with a way back to the full list. */
+.split-panel__summary.is-selection { background: #eef3fd; border-color: #d5e2fa; }
+.split-panel__summary.is-selection strong { color: #1f5fd1; }
+.split-panel__summary.is-selection .list-view__chip { margin-left: auto; }
+.split-panel__list:focus:not(:focus-visible) { outline: none; }
+.split-panel__notice { display: grid; justify-items: center; gap: 12px; padding: 48px 16px; color: #555; font-size: 14px; text-align: center; }
 .split-panel .pagination { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 18px 0 0; }
 .split-panel .pagination .button { min-height: 32px; padding: 0 12px; border: 1px solid #d6d6d6; border-radius: 6px; background: #fff; color: #222; font-size: 13px; }
 .list-view__page { color: #555; font-size: 13px; }

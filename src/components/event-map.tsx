@@ -17,7 +17,7 @@ import { BASEMAP_ATTACH_ZOOM, BASEMAP_BACKGROUND, BASEMAP_FADE, BASEMAP_GLYPHS, 
 export type MapFocusTarget = { latitude: number; longitude: number; nonce: number };
 export type EventMapPoint = { countryCode?: CountryCode; id: string; slug: string; title: string; latitude: number; longitude: number };
 type Coordinates = { latitude: number; longitude: number };
-type Props = ({ points: EventMapPoint[]; fitToPoints?: boolean; point?: never; onPick?: never } | { points?: never; fitToPoints?: never; point: Coordinates | null; onPick: (point: Coordinates) => void }) & { country?: CountryCode; overview?: boolean; onReady?: (focusCountry: (country: CountryCode) => void) => void; onCountryFocused?: () => void; onSelectEvents?: (ids: string[]) => void; selectedEventId?: string; onViewportChange?: (bounds: MapBounds, userChanged: boolean) => void; onEventHighlight?: (id: string | null) => void; highlightedId?: string | null; onCountryClick?: (country: CountryCode) => void; focusTarget?: MapFocusTarget | null };
+type Props = ({ points: EventMapPoint[]; fitToPoints?: boolean; point?: never; onPick?: never } | { points?: never; fitToPoints?: never; point: Coordinates | null; onPick: (point: Coordinates) => void }) & { country?: CountryCode; overview?: boolean; onReady?: (focusCountry: (country: CountryCode) => void) => void; onCountryFocused?: () => void; onSelectEvents?: (ids: string[]) => void; onSelectGroup?: (ids: string[]) => void; selectedEventId?: string; onViewportChange?: (bounds: MapBounds, userChanged: boolean) => void; onEventHighlight?: (id: string | null) => void; highlightedId?: string | null; onCountryClick?: (country: CountryCode) => void; focusTarget?: MapFocusTarget | null };
 
 function globeZoom(element: HTMLElement) {
   return Math.log2(Math.min(element.clientWidth * 0.8, element.clientHeight * 0.65, 740) * Math.PI / 512);
@@ -58,7 +58,7 @@ function coordinateGrid(map: MapLibreMap): FeatureCollection<LineString> {
   return { type: "FeatureCollection", features };
 }
 
-export function EventMap({ points, point, onPick, fitToPoints = false, country = "kr", overview = false, onReady, onCountryFocused, onSelectEvents, selectedEventId, onViewportChange, onEventHighlight, highlightedId, onCountryClick, focusTarget }: Props) {
+export function EventMap({ points, point, onPick, fitToPoints = false, country = "kr", overview = false, onReady, onCountryFocused, onSelectEvents, onSelectGroup, selectedEventId, onViewportChange, onEventHighlight, highlightedId, onCountryClick, focusTarget }: Props) {
   const { t, locale } = useTranslations();
   const localeRef = useRef(locale);
   localeRef.current = locale;
@@ -68,6 +68,9 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
   countryClick.current = onCountryClick;
   const container = useRef<HTMLDivElement>(null);
   const selection = useRef(onSelectEvents);
+  // Desktop: a group (cluster or grouped poster) goes to the list panel instead of the popup.
+  const groupSelection = useRef(onSelectGroup);
+  groupSelection.current = onSelectGroup;
   const viewport = useRef(onViewportChange);
   const selected = useRef(selectedEventId);
   selection.current = onSelectEvents;
@@ -387,7 +390,8 @@ export function EventMap({ points, point, onPick, fitToPoints = false, country =
             void Promise.all(group.clusterIds.map((id) => source.getClusterLeaves(id, 5000, 0))).then((batches) => {
               if (disposed || generation !== selectionGeneration) return;
               const ids = [...new Set([...group.eventIds, ...batches.flat().map((leaf) => String(leaf.properties?.id || "")).filter(Boolean)])];
-              if (ids.length) { if (selection.current) selection.current(ids); else setClusterIds(ids); }
+              const pick = selection.current ?? groupSelection.current;
+              if (ids.length) { if (pick) pick(ids); else setClusterIds(ids); }
             }).catch(() => { /* Source may change during a filter/navigation. */ });
           };
           instance.on("click", "event-clusters", (event) => {

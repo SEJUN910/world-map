@@ -20,6 +20,7 @@ import { CountrySwitch } from "./country-switch";
 import { SourceNotice } from "./source-notice";
 import { CategoryChips } from "./category-chips";
 import { TagChips } from "./tag-chips";
+import { useGroupEvents } from "./use-group-events";
 import type { EventTag } from "@/lib/event-tags";
 const MobileEventSheet = dynamic(() => import("./mobile-event-sheet").then(module => module.MobileEventSheet), { ssr: false });
 
@@ -81,11 +82,13 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
     if (next === "list") url.searchParams.set("view", "list"); else url.searchParams.delete("view");
     window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
   }, []);
+  // Desktop keeps a map selection in the list while flying to one of its events.
   const showOnMap = useCallback((event: FestivalEvent) => {
-    setSelectedIds(null); setSelectedId(event.id); setHighlightedId(event.id);
+    if (isMobile) setSelectedIds(null);
+    setSelectedId(event.id); setHighlightedId(event.id);
     setFocus({ latitude: event.latitude, longitude: event.longitude, nonce: Date.now() });
     changeView("map");
-  }, [changeView]);
+  }, [changeView, isMobile]);
   // The mobile sheet renders in a portal on <body>; the floating view switch
   // there needs the sheet height too.
   const onHeight = useCallback((height: number) => {
@@ -100,6 +103,17 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
     if (!next.length) return;
     setSelectedIds(next); setSelectedId(next[0]);
   }, []);
+  // Desktop: a clicked group replaces the list panel (in map order) until cleared
+  // or the filters change. The panel opens if it was folded.
+  const selectDesktopGroup = useCallback((ids: string[]) => {
+    const order = new Map(latestPoints.current.map((point, index) => [point.id, index]));
+    const next = [...new Set(ids)].filter(id => order.has(id)).sort((a, b) => order.get(a)! - order.get(b)!);
+    if (!next.length) return;
+    setSelectedIds(next); setSelectedId(""); setHighlightedId(null); setCatalogOpen(true);
+    listRef.current?.scrollTo({ top: 0 });
+  }, []);
+  const group = useGroupEvents(isMobile ? null : selectedIds, events);
+  useEffect(() => { listRef.current?.scrollTo({ top: 0 }); }, [group.groupPage]);
   const onViewportChange = useCallback((bounds: MapBounds, userChanged: boolean) => {
     setViewportBounds(bounds);
     if (userChanged) setViewportDirty(true);
@@ -154,7 +168,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
   </nav>;
   const pages = Math.max(1, Math.ceil(total / 24));
 
-  const sortSelect = <select className="list-view__sort" aria-label={t("정렬")} value={sort} disabled={pending} onChange={event => applySort(event.target.value as EventSort)}>
+  const sortSelect = <select className="list-view__sort" aria-label={t("정렬")} value={sort} disabled={pending || (!isMobile && !!selectedIds)} onChange={event => applySort(event.target.value as EventSort)}>
     <option value="latest">{t("최신 등록순")}</option><option value="soon">{t("일정 빠른 순")}</option><option value="ending">{t("종료 임박순")}</option>
   </select>;
   const searchAreaButton = viewportDirty && viewportBounds && <button type="button" className="atlas-search-area" disabled={pending} onClick={() => apply(initialRegion, initialQuery, { ...filters, bounds: viewportBounds.map(n => Number(n.toFixed(5))).join(",") })}>{t("이 지역에서 검색")}</button>;
@@ -177,11 +191,25 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
           <TagChips tags={tagChips} value={filters.tag} disabled={pending} onChange={tag => apply(initialRegion, initialQuery, { ...filters, tag })} />
           <div className="split-panel__filters">{dateFilter}{sortSelect}</div>
         </div>
-        <div className="split-panel__summary">
-          <span>{t("총 {count}개", { count: total })}</span>
+        <div className={`split-panel__summary${selectedIds ? " is-selection" : ""}`}>
+          {selectedIds ? <>
+            <span><strong>{t("선택한 위치의 행사")}</strong> · {t("총 {count}개", { count: selectedIds.length })}</span>
+            <button type="button" className="list-view__chip" onClick={() => { setSelectedIds(null); setSelectedId(""); listRef.current?.scrollTo({ top: 0 }); listRef.current?.focus({ preventScroll: true }); }}>{t("전체 목록")}</button>
+          </> : <span>{t("총 {count}개", { count: total })}</span>}
           {filters.bounds && <button type="button" className="list-view__chip" onClick={() => apply(initialRegion, initialQuery, { ...filters, bounds: "" })}>{t("현재 지도 영역")} <span aria-hidden="true">×</span><span className="visually-hidden">{t("영역 해제")}</span></button>}
         </div>
-        <div ref={listRef} className="split-panel__list" aria-busy={pending}>
+        <div ref={listRef} className="split-panel__list" aria-busy={pending || group.loading} tabIndex={-1}>
+          {selectedIds ? <>
+            {group.loading ? <p className="split-panel__notice" role="status">{t("불러오는 중…")}</p>
+              : group.error ? <div className="split-panel__notice" role="alert"><p>{t("행사를 불러오지 못했어요.")}</p><button type="button" className="button button-secondary" onClick={group.retry}>{t("다시 시도")}</button></div>
+              : !group.groupEvents.length ? <p className="split-panel__notice">{t("아직 발견하지 못했어요.")}</p>
+              : <div className="split-panel__rows">{group.groupEvents.map(event => <EventListItem key={event.id} event={event} selected={selectedId === event.id} highlighted={highlightedId === event.id} onHover={handleCardHighlight} onShowOnMap={showOnMap} />)}</div>}
+            {selectedIds.length > 24 && <nav className="pagination" aria-label={t("행사 목록 페이지")}>
+              {group.groupPage > 0 && <button type="button" className="button button-secondary" onClick={() => { group.setGroupPage(value => value - 1); listRef.current?.focus({ preventScroll: true }); }}>{t("← 이전")}</button>}
+              <span className="list-view__page">{t("{current} / {total} 페이지", { current: group.groupPage + 1, total: Math.ceil(selectedIds.length / 24) })}</span>
+              {(group.groupPage + 1) * 24 < selectedIds.length && <button type="button" className="button button-secondary" onClick={() => { group.setGroupPage(value => value + 1); listRef.current?.focus({ preventScroll: true }); }}>{t("다음 →")}</button>}
+            </nav>}
+          </> : <>
           {events.length
             ? <div className="split-panel__rows">{events.map(event => <EventListItem key={event.id} event={event} selected={selectedId === event.id} highlighted={highlightedId === event.id} onHover={handleCardHighlight} onShowOnMap={showOnMap} />)}</div>
             : <div className="empty-state"><span aria-hidden="true">✳</span><h2>{t("아직 발견하지 못했어요.")}</h2></div>}
@@ -190,6 +218,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
             <span className="list-view__page">{t("{current} / {total} 페이지", { current: page, total: pages })}</span>
             {page * 24 < total && <Link className="button button-secondary" href={pageHref(page + 1)}>{t("다음 →")}</Link>}
           </nav>}
+          </>}
           <SourceNotice country={country} />
           <TrafficCounter inline />
         </div>
@@ -203,7 +232,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
         <aside className="country-map" aria-label={t("지역 지도")}>
           {/* Fit once per region page; a bounds search must not rebuild the map and lose the user's viewport. */}
           <EventMap country={country} points={mapPoints} fitToPoints={!!initialRegion}
-            onSelectEvents={isMobile ? selectMapEvents : undefined} selectedEventId={selectedId} onViewportChange={onViewportChange} focusTarget={focus}
+            onSelectEvents={isMobile ? selectMapEvents : undefined} onSelectGroup={isMobile ? undefined : selectDesktopGroup} selectedEventId={selectedId} onViewportChange={onViewportChange} focusTarget={focus}
             onEventHighlight={isMobile ? undefined : handleMapHighlight} highlightedId={isMobile ? undefined : highlightedId} />
           {searchAreaButton}
           {total > mapPoints.length && <p className="map-help">{t("지도에는 최대 5,000개의 행사만 표시돼요.")}</p>}
