@@ -11,13 +11,23 @@ for (const event of dataset.events) {
   if (!Number.isFinite(event.latitude) || !Number.isFinite(event.longitude) || event.latitude < 21.8 || event.latitude > 26.5 || event.longitude < 118 || event.longitude > 123) throw Error("Invalid Taiwan coordinates");
   const url = new URL(event.poster);
   if (url.protocol !== "https:" || !/(^|\.)(gov\.tw|taiwan\.net\.tw)$/.test(url.hostname)) throw Error("Unexpected image host");
-  const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
-  const type = response.headers.get("content-type") || "";
-  await response.body?.cancel();
-  if (!response.ok || !type.startsWith("image/")) throw Error(`Image unavailable: ${event.sourceId}`);
+  // localPoster: a reduced copy (OGDL-1.0 allows modification) of an official image
+  // too large for the image optimizer, served from public/ under the source ID.
+  let image = event.poster;
+  if (event.localPoster) {
+    if (event.localPoster !== `/assets/posters/${event.sourceId}.jpg`) throw Error(`Unexpected local poster path: ${event.sourceId}`);
+    const bytes = await readFile(new URL(`../public${event.localPoster}`, import.meta.url));
+    if (bytes.length > 1024 * 1024 || bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes[2] !== 0xff) throw Error(`Local poster must be a JPEG under 1MB: ${event.sourceId}`);
+    image = event.localPoster;
+  } else {
+    const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
+    const type = response.headers.get("content-type") || "";
+    await response.body?.cancel();
+    if (!response.ok || !type.startsWith("image/")) throw Error(`Image unavailable: ${event.sourceId}`);
+  }
   const hash = createHash("sha256").update(`taiwan_tourism:${event.sourceId}`).digest("hex");
   const id = `${hash.slice(0,8)}-${hash.slice(8,12)}-4${hash.slice(13,16)}-a${hash.slice(17,20)}-${hash.slice(20,32)}`;
-  rows.push({ id, author_id: null, country_code: "tw", timezone: "Asia/Taipei", category: "festival", tags: ["festival"], slug: event.title.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0,80), title: event.title, description: event.description, region: event.region, region_code: event.regionCode, venue: event.venue, address: event.address, latitude: event.latitude, longitude: event.longitude, start_date: event.startDate, end_date: event.endDate, official_url: event.officialUrl, publication_status: "published", event_status: "scheduled", source_name: "taiwan_tourism", source_id: event.sourceId, source_url: dataset.source, source_provider: "Taiwan Tourism Administration", source_reference_date: dataset.referenceDate, source_synced_at: new Date().toISOString(), source_image_url: event.poster, source_image_license: "OGDL-1.0" });
+  rows.push({ id, author_id: null, country_code: "tw", timezone: "Asia/Taipei", category: "festival", tags: ["festival"], slug: event.title.normalize("NFKC").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "").slice(0,80), title: event.title, description: event.description, region: event.region, region_code: event.regionCode, venue: event.venue, address: event.address, latitude: event.latitude, longitude: event.longitude, start_date: event.startDate, end_date: event.endDate, official_url: event.officialUrl, publication_status: "published", event_status: "scheduled", source_name: "taiwan_tourism", source_id: event.sourceId, source_url: dataset.source, source_provider: "Taiwan Tourism Administration", source_reference_date: dataset.referenceDate, source_synced_at: new Date().toISOString(), source_image_url: image, source_image_license: "OGDL-1.0" });
 }
 if (!rows.length) throw Error("No current Taiwan events; refresh the curated dataset first");
 const option = process.argv.indexOf("--sql");

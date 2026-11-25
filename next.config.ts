@@ -23,6 +23,7 @@ const config: NextConfig = {
   // low; 31 days because a changed source image arrives under a new URL.
   images: {
     remotePatterns: RESIZABLE_POSTER_HOSTS.map((hostname) => ({ protocol: "https" as const, hostname })),
+    localPatterns: [{ pathname: "/assets/posters/**", search: "" }],
     formats: ["image/webp"],
     qualities: [70],
     imageSizes: [192],

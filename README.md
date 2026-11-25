@@ -53,7 +53,7 @@ http://127.0.0.1:3000 에서 확인합니다. `.env.example`을 참고해 `.env.
 
 지도 점은 크기를 유지한 주황색 원으로 표시합니다. 확대 단계 6부터 각 점 위에 48px 원형 포스터 한 장이 나타나고 7에서 선명해집니다. 묶인 점은 해당 묶음의 행사 한 장을 대표로 보여주며, 더 확대하면 개별 행사로 나뉩니다. 겹침을 피한 화면 내 최대 36개만 표시하며 `/api/map-posters`에서 해당 공개 행사의 이미지·소개 정보를 가져옵니다. 이미지 링크는 필요할 때만 발급하고 브라우저 메모리에 최대 4분간 보관합니다. 마우스·키보드 포커스로 행사명·장소·기간을 확인하고, 클릭·탭하면 소개 모달이 열립니다. 축소하면 포스터가 사라지고 주황색 점이 남습니다.
 
-목록 썸네일·지도 포스터·포스터 카드는 공공 출처(문화포털 `www.culture.go.kr`, 파리 `cdn.paris.fr`, 대만 `*.gov.tw`·`*.taiwan.net.tw`) 이미지를 원본 대신 Next 이미지 변환(`/_next/image`)으로 줄인 WebP를 받습니다. 목록과 지도 포스터는 같은 192px 이미지를, 카드는 384px 이미지를 공유하고 품질은 70 하나만 허용합니다(Vercel 변환 횟수 절약, 캐시 31일). 출처 목록은 `src/lib/poster-hosts.ts` 한 곳에 있고 `next.config.ts`도 이를 씁니다. 한국관광공사 이미지는 공공누리 제3유형(변경금지)이라 원본을 그대로 쓰고, 사용자 등록 포스터(Supabase 5분 링크)도 원본을 씁니다. 소개 모달은 항상 원본을 보여 줍니다. 줄인 이미지를 못 받으면 목록·카드는 원본으로 한 번 다시 시도하고, 지도 포스터도 원본으로 한 번 다시 시도한 뒤 실패하면 숨깁니다.
+목록 썸네일·지도 포스터·포스터 카드는 공공 출처(문화포털 `www.culture.go.kr`, 파리 `cdn.paris.fr`, 대만 `*.gov.tw`·`*.taiwan.net.tw`) 이미지를 원본 대신 Next 이미지 변환(`/_next/image`)으로 줄인 WebP를 받습니다. 목록과 지도 포스터는 같은 192px 이미지를, 카드는 384px 이미지를 공유하고 품질은 70 하나만 허용합니다(Vercel 변환 횟수 절약, 캐시 31일). 출처 목록은 `src/lib/poster-hosts.ts` 한 곳에 있고 `next.config.ts`도 이를 씁니다. 사이트 안에 둔 대만 행사 사진 사본(`/assets/posters/`)도 같은 방식으로 줄입니다. 한국관광공사 이미지는 공공누리 제3유형(변경금지)이라 원본을 그대로 쓰고, 사용자 등록 포스터(Supabase 5분 링크)도 원본을 씁니다. 소개 모달은 항상 원본을 보여 줍니다. 줄인 이미지를 못 받으면 목록·카드는 원본으로 한 번 다시 시도하고, 지도 포스터도 원본으로 한 번 다시 시도한 뒤 실패하면 숨깁니다.
 
 묶인 큰 점에 마우스를 올리면 행사 수와 최대 5개 행사명을 미리 보여줍니다. 큰 점이나 그 점의 원형 대표 포스터를 누르면 자동 확대 대신 묶음 전체의 포스터 목록이 열립니다. 목록은 24개씩 페이지를 넘기며 탐색하고, 행사를 누르면 소개 모달이 열립니다. 소개를 닫으면 목록과 보던 페이지가 유지됩니다. 첫 화면의 지구에서도 동일하게 동작합니다.
 
@@ -165,7 +165,7 @@ The home globe's country select ends with “+ 다른 나라 요청하기…”,
 
 ## Taiwan seed data
 
-`/taiwan` uses country-scoped events/regions and the same globe and introduction modals. The home globe displays both countries. `data/taiwan-events.json` contains six curated English introductions based on the Taiwan Tourism Administration activity open dataset (https://data.gov.tw/en/datasets/7778), with original official images, source attribution, reference date and OGDL-1.0 licensing. These are representative images and may be photos rather than edition-specific posters.
+`/taiwan` uses country-scoped events/regions and the same globe and introduction modals. The home globe displays both countries. `data/taiwan-events.json` contains six curated English introductions based on the Taiwan Tourism Administration activity open dataset (https://data.gov.tw/en/datasets/7778), with original official images, source attribution, reference date and OGDL-1.0 licensing. These are representative images and may be photos rather than edition-specific posters. An official image too large for the image optimizer can be replaced by a reduced JPEG copy (OGDL-1.0 allows modification): put it at `public/assets/posters/<sourceId>.jpg` (under 1MB) and set `localPoster` in the JSON; the import then stores that path instead of the official URL, which stays in `poster` for reference. Pingtung Luoshanfeng Art Festival uses one (official 8000x6000, 14.7MB → 1200x900, 119KB).
 
 Run `node scripts/import-taiwan.mjs` to validate current records and check all image URLs. `--sql OUTPUT_FILE` writes an upsert for review/application through the existing project database MCP; it does not execute SQL or require a service key. Repeat imports preserve hidden/deleted publication states and do not remove unrelated records. Refresh the curated source records when their dates expire; no automatic scheduler has been added.
 

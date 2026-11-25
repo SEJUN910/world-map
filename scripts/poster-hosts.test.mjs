@@ -12,6 +12,7 @@ test("public poster hosts are resized", () => {
     "https://www.sunmoonlake.gov.tw/fapi/Image?type=Activity&id=1",
     "https://data.gov.tw/a.png",
     "https://media.taiwan.net.tw/a.jpg",
+    "/assets/posters/Event_A15010000H_081870.jpg",
   ]) assert.equal(isResizablePoster(url), true, url);
 });
 
@@ -25,6 +26,10 @@ test("TourAPI, Supabase and anything else stay original", () => {
     "https://gov.tw.evil.com/a.jpg",
     "https://culture.go.kr/a.jpg",
     "data:image/jpeg;base64,AAAA",
+    "/assets/posters/../korea.json",
+    "/assets/posters/Event_a.jpg?x=1",
+    "/assets/korea.json",
+    "//evil.com/assets/posters/Event_a.jpg",
     "",
     "not a url",
   ]) assert.equal(isResizablePoster(url), false, url);
