@@ -2060,6 +2060,8 @@ body:has(.site-header) .language-select--floating { top: auto; bottom: 16px; }
 .google-sign-in { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 44px; padding: 10px 16px; border: 1px solid #747775; border-radius: 4px; background: white; color: #1f1f1f; font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
 .google-sign-in:hover { background: #f6f9fe; }
 .google-sign-in:disabled { cursor: default; opacity: .5; }
+/* On a full-width page the sign-in button keeps a dialog-sized width. */
+.saved-page__login form { width: min(100%, 320px); margin: 24px auto 0; }
 .auth-error-page { max-width: 560px; padding-top: 90px; padding-bottom: 90px; display: flex; flex-direction: column; gap: 22px; }
 
 .traffic-counter { position: fixed; left: 28px; top: 24px; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 5px 12px; max-width: calc(100vw - 56px); padding: 0; background: transparent; color: #7890af; font-size: 10px; line-height: 1.5; font-variant-numeric: tabular-nums; }
