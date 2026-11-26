@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { locales, type Locale } from "./i18n";
 import { siteUrl, searchIndexingEnabled } from "./site";
 import { countries } from "./countries";
-import { eventPath, type FestivalEvent } from "./events";
+import { eventDate, eventPath, type FestivalEvent } from "./events";
+import type { CountryCode } from "./countries";
 
 export function localizedPath(path: string, locale: Locale, values: Record<string, string | number | undefined> = {}) {
   const url = new URL(path, siteUrl);
@@ -32,8 +33,19 @@ export function pageMetadata({ title, description, path, locale, values = {}, no
     twitter: { card: "summary_large_image", title, description, images: [absoluteUrl(image)] },
   };
 }
-export function eventDescription(event: FestivalEvent) {
-  return (event.description || [event.title, event.region, event.venue, event.address].filter(Boolean).join(" · ")).replace(/\s+/g, " ").trim().slice(0, 180);
+// Page titles (translation keys) shared by the metadata and the page's <h1>.
+export const COUNTRY_PAGE_TITLES = { kr: "한국의 축제와 동네 행사", tw: "대만의 축제와 행사", fr: "프랑스의 축제와 행사" } as const satisfies Record<CountryCode, string>;
+export const REGION_PAGE_TITLE = "{region}의 축제와 행사";
+
+/** Search snippet: when and where first ("2026.12.23 — 2026.12.25 · 청주한국공예관 · 충청북도"), then the description. */
+export function eventDescription(event: FestivalEvent, max = 160) {
+  const clean = (value: string | null | undefined) => (value || "").replace(/\s+/g, " ").trim();
+  const place = [...new Set([clean(event.venue), clean(event.region)].filter(Boolean))];
+  const lead = [event.startDate ? eventDate(event) : "", ...place].filter(Boolean).join(" · ");
+  const about = clean(event.description) || clean(event.address);
+  const text = [lead, about].filter(Boolean).join(". ") || clean(event.title);
+  const chars = Array.from(text);
+  return chars.length > max ? `${chars.slice(0, max - 1).join("").trimEnd()}…` : text;
 }
 export function eventStructuredData(event: FestivalEvent, locale: Locale) {
   if (!event.startDate || !event.address) return null;

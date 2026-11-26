@@ -14,7 +14,7 @@ const site = compile(await file("site"));
 const { resolveSiteUrl } = await import(site);
 let source = await file("seo");
 for (const [name, value] of [["./i18n",i18n],["./site",site],["./countries",countries],["./events",events]]) source = source.replace(JSON.stringify(name), JSON.stringify(value));
-const { pageMetadata, localizedPath, eventStructuredData, serializeJsonLd, collectionStructuredData, sitemapEntry, sitemapUrl } = await import(compile(source));
+const { pageMetadata, localizedPath, eventStructuredData, serializeJsonLd, collectionStructuredData, sitemapEntry, sitemapUrl, eventDescription } = await import(compile(source));
 test("canonical language/event/page URLs stay distinct and share reciprocal alternates", () => {
   const metadata = pageMetadata({ title:"Events",description:"Explore",path:"/korea",locale:"en",values:{page:2} });
   assert.equal(metadata.alternates.canonical,"https://festiva.test/korea?page=2&lang=en");
@@ -52,4 +52,13 @@ test("titles get the brand unless they already name it", () => {
   assert.equal(pageMetadata({ title: "Festivals and local events in South Korea", description: "d", path: "/korea", locale: "en" }).title, "Festivals and local events in South Korea");
   assert.deepEqual(pageMetadata({ title: "festiva — 지도로 만나는 우리 동네 행사", description: "d", path: "/", locale: "ko" }).title, { absolute: "festiva — 지도로 만나는 우리 동네 행사" });
   assert.equal(pageMetadata({ title: "Festival Paris", description: "d", path: "/france", locale: "en" }).title, "Festival Paris");
+});
+test("event snippets lead with when and where, then the description, within 160 characters", () => {
+  const event = { title: "러브액츄얼리", description: "관람료: 전석무료   문의: 054-955-3832", venue: "청주한국공예관", region: "충청북도", address: "충북 청주시", startDate: "2026-12-23", endDate: "2026-12-25" };
+  assert.equal(eventDescription(event), "2026.12.23 — 2026.12.25 · 청주한국공예관 · 충청북도. 관람료: 전석무료 문의: 054-955-3832");
+  assert.equal(eventDescription({ ...event, venue: "충청북도", endDate: "2026-12-23" }), "2026.12.23 · 충청북도. 관람료: 전석무료 문의: 054-955-3832");
+  assert.equal(eventDescription({ ...event, startDate: null, venue: "", region: "", description: "" }), "충북 청주시");
+  assert.equal(eventDescription({ title: "Only a title" }), "Only a title");
+  const long = eventDescription({ ...event, description: "가".repeat(400) });
+  assert.equal(Array.from(long).length, 160); assert.ok(long.endsWith("…"));
 });

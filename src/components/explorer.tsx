@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "./language-provider";
-import { localizedPath } from "@/lib/seo";
+import { COUNTRY_PAGE_TITLES, localizedPath, REGION_PAGE_TITLE } from "@/lib/seo";
 import { countries, type CountryCode } from "@/lib/countries";
 import { todayInCountry, type FestivalEvent } from "@/lib/events";
 import { discoveryParams, emptyDiscoveryFilters, normalizeView, validDate, viewParams, type DateChoice, type DiscoveryFilters, type EventSort, type ExplorerView, type MapBounds } from "@/lib/discovery-filters";
@@ -233,6 +233,9 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
   }
   const pageHref = (nextPage: number) => pathFor(initialRegion, initialQuery, filters, nextPage);
   const options = [...regions];
+  // The page's one <h1>, the same words as its <title> ("서울특별시의 축제와 행사").
+  const regionName = regions.find(item => item.code === initialRegion)?.name;
+  const pageHeading = regionName ? t(REGION_PAGE_TITLE, { region: regionName }) : t(COUNTRY_PAGE_TITLES[country]);
   for (const event of events) if (event.region.trim() && !options.some(item => item.code === event.regionCode)) options.push({ code: event.regionCode, name: event.region });
 
   const searchForm = <form className="search-field country-search" onSubmit={event => { event.preventDefault(); apply(initialRegion, query, filters); }}>
@@ -282,7 +285,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
       ? <>
         {/* Phones: one floating search bar (back, search, menu) and the category chips over the map — no header band. */}
         <div className="atlas-top" data-view={view}>
-          {!initialEvent && <h1 className="visually-hidden">{t(countries[country].name)}</h1>}
+          {!initialEvent && <h1 className="visually-hidden">{pageHeading}</h1>}
           {/* The menu is a sibling of the search form: its account dialog has forms of its own. */}
           <div className="atlas-top__bar">
           <form className="atlas-top__search" role="search" onSubmit={event => { event.preventDefault(); (event.currentTarget.querySelector("input") as HTMLInputElement | null)?.blur(); apply(initialRegion, query, filters); }}>
@@ -301,7 +304,8 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
       </>
       : <section id="atlas-catalog" className="split-panel" aria-label={t("행사 목록")} hidden={!catalogOpen}>
         <div className="split-panel__top">
-          <MinimalMasthead back actions={<CountrySwitch country={country} heading={initialEvent ? "p" : "h1"} />} />
+          {!initialEvent && <h1 className="visually-hidden">{pageHeading}</h1>}
+          <MinimalMasthead back actions={<CountrySwitch country={country} heading="p" />} />
           {searchForm}
           <CategoryChips value={filters.category} disabled={pending} onChange={category => apply(initialRegion, initialQuery, { ...filters, category, tag: "" })} />
           <TagChips tags={tagChips} value={filters.tag} disabled={pending} onChange={tag => apply(initialRegion, initialQuery, { ...filters, tag })} />
