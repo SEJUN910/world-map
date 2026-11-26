@@ -2639,3 +2639,9 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
 }
 /* Only the opener link is hidden; its dialog (a sibling) must stay renderable. */
 .atlas-create-opener { display: none; }
+
+/* ── Mobile fixes from the phone check: menu above the list sheet, one-line chips. ── */
+@media (max-width: 700px) {
+  .mobile-menu__panel { position: fixed; z-index: 20; top: calc(64px + env(safe-area-inset-top)); right: 12px; max-height: calc(100dvh - 80px - env(safe-area-inset-top)); overflow-y: auto; }
+  .event-sheet__scroll .event-sheet__filters > button.event-sheet__chip { display: inline-flex; align-items: center; gap: 4px; }
+}
