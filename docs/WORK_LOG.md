@@ -1,5 +1,12 @@
 # Work Log
 
+## 2026-11-26 - Map posters: smooth zoom (no reload look)
+
+- User: zooming still looks like a reload / blinks. Recorded on production (poster add/remove, image loads, 50 ms ticks): one zoom step removed and re-added up to 26 posters, up to 19 showed as empty circles while their images loaded, and posters came back 2–3 s after the zoom. Cause: cluster lookups ran one after another (~0.7 s), then faces were fetched and only then their images, and every refresh dropped posters before the replacements were ready.
+- `event-map-posters.tsx`: cluster lookups in parallel (20 leaves each); a poster is rendered only when its thumbnail is decoded; faces prefer on-screen → decoded → known; the new layout replaces the old one in one go (old posters stay until faces are ready, at most 1.5 s; shown at once when nothing is on screen); read-ahead of the next zoom's likely faces (2 per group, ≤24, not cancelled by the next zoom, only resized images preloaded); ids the API does not return are remembered; no rebuild while the map is moving; posters already in place glide 260 ms to new anchors (`.is-settling .map-poster[data-placed]`), new ones appear in place; reduced motion respected.
+- Review fixes: fly-in from the corner, waiting on posters that were off-screen, stale posters after a filter change, phone data use (read-ahead 72 → 24, no full-size decodes), duplicate decodes, cache trim in `finally`.
+- Measured (local, warm, headless): blank posters 16–19 → 0, corner fly-ins 0, posters back after a zoom 2.5 s → 1.4 s, poster API calls 10 → 7, image downloads 218 → 80. Regression: qa-group 18, qa-m6 21, qa-m8 25, qa-m9 20.
+
 ## 2026-11-26 - Rename: festiva → 루크맵 / LukeMap
 
 - User picked the name after several rounds (festiva clashes in search with Ford Festiva and Festiva resorts; `lookmap.vercel.app` was taken, so "Luke" as in the gospel). Korean pages say 루크맵, English and Chinese pages LukeMap; the wordmark is LukeMap ✳.

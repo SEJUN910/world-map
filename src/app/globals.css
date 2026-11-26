@@ -1877,6 +1877,9 @@ canvas:focus-visible {
 .map-poster:hover .map-poster__info, .map-poster:focus-visible .map-poster__info { opacity: 1; visibility: visible; transform: translateY(-50%); }
 .map-poster.is-near-right .map-poster__info { left: auto; right: 54px; }
 @keyframes map-poster-appear { from { opacity: 0; } to { opacity: var(--poster-opacity); } }
+/* After a zoom regroups the posters, the ones that stay glide to their new spot instead of jumping. */
+.map-posters.is-settling .map-poster[data-placed] { transition: opacity 250ms ease, transform 260ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .map-posters.is-settling .map-poster[data-placed] { transition: none; } }
 @media (prefers-reduced-motion: reduce) {
   .map-poster, .map-poster img, .map-poster__info { transition: none; animation: none; }
 }
