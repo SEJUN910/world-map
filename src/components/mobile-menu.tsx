@@ -4,10 +4,11 @@ import { createPortal } from "react-dom";
 import type { CountryCode } from "@/lib/countries";
 import { useTranslations } from "./language-provider";
 import { CountrySwitch } from "./country-switch";
-import { SiteTools } from "./site-tools";
+import { AccountControl } from "./account-control";
+import { SavedEventsLink } from "./saved-events";
 
 // Phone menu inside the floating search bar: everything that is not searching
-// or filtering — switch country, post an event, saved events, account.
+// or filtering, as one list of rows — country, post an event, saved events, account.
 export function MobileMenu({ country, onCreate }: { country: CountryCode; onCreate: () => void }) {
   const { t } = useTranslations();
   const [open, setOpen] = useState(false);
@@ -29,9 +30,13 @@ export function MobileMenu({ country, onCreate }: { country: CountryCode; onCrea
     </button>
     {/* On <body>: the page is its own stacking context, so a panel inside it would sit under the list sheet. */}
     {open && createPortal(<div ref={panel} id={id} className="mobile-menu__panel">
-      <CountrySwitch country={country} heading="p" />
-      <button type="button" className="mobile-menu__add" onClick={() => { setOpen(false); onCreate(); }}>{t("＋ 행사 올리기")}</button>
-      <SiteTools />
+      <CountrySwitch country={country} variant="row" />
+      <button type="button" className="menu-row mobile-menu__add" onClick={() => { setOpen(false); onCreate(); }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+        <span>{t("행사 올리기")}</span>
+      </button>
+      <SavedEventsLink variant="row" />
+      <AccountControl />
     </div>, document.body)}
   </div>;
 }

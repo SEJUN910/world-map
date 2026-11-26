@@ -12,6 +12,7 @@ import { TrafficCounter } from "./traffic-counter";
 import { SourceNotice } from "./source-notice";
 import { TagChips } from "./tag-chips";
 import { QuickChips } from "./quick-chips";
+import { SelectChip } from "./select-chip";
 import { FeaturedStrip } from "./featured-strip";
 import type { EventTag } from "@/lib/event-tags";
 
@@ -57,7 +58,8 @@ export function MobileEventSheet(props: Props) {
   const dragging = useRef(false);
   const [snap, setSnap] = useState(view === "list" ? LIST : 2);
   const snapRef = useRef(snap); snapRef.current = snap;
-  const [custom, setCustom] = useState(filters.when === "custom");
+  // True only while the two date fields are open; an applied range shows in the chip instead.
+  const [custom, setCustom] = useState(false);
   const [from, setFrom] = useState(filters.from || todayInCountry(country));
   const [to, setTo] = useState(filters.to || todayInCountry(country));
   const [formError, setFormError] = useState("");
@@ -67,7 +69,7 @@ export function MobileEventSheet(props: Props) {
   const [error, setError] = useState(false);
   const [retry, setRetry] = useState(0);
 
-  useEffect(() => { setCustom(filters.when === "custom"); setFormError(""); setFrom(filters.from || todayInCountry(country)); setTo(filters.to || todayInCountry(country)); }, [filters.when, filters.from, filters.to, country]);
+  useEffect(() => { setCustom(false); setFormError(""); setFrom(filters.from || todayInCountry(country)); setTo(filters.to || todayInCountry(country)); }, [filters.when, filters.from, filters.to, country]);
   useEffect(() => {
     setGroupPage(0); scroll.current?.scrollTo({ top: 0 });
     // A map selection or "near me" opens the sheet halfway, unless the list is already open.
@@ -106,7 +108,16 @@ export function MobileEventSheet(props: Props) {
   const narrowed = !!(region || query || filters.when !== "all" || filters.bounds || filters.theme);
   // Shown next to the count so a lowered sheet still says the list is filtered (the category has its own chips on top).
   const filterCount = [region, query, filters.when !== "all", filters.bounds, filters.theme, filters.tag].filter(Boolean).length;
+  // What the date chip says: the choice, or the applied range ("11.20–11.30").
+  const short = (date: string) => date.slice(5).replace("-", ".");
+  const dateLabel = custom ? t("기간 선택")
+    : filters.when === "custom" ? `${short(filters.from)}–${short(filters.to)}`
+    : t(({ all: "기간", today: "오늘", weekend: "이번 주말", month: "이번 달", custom: "기간 선택" } as const)[filters.when]);
+  // Close the date fields and drop unapplied edits.
+  function closeDates() { setCustom(false); setFormError(""); setFrom(filters.from || todayInCountry(country)); setTo(filters.to || todayInCountry(country)); }
   function applyDate(value: DateChoice) {
+    // "applied" is the current range itself (listed so "기간 선택" can be picked again to change it).
+    if ((value as string) === "applied") { closeDates(); return; }
     setCustom(value === "custom"); setFormError("");
     if (value !== "custom") onApply(region, query, { ...filters, when: value, from: "", to: "" });
   }
@@ -157,33 +168,40 @@ export function MobileEventSheet(props: Props) {
           </div>}
         </div>
         <Sheet.Content id="event-sheet-body" disableDrag disableScroll={snap <= 2} inert={snap <= 2} style={{ opacity: "var(--sheet-body-opacity, 0)" }} scrollRef={scroll} scrollClassName="event-sheet__scroll" scrollStyle={{ padding: "0 16px", paddingBottom: "calc(max(24px, env(safe-area-inset-bottom), var(--keyboard-inset-height, 0px)) + 24px)" }} aria-busy={pending || loading}>
-          <QuickChips filters={filters} disabled={pending} onChange={next => { if (next.when !== "custom") setCustom(false); onApply(region, query, next); }} />
-          <div className="event-sheet__filters">
-            <select aria-label={t("정렬")} value={sort} disabled={pending || !!selectedIds} onChange={event => onSort(event.target.value as EventSort)}>
-              <option value="latest">{t("최신 등록순")}</option><option value="soon">{t("일정 빠른 순")}</option><option value="ending">{t("종료 임박순")}</option>
-            </select>
-            <select aria-label={t("기간 필터")} value={custom ? "custom" : filters.when} disabled={pending} onChange={event => applyDate(event.target.value as DateChoice)}>
-              <option value="all">{t("기간 전체")}</option><option value="today">{t("오늘")}</option><option value="weekend">{t("이번 주말")}</option><option value="month">{t("이번 달")}</option><option value="custom">{t("기간 선택")}</option>
-            </select>
-            <select aria-label={t("지역 필터")} value={region} disabled={pending} onChange={event => onApply(event.target.value, query, { ...filters, bounds: "" })}>
-              <option value="">{t(country === "kr" ? "전국" : "전체")}</option>{regions.map(item => <option key={item.code} value={item.code}>{item.name}</option>)}
-            </select>
-            {filters.bounds && <button type="button" className="event-sheet__chip" onClick={() => onApply(region, query, { ...filters, bounds: "" })}>{t("현재 지도 영역")} <span aria-hidden="true">×</span><span className="visually-hidden">{t("영역 해제")}</span></button>}
-            {narrowed && <button type="button" className="event-sheet__chip" disabled={pending} onClick={() => { setCustom(false); onApply("", "", { when: "all", from: "", to: "", bounds: "", category: filters.category, tag: filters.tag, theme: "" }); }}>↺ {t("초기화")}</button>}
+          {/* Two rows by role: what to sort and narrow by (select chips), then one-tap picks. */}
+          <div className="event-sheet__controls">
+            <div className="event-sheet__filters">
+              <SelectChip display={t(sort === "soon" ? "일정 빠른 순" : sort === "ending" ? "종료 임박순" : "최신순")} active={sort !== "latest"}
+                aria-label={t("정렬")} value={sort} disabled={pending || !!selectedIds} onChange={event => onSort(event.target.value as EventSort)}>
+                <option value="latest">{t("최신 등록순")}</option><option value="soon">{t("일정 빠른 순")}</option><option value="ending">{t("종료 임박순")}</option>
+              </SelectChip>
+              <SelectChip display={dateLabel} active={custom || filters.when !== "all"}
+                aria-label={t("기간 필터")} value={custom ? "custom" : filters.when === "custom" ? "applied" : filters.when} disabled={pending} onChange={event => applyDate(event.target.value as DateChoice)}>
+                {filters.when === "custom" && <option value="applied">{`${short(filters.from)}–${short(filters.to)}`}</option>}<option value="all">{t("기간 전체")}</option><option value="today">{t("오늘")}</option><option value="weekend">{t("이번 주말")}</option><option value="month">{t("이번 달")}</option><option value="custom">{t("기간 선택")}</option>
+              </SelectChip>
+              <SelectChip display={regions.find(item => item.code === region)?.name || t(country === "kr" ? "전국" : "전체")} active={!!region}
+                aria-label={t("지역 필터")} value={region} disabled={pending} onChange={event => onApply(event.target.value, query, { ...filters, bounds: "" })}>
+                <option value="">{t(country === "kr" ? "전국" : "전체")}</option>{regions.map(item => <option key={item.code} value={item.code}>{item.name}</option>)}
+              </SelectChip>
+              {filters.bounds && <button type="button" className="event-sheet__chip" onClick={() => onApply(region, query, { ...filters, bounds: "" })}>{t("현재 지도 영역")} <span aria-hidden="true">×</span><span className="visually-hidden">{t("영역 해제")}</span></button>}
+              {narrowed && <button type="button" className="event-sheet__chip" disabled={pending} onClick={() => { setCustom(false); onApply("", "", { when: "all", from: "", to: "", bounds: "", category: filters.category, tag: filters.tag, theme: "" }); }}>↺ {t("초기화")}</button>}
+            </div>
+            {/* Picking "기간 선택" opens the two dates right here (there is no separate settings screen). */}
+            {custom && <form className="event-sheet__dates" onSubmit={event => {
+              event.preventDefault();
+              if (!validDate(from) || !validDate(to) || from > to) { setFormError(t("시작일과 종료일을 확인해주세요.")); return; }
+              setFormError("");
+              setCustom(false);
+              onApply(region, query, { ...filters, when: "custom", from, to });
+            }}>
+              <label>{t("시작일")}<input type="date" value={from} onChange={event => setFrom(event.target.value)} required /></label>
+              <label>{t("종료일")}<input type="date" value={to} min={from} onChange={event => setTo(event.target.value)} required /></label>
+              <div className="event-sheet__apply"><button type="button" onClick={closeDates}>{t("취소")}</button><button type="submit" disabled={pending}>{t("적용")}</button></div>
+              {formError && <p role="alert">{formError}</p>}
+            </form>}
+            <QuickChips filters={filters} disabled={pending} onChange={next => { if (next.when !== "custom") setCustom(false); onApply(region, query, next); }} />
+            <TagChips tags={tagChips} value={filters.tag} disabled={pending} onChange={tag => onApply(region, query, { ...filters, tag })} />
           </div>
-          {/* Picking "기간 선택" opens the two dates right here (there is no separate settings screen). */}
-          {custom && <form className="event-sheet__dates" onSubmit={event => {
-            event.preventDefault();
-            if (!validDate(from) || !validDate(to) || from > to) { setFormError(t("시작일과 종료일을 확인해주세요.")); return; }
-            setFormError("");
-            onApply(region, query, { ...filters, when: "custom", from, to });
-          }}>
-            <label>{t("시작일")}<input type="date" value={from} onChange={event => setFrom(event.target.value)} required /></label>
-            <label>{t("종료일")}<input type="date" value={to} min={from} onChange={event => setTo(event.target.value)} required /></label>
-            <div className="event-sheet__apply"><button type="button" onClick={() => { setCustom(filters.when === "custom"); setFormError(""); setFrom(filters.from || todayInCountry(country)); setTo(filters.to || todayInCountry(country)); }}>{t("취소")}</button><button type="submit" disabled={pending}>{t("적용")}</button></div>
-            {formError && <p role="alert">{formError}</p>}
-          </form>}
-          <TagChips tags={tagChips} value={filters.tag} disabled={pending} onChange={tag => onApply(region, query, { ...filters, tag })} />
           {snap === LIST && !selectedIds && !narrowed && !filters.category && page === 1 && <FeaturedStrip events={featured} onShowOnMap={onShowOnMap} />}
           {loading ? <p className="event-sheet__notice" role="status">{t("불러오는 중…")}</p> : error ? <div className="event-sheet__notice" role="alert"><p>{t("행사를 불러오지 못했어요.")}</p><button type="button" onClick={() => setRetry(value => value + 1)}>{t("다시 시도")}</button></div> : items.length ? <div className="event-sheet__list">
             {items.map(event => <EventListItem key={event.id} event={event} selected={event.id === selectedId} onOpen={() => onSelect(event.id)} onShowOnMap={onShowOnMap} distance={distanceOf?.(event.id)} />)}

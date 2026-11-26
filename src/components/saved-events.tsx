@@ -132,10 +132,15 @@ export function SaveEventButton({ id, variant = "icon", className = "" }: { id: 
   </>;
 }
 
-export function SavedEventsLink() {
+export function SavedEventsLink({ variant }: { variant?: "row" }) {
   const { t } = useTranslations();
   const { saved } = useSavedEvents();
   const label = saved.size ? t("관심 행사 {count}개", { count: saved.size }) : t("관심 행사");
+  if (variant === "row") return <Link href="/me/saved" className="menu-row">
+    <BookmarkIcon filled={!!saved.size} size={20} /><span>{t("관심 행사")}</span>
+    {!!saved.size && <strong>{saved.size > 99 ? "99+" : saved.size}</strong>}
+    <svg className="menu-row__more" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 6 6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+  </Link>;
   return <Link href="/me/saved" className="site-tools__saved" aria-label={label} title={label}>
     <BookmarkIcon filled={!!saved.size} size={17} />
     {!!saved.size && <small aria-hidden="true">{saved.size > 99 ? "99+" : saved.size}</small>}

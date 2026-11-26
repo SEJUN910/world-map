@@ -1,5 +1,17 @@
 # Work Log
 
+## 2026-11-26 - SEO check and mobile spacing
+
+- SEO check (user: "xml 파일이랑 seo 점검해줘"). Found and fixed: `sitemap.xml` was not well-formed XML — 1,183 URLs carried a raw `&` (`?event=…&lang=ko`), Next.js writes sitemap URLs unescaped, so search engines could not read the file at all; `sitemapEntry()` in `src/lib/seo.ts` now escapes `&` (1,187 URLs parse on production). English titles lost "| festiva" because "Festivals" contains "festiva" (word check now). Region pages' `<h1>` said "대한민국"; every explorer page now has one `<h1>` equal to its title ("서울특별시의 축제와 행사"). Event meta descriptions lead with date and place before the source text (160 chars). Added `favicon.ico` (16/32/48, PNG-in-ICO from `icon.svg`) and `apple-icon.png`.
+- Already fine: robots.txt, canonical + hreflang on every page, noindex for filtered/sorted/list/ended pages, Event + Breadcrumb + CollectionPage JSON-LD, crawlable list/pagination/region links, 404s, 308 for old event URLs, OG image.
+- Left to the owner: Google Search Console / Naver Search Advisor registration (set `GOOGLE_SITE_VERIFICATION` / `NAVER_SITE_VERIFICATION` on Vercel, then submit the sitemap); a custom domain.
+- Mobile spacing (user, with phone screenshots: the menu looks boxy; inputs and buttons are cramped). Plan `.omc/plans/mobile-spacing.md` (Antigravity login expired; user approved "역할별 두 줄").
+  - `SelectChip`: sort / date / region show only the chosen value ("최신순 ▾", "12.01–12.31 ▾", "서울특별시 ▾") with the native picker laid over the chip, so a chip is as wide as its text (bare selects were as wide as their longest option and pushed 전국 off screen); blue when not the default.
+  - Sheet controls: row 1 select chips (+ area / reset), row 2 quick chips, 12px apart, divider before the list; every chip 36px / 14px / 8px gap. The custom-date form opens only while picking and closes on apply; the applied range is the chip label and an option of its own, so "기간 선택" reopens it.
+  - "지도보기 / 목록보기" is an outlined button. Date fields and buttons 44px, buttons half and half.
+  - ≡ menu: list rows (48px, icon · label · value ›, hairlines): 나라 — 대한민국 ›, 행사 올리기, 관심 행사 (n), 로그인 / 내 계정 (`CountrySwitch variant="row"`, `SavedEventsLink variant="row"`, non-compact `AccountControl`).
+- Checks: `npm test` 76; `qa-m9.mjs` 18/18, `qa-m6` 21, `qa-m7` 8, `qa-m8` 25 (menu selectors updated).
+
 ## 2026-11-26 - Phone check round 2: language on home only, themes, weekend strip, steadier posters
 
 - User on the phone after the floating-top release: (1) posters seem to reload on zoom, (2) the language select follows everywhere — home only, (3) a horizontal "recommended/AD" strip above the list, (4) theme keywords such as "with kids", "weekend", "couples", (5) stronger list filters. Antigravity login had expired; the user chose "기획 없이 바로", so there is no plan file for this round.

@@ -498,4 +498,7 @@ export const messages: [string, string, string][] = [
   ["전통·역사", "Tradition & history", "傳統・歷史"],
   ["필터 {count}", "Filters: {count}", "篩選 {count}"],
   ["이번 주말 가볼 만한 행사", "Worth a visit this weekend", "本週末值得一去"],
+  ["최신순", "Newest", "最新"],
+  ["기간", "Dates", "期間"],
+  ["나라", "Country", "國家"],
 ];
