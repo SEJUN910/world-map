@@ -1,11 +1,13 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
+import type { CountryCode } from "@/lib/countries";
 import { useTranslations } from "./language-provider";
+import { CountrySwitch } from "./country-switch";
 import { SiteTools } from "./site-tools";
 
-// Phone header menu: saved events, account and language in one tap
-// (they used to sit inside the sheet's settings panel).
-export function MobileMenu() {
+// Phone menu inside the floating search bar: everything that is not searching
+// or filtering — switch country, post an event, saved events, account, language.
+export function MobileMenu({ country, onCreate }: { country: CountryCode; onCreate: () => void }) {
   const { t } = useTranslations();
   const [open, setOpen] = useState(false);
   const id = useId();
@@ -13,7 +15,8 @@ export function MobileMenu() {
   useEffect(() => {
     if (!open) return;
     const close = (event: Event) => { if (!root.current?.contains(event.target as Node)) setOpen(false); };
-    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); };
+    // Escape inside an open dialog (account) belongs to that dialog.
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape" && !document.querySelector("dialog[open]")) setOpen(false); };
     document.addEventListener("pointerdown", close);
     document.addEventListener("keydown", escape);
     return () => { document.removeEventListener("pointerdown", close); document.removeEventListener("keydown", escape); };
@@ -22,6 +25,10 @@ export function MobileMenu() {
     <button type="button" className="mobile-menu__toggle" aria-expanded={open} aria-controls={id} aria-label={t("메뉴")} title={t("메뉴")} onClick={() => setOpen((value) => !value)}>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
     </button>
-    {open && <div id={id} className="mobile-menu__panel"><SiteTools /></div>}
+    {open && <div id={id} className="mobile-menu__panel">
+      <CountrySwitch country={country} heading="p" />
+      <button type="button" className="mobile-menu__add" onClick={() => { setOpen(false); onCreate(); }}>{t("＋ 행사 올리기")}</button>
+      <SiteTools />
+    </div>}
   </div>;
 }

@@ -15,6 +15,7 @@ import { LinkedEventDialog } from "./event-poster-dialog";
 import { TrafficCounter } from "./traffic-counter";
 import { SiteTools } from "./site-tools";
 import { MobileMenu } from "./mobile-menu";
+import { EventCreateButton } from "./event-create-button";
 import { useMobileAtlas } from "./mobile-atlas-controls";
 import { CountrySwitch } from "./country-switch";
 import { SourceNotice } from "./source-notice";
@@ -34,6 +35,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
   const router = useRouter();
   const isMobile = useMobileAtlas();
   const root = useRef<HTMLDivElement>(null);
+  const createOpener = useRef<HTMLSpanElement>(null);
   const latestPoints = useRef(mapPoints); latestPoints.current = mapPoints;
   const [query, setQuery] = useState(initialQuery);
   const [catalogOpen, setCatalogOpen] = useState(true);
@@ -93,7 +95,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
   // The mobile sheet renders in a portal on <body>; the floating view switch
   // there needs the sheet height too.
   const onHeight = useCallback((height: number) => {
-    const value = `${Math.max(144, height)}px`;
+    const value = `${Math.max(76, height)}px`;
     root.current?.classList.toggle("is-sheet-tall", height > window.innerHeight * 0.48);
     root.current?.style.setProperty("--mobile-sheet-height", value);
     document.documentElement.style.setProperty("--mobile-sheet-height", value);
@@ -219,6 +221,8 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
     });
   }
   function apply(region: string, text: string, nextFilters: DiscoveryFilters) {
+    // Applying also settles the search box (a reset clears text that was typed but not submitted).
+    setQuery(text);
     setSelectedIds(null); setSelectedId(""); setViewportDirty(false);
     startTransition(() => router.push(pathFor(region, text, nextFilters), { scroll: false }));
   }
@@ -275,14 +279,24 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
     {initialEvent && <LinkedEventDialog key={initialEvent.id} event={initialEvent} />}
     {isMobile
       ? <>
-        <MinimalMasthead back actions={<div className="atlas-mobile-actions atlas-mobile-country"><CountrySwitch country={country} heading={initialEvent ? "p" : "h1"} /></div>} after={<MobileMenu />} />
-        {/* Always-visible search on phones (it used to hide behind the settings icon). */}
-        <form className="atlas-mobile-search" role="search" onSubmit={event => { event.preventDefault(); (event.currentTarget.querySelector("input") as HTMLInputElement | null)?.blur(); apply(initialRegion, query, filters); }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" strokeWidth="1.6"/><path d="m16 16 4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
-          <input aria-label={t("행사명, 지역, 장소 검색")} placeholder={t("행사, 지역, 장소 검색")} type="search" enterKeyHint="search" maxLength={100} value={query} onChange={event => setQuery(event.target.value)} />
-          {(query || initialQuery) && <button type="button" aria-label={t("검색어 지우기")} onClick={() => { setQuery(""); if (initialQuery) apply(initialRegion, "", filters); }}>×</button>}
-        </form>
-        <div className="atlas-mobile-chips"><CategoryChips value={filters.category} disabled={pending} onChange={category => apply(initialRegion, initialQuery, { ...filters, category, tag: "" })} /></div>
+        {/* Phones: one floating search bar (back, search, menu) and the category chips over the map — no header band. */}
+        <div className="atlas-top" data-view={view}>
+          {!initialEvent && <h1 className="visually-hidden">{t(countries[country].name)}</h1>}
+          {/* The menu is a sibling of the search form: its account dialog has forms of its own. */}
+          <div className="atlas-top__bar">
+          <form className="atlas-top__search" role="search" onSubmit={event => { event.preventDefault(); (event.currentTarget.querySelector("input") as HTMLInputElement | null)?.blur(); apply(initialRegion, query, filters); }}>
+            <Link className="atlas-top__back" href={localizedPath("/", locale)} aria-label={t("지구본으로 돌아가기")} title={t("뒤로가기")}>
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true"><path d="m14 6-6 6 6 6M8 12h11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </Link>
+            <input aria-label={t("행사명, 지역, 장소 검색")} placeholder={t("{country} 행사·지역·장소 검색", { country: t(countries[country].name) })} type="search" enterKeyHint="search" maxLength={100} value={query} onChange={event => setQuery(event.target.value)} />
+            {(query || initialQuery) && <button type="button" className="atlas-top__clear" aria-label={t("검색어 지우기")} onClick={() => { setQuery(""); if (initialQuery) apply(initialRegion, "", filters); }}>×</button>}
+          </form>
+          <MobileMenu country={country} onCreate={() => createOpener.current?.querySelector("a")?.click()} />
+          </div>
+          <div className="atlas-top__chips"><CategoryChips value={filters.category} disabled={pending} onChange={category => apply(initialRegion, initialQuery, { ...filters, category, tag: "" })} /></div>
+        </div>
+        {/* The one "post an event" dialog on phones: opened from the menu or by ?create=1. */}
+        <span ref={createOpener}><EventCreateButton openFromQuery className="atlas-create-opener" /></span>
       </>
       : <section id="atlas-catalog" className="split-panel" aria-label={t("행사 목록")} hidden={!catalogOpen}>
         <div className="split-panel__top">
@@ -351,7 +365,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
     {isMobile ? <>
       <MobileEventSheet country={country} events={events} total={total} page={page} regions={options} region={initialRegion} query={initialQuery} filters={filters} pending={pending} tagChips={tagChips}
         selectedIds={selectedIds} selectedId={selectedId} onSelect={setSelectedId}
-        selectionLabel={nearbyActive ? `${t("내 주변 행사")} · ${t("반경 {km}km", { km: nearby!.radiusKm })}` : undefined}
+        selectionLabel={nearbyActive ? t("내 주변 {km}km", { km: nearby!.radiusKm }) : undefined}
         distanceOf={nearbyActive && nearby!.distances ? (id) => nearby!.distances!.get(id) : undefined} onSelectionClear={() => { setSelectedIds(null); setSelectedId(""); }}
         onApply={apply} pageHref={pageHref} onHeight={onHeight}
         view={view} onViewChange={changeView} sort={sort} onSort={applySort} onShowOnMap={showOnMap} />

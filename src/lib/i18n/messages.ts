@@ -489,4 +489,7 @@ export const messages: [string, string, string][] = [
   ["작은 동네 행사부터 지역 축제까지", "From small neighbourhood events to regional festivals", "從社區小活動到地方節慶"],
   ["다른 나라 요청", "Request a country", "申請其他國家"],
   ["＋ 행사 올리기", "＋ Post an event", "＋ 上傳活動"],
+  ["{country} 행사·지역·장소 검색", "Search {country} events, areas, venues", "搜尋{country}的活動、地區、場地"],
+  ["내 주변 {km}km", "Near me · {km} km", "附近 {km} 公里"],
+  ["선택한 위치", "Selected spot", "所選位置"],
 ];

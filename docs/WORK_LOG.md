@@ -1,5 +1,13 @@
 # Work Log
 
+## 2026-11-26 - Mobile: floating top and four-snap sheet
+
+- User on a real phone (KakaoTalk in-app, 4 screenshots + a Naver Map reference): the top was a cluttered white block, the blue + far too prominent, the sheet would not go low enough, the settings button opened an empty screen. Planned by Antigravity (`.omc/plans/mobile-floating-top.md`), user chose "as planned".
+- Top: one floating bar (back · search with the country in the placeholder · ≡ menu) and floating category chips over the map, no header band; logo removed on country pages; country switch and "＋ 행사 올리기" moved into the menu (with saved/account/language). List view turns the top into a white bar the sheet sits under. A single hidden opener serves the create dialog (menu and `?create=1`).
+- Sheet: snaps [84, 188, half, full]; 84 = handle + heading (map ~70%), 188 = first event (default), full = list. Settings panel removed: custom dates open inline under the filters, "초기화" and "현재 지도 영역 ×" are chips in the filter row, leaving a selection/near-me is "× 전체" in the heading, visit counter at the list end. Bottom padding ≥18px against in-app bars.
+- Review: menu moved out of the search form (its account dialog has forms; submit would have bubbled into search); date cancel restores the applied dates; applying also settles the search box; list-view top takes touches; hidden h1 on phones.
+- Checks: `npm test` 71; `qa-m6.mjs` 21/21 at 360×664; regression split 79, nearby 33, tags 21, category 16, home 13 (QA selectors moved to the new structure).
+
 ## 2026-11-25 - Mobile overhaul review fixes
 
 - Review of stages 1–5: no high findings. Fixed: "search this area" hidden behind a notice only on phones (desktop unchanged); home placeholder hidden when the map shows its own error; phone credits state reset when the map is recreated; collapsed-sheet preview shows the load error with retry instead of "nothing found". Kept on purpose: the globe placeholder on desktop too (the blank first load was a flow-review finding). Known: filters/date/area indicators are only visible once the sheet is raised.

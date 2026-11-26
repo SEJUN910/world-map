@@ -2592,3 +2592,50 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
   /* Lists: no metadata under 12px on phones. */
   .event-row__meta, .event-row__date, .event-row__place, .event-sheet__heading > span { font-size: 12px; }
 }
+
+/* ── Mobile: floating top (search + chips over the map) and a four-snap sheet. See .omc/plans/mobile-floating-top.md. ── */
+.atlas-top { display: none; }
+@media (max-width: 700px) {
+  :root, .country-page--atlas { --atlas-mobile-header-height: calc(112px + env(safe-area-inset-top)); }
+  /* The wrapper lets map drags through; only the bar and the chips take touches. */
+  .atlas-top { position: fixed; z-index: 6; left: 0; right: 0; top: 0; display: grid; gap: 8px; padding: calc(10px + env(safe-area-inset-top)) 12px 8px; pointer-events: none; }
+  .atlas-top__bar { display: flex; align-items: center; gap: 2px; height: 48px; padding: 0 4px; border-radius: 24px; background: #fff; box-shadow: 0 2px 10px #182c4c33; pointer-events: auto; }
+  .atlas-top__search { flex: 1; min-width: 0; display: flex; align-items: center; gap: 2px; margin: 0; }
+  .atlas-top__back { flex: 0 0 40px; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; color: #36507a; }
+  .atlas-top__search input { flex: 1; min-width: 0; height: 44px; padding: 0 4px; border: 0; background: transparent; color: #1d2b44; font: inherit; font-size: 16px; outline: none; }
+  .atlas-top__search input::placeholder { color: #7d8fa9; }
+  .atlas-top__search input::-webkit-search-cancel-button { display: none; }
+  .atlas-top__bar:has(input:focus) { box-shadow: 0 0 0 2px #8fb2ea, 0 2px 10px #182c4c33; }
+  .atlas-top__clear { flex: 0 0 36px; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #5d7598; font-size: 20px; cursor: pointer; }
+  .atlas-top .mobile-menu { flex: 0 0 40px; }
+  .atlas-top__chips { pointer-events: none; margin: 0 -12px; }
+  .atlas-top__chips .category-chips { margin: 0; padding: 0 12px 4px; pointer-events: auto; }
+  .atlas-top__chips .category-chips button { height: 34px; padding: 0 14px; border-color: transparent; font-size: 13px; box-shadow: 0 2px 6px #182c4c24; }
+  .atlas-top__chips .category-chips button[aria-pressed="true"] { border-color: #222; }
+  /* List view: the top turns into a plain white bar the sheet sits under. */
+  .atlas-top[data-view="list"] { background: #fff; border-bottom: 1px solid #e5ecf5; pointer-events: auto; }
+  .atlas-top[data-view="list"] .atlas-top__bar { background: #f6f8fc; box-shadow: inset 0 0 0 1px #d5e0ee; }
+  .atlas-top[data-view="list"] .category-chips button { border-color: #d6d6d6; box-shadow: none; }
+  .atlas-top[data-view="list"] .category-chips button[aria-pressed="true"] { border-color: #222; }
+  /* Menu: country, post an event, tools. */
+  .mobile-menu__panel { display: grid; gap: 8px; min-width: 216px; padding: 10px; }
+  .mobile-menu__panel .country-switch { width: 100%; min-height: 44px; border: 1px solid #d5e0ee; border-radius: 12px; }
+  .mobile-menu__add { min-height: 44px; padding: 0 14px; border: 1px solid #d5e0ee; border-radius: 12px; background: #fff; color: #1f5fd1; font: inherit; font-size: 14px; font-weight: 600; text-align: left; cursor: pointer; }
+  .mobile-menu__panel .site-tools { justify-content: space-between; padding: 0; }
+  /* Sheet: room under the heading and the preview for in-app browser bars that cover the bottom edge. */
+  .event-sheet__fixed { padding-bottom: max(18px, env(safe-area-inset-bottom)); }
+  .event-sheet__heading > strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .event-sheet__heading > span { flex: 0 0 auto; margin-left: 0; }
+  .event-sheet__heading .atlas-view-switch { flex: 0 0 auto; margin-left: auto; }
+  .event-sheet__heading .event-sheet__clear { flex: 0 0 auto; min-height: 32px; padding: 0 10px; border: 1px solid #d5e0ee; border-radius: 16px; background: #fff; color: #36507a; font: inherit; font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+  /* Filter row chips (area, reset) and the inline date form. */
+  .event-sheet__scroll .event-sheet__filters > button.event-sheet__chip { flex: 0 0 auto; width: auto; height: 36px; padding: 0 12px; border: 1px solid #c9d8ee; border-radius: 18px; background: #eef3fd; color: #1f5fd1; font: inherit; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .event-sheet__scroll form.event-sheet__dates { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 12px; padding: 12px; border: 1px solid #e0e8f3; border-radius: 12px; background: #f8fafd; }
+  .event-sheet__scroll form.event-sheet__dates label { display: grid; gap: 4px; color: #50627e; font-size: 12px; }
+  .event-sheet__scroll form.event-sheet__dates input { min-width: 0; height: 40px; padding: 0 8px; border: 1px solid #d5e0ee; border-radius: 8px; background: #fff; font: inherit; font-size: 16px; }
+  .event-sheet__scroll form.event-sheet__dates .event-sheet__apply { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; margin: 0; }
+  .event-sheet__scroll form.event-sheet__dates > p { grid-column: 1 / -1; margin: 0; color: #a33; font-size: 12px; }
+  .event-sheet__scroll .traffic-counter { margin: 12px 0 0; }
+}
+/* Only the opener link is hidden; its dialog (a sibling) must stay renderable. */
+.atlas-create-opener { display: none; }
