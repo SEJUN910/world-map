@@ -27,7 +27,7 @@ export function EventDetailActions({ event }: { event: FestivalEvent }) {
     const href = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = href;
-    link.download = `festiva-${event.id.slice(0, 8)}.ics`;
+    link.download = `lukemap-${event.id.slice(0, 8)}.ics`;
     document.body.appendChild(link); link.click(); link.remove();
     // Generous delay: a slow download (or a webview asking first) must not lose the file.
     setTimeout(() => URL.revokeObjectURL(href), 60_000);

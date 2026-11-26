@@ -14,8 +14,8 @@ export function MinimalMasthead({ back = false, actions, after }: { back?: boole
           </svg>
         </Link>
       )}
-      <Link className="home-wordmark" href="/" aria-label={t("festiva 홈")}>
-        festiva<span className="home-brand-mark" aria-hidden="true">✳</span>
+      <Link className="home-wordmark" href="/" aria-label={t("루크맵 홈")}>
+        LukeMap<span className="home-brand-mark" aria-hidden="true">✳</span>
       </Link>
       {actions}
       <EventCreateButton openFromQuery className={back ? "home-add" : "home-add home-add--labeled"}>

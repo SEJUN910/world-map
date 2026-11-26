@@ -22,7 +22,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
       {children}
       {!isHome && (
         <footer className="site-footer">
-          <span className="footer-brand">festiva ✳</span>
+          <span className="footer-brand">LukeMap ✳</span>
           <span>{t("작은 행사에도, 발견되는 순간을.")}</span>
           <span>{t("우리 동네의 축제와 행사")}</span>
         </footer>

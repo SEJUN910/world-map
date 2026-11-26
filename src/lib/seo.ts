@@ -21,15 +21,17 @@ export function sitemapUrl(url: string) { return url.replace(/&(?!amp;)/g, "&amp
 export function sitemapEntry(path: string, values: Record<string, string | number | undefined> = {}) {
   return { url: sitemapUrl(absoluteUrl(localizedPath(path, "ko", values))), alternates: { languages: Object.fromEntries(Object.entries(localeAlternates(path, values)).map(([language, url]) => [language, sitemapUrl(String(url))])) } };
 }
-// The brand is added to titles unless it is already there as a word ("Festivals in Korea" does not count).
-const HAS_BRAND = /(^|[^a-z])festiva([^a-z]|$)/i;
+// The service name: Korean on Korean pages, "LukeMap" elsewhere (formerly festiva).
+export function brandName(locale: Locale) { return locale === "ko" ? "루크맵" : "LukeMap"; }
+// The brand is added to titles unless it is already there.
+const HAS_BRAND = /루크맵|lukemap/i;
 export function pageMetadata({ title, description, path, locale, values = {}, noindex = false, image = "/og" }: {
   title: string; description: string; path: string; locale: Locale; values?: Record<string, string | number | undefined>; noindex?: boolean; image?: string;
 }): Metadata {
   const url = absoluteUrl(localizedPath(path, locale, values));
   return { title: HAS_BRAND.test(title) ? { absolute: title } : title, description, alternates: { canonical: url, languages: localeAlternates(path, values) },
     robots: { index: searchIndexingEnabled && !noindex, follow: true, googleBot: { index: searchIndexingEnabled && !noindex, follow: true, "max-image-preview": "large" } },
-    openGraph: { title: `${title} | festiva`, description, url, siteName: "festiva", type: "website", locale: locale === "ko" ? "ko_KR" : locale === "en" ? "en_US" : "zh_TW", images: [{ url: absoluteUrl(image), alt: title }] },
+    openGraph: { title: HAS_BRAND.test(title) ? title : `${title} | ${brandName(locale)}`, description, url, siteName: brandName(locale), type: "website", locale: locale === "ko" ? "ko_KR" : locale === "en" ? "en_US" : "zh_TW", images: [{ url: absoluteUrl(image), alt: title }] },
     twitter: { card: "summary_large_image", title, description, images: [absoluteUrl(image)] },
   };
 }
@@ -64,7 +66,7 @@ export function collectionStructuredData(title: string, path: string, events: Fe
   };
 }
 export function breadcrumbData(country: keyof typeof countries, locale: Locale, region?: { name: string; path: string }) {
-  const items = [{ name: "festiva", path: "/" }, { name: countries[country].english, path: countries[country].path }, ...(region ? [region] : [])];
+  const items = [{ name: brandName(locale), path: "/" }, { name: countries[country].english, path: countries[country].path }, ...(region ? [region] : [])];
   return { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: items.map((item, index) => ({ "@type": "ListItem", position: index + 1, name: item.name, item: absoluteUrl(localizedPath(item.path, locale)) })) };
 }
 export function serializeJsonLd(value: unknown) { return JSON.stringify(value).replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029"); }

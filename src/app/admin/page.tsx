@@ -43,7 +43,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
   return (
     <main style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto", fontFamily: "sans-serif" }}>
-      <h1 style={{ fontSize: "1.5rem", marginBottom: "2rem" }}>festiva admin</h1>
+      <h1 style={{ fontSize: "1.5rem", marginBottom: "2rem" }}>LukeMap admin</h1>
       {result && (
         <p role={result.failed ? "alert" : "status"} style={{ padding: "0.75rem 1rem", marginBottom: "1.5rem", borderRadius: "6px", background: result.failed ? "#fdecec" : "#eaf6ec", color: result.failed ? "#a00" : "#0a5c1f" }}>
           {result.text}

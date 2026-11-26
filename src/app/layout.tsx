@@ -13,16 +13,16 @@ export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations();
   const locale = await getLocale();
   return {
-  applicationName: "festiva",
+  applicationName: "LukeMap",
   verification: { google: process.env.GOOGLE_SITE_VERIFICATION || undefined, other: process.env.NAVER_SITE_VERIFICATION ? { "naver-site-verification": process.env.NAVER_SITE_VERIFICATION } : undefined },
   metadataBase: new URL(siteUrl),
   title: {
-    default: t("festiva — 지도로 만나는 우리 동네 행사"),
-    template: "%s | festiva",
+    default: t("루크맵 — 지도로 만나는 우리 동네 행사"),
+    template: `%s | ${t("루크맵")}`,
   },
   description:
     t("작은 동네 행사부터 지역 축제까지. 지도에서 발견하고, 포스터 한 장으로 나누세요."),
-  openGraph: { type: "website", locale: locale === "ko" ? "ko_KR" : locale === "en" ? "en_US" : "zh_TW", siteName: "festiva" },
+  openGraph: { type: "website", locale: locale === "ko" ? "ko_KR" : locale === "en" ? "en_US" : "zh_TW", siteName: t("루크맵") },
   };
 }
 export default async function RootLayout({

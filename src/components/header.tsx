@@ -6,8 +6,8 @@ export function Header() {
   const { t } = useTranslations();
   return (
     <header className="site-header">
-      <Link className="brand" href="/" aria-label={t("festiva 홈")}>
-        festiva<span>✳</span>
+      <Link className="brand" href="/" aria-label={t("루크맵 홈")}>
+        LukeMap<span>✳</span>
       </Link>
       <nav aria-label={t("주 메뉴")}>
         <Link href="/korea">{t("행사 둘러보기")}</Link>

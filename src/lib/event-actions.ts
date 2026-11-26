@@ -78,7 +78,7 @@ export function icsFile(event: CalendarEvent, start: string, end: string, detail
   const stamp = now.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const location = [event.venue, event.address].filter(Boolean).join(", ");
   const lines = [
-    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Festiva//Event//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//LukeMap//Event//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
     "BEGIN:VEVENT",
     `UID:${event.id}-${compactDate(start)}@festiva`,
     `DTSTAMP:${stamp}`,

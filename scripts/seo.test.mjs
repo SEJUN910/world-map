@@ -50,7 +50,11 @@ test("sitemap URLs are escaped for XML, once", () => {
 });
 test("titles get the brand unless they already name it", () => {
   assert.equal(pageMetadata({ title: "Festivals and local events in South Korea", description: "d", path: "/korea", locale: "en" }).title, "Festivals and local events in South Korea");
-  assert.deepEqual(pageMetadata({ title: "festiva — 지도로 만나는 우리 동네 행사", description: "d", path: "/", locale: "ko" }).title, { absolute: "festiva — 지도로 만나는 우리 동네 행사" });
+  assert.deepEqual(pageMetadata({ title: "루크맵 — 지도로 만나는 우리 동네 행사", description: "d", path: "/", locale: "ko" }).title, { absolute: "루크맵 — 지도로 만나는 우리 동네 행사" });
+  assert.deepEqual(pageMetadata({ title: "LukeMap — Discover events on the globe", description: "d", path: "/", locale: "en" }).title, { absolute: "LukeMap — Discover events on the globe" });
+  const ko = pageMetadata({ title: "한국의 축제와 동네 행사", description: "d", path: "/korea", locale: "ko" });
+  assert.equal(ko.openGraph.siteName, "루크맵"); assert.equal(ko.openGraph.title, "한국의 축제와 동네 행사 | 루크맵");
+  assert.equal(pageMetadata({ title: "Events", description: "d", path: "/korea", locale: "zh-TW" }).openGraph.siteName, "LukeMap");
   assert.equal(pageMetadata({ title: "Festival Paris", description: "d", path: "/france", locale: "en" }).title, "Festival Paris");
 });
 test("event snippets lead with when and where, then the description, within 160 characters", () => {

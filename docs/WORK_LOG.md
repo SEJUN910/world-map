@@ -1,5 +1,13 @@
 # Work Log
 
+## 2026-11-26 - Rename: festiva → 루크맵 / LukeMap
+
+- User picked the name after several rounds (festiva clashes in search with Ford Festiva and Festiva resorts; `lookmap.vercel.app` was taken, so "Luke" as in the gospel). Korean pages say 루크맵, English and Chinese pages LukeMap; the wordmark is LukeMap ✳.
+- Changed: page titles and the "| 브랜드" suffix (`brandName(locale)` in `src/lib/seo.ts`, `t("루크맵")` in the layout), og:site_name and og:title, WebSite JSON-LD (`name: "LukeMap"`, `alternateName: ["루크맵", "festiva"]`), breadcrumb root, home `<h1>`, header / home / footer wordmarks, OG image, account and auth-error eyebrows, admin heading, `.ics` file name and PRODID.
+- Kept on purpose: cookie and storage names (`festiva-…`), the `x-festiva-locale` header, calendar UIDs (`…@festiva`, so re-downloads update instead of duplicating), the repo folder and type names.
+- Address: planned `lukemap.vercel.app` (free; set in Vercel Domains, `NEXT_PUBLIC_SITE_URL`, old domain redirected) — done by the owner in the Vercel dashboard.
+- Checks: `npm test` 76; `qa-brand.mjs` 10/10 (titles per language, og names, no visible "festiva", wordmark fits at 360 and 1366).
+
 ## 2026-11-26 - SEO check and mobile spacing
 
 - SEO check (user: "xml 파일이랑 seo 점검해줘"). Found and fixed: `sitemap.xml` was not well-formed XML — 1,183 URLs carried a raw `&` (`?event=…&lang=ko`), Next.js writes sitemap URLs unescaped, so search engines could not read the file at all; `sitemapEntry()` in `src/lib/seo.ts` now escapes `&` (1,187 URLs parse on production). English titles lost "| festiva" because "Festivals" contains "festiva" (word check now). Region pages' `<h1>` said "대한민국"; every explorer page now has one `<h1>` equal to its title ("서울특별시의 축제와 행사"). Event meta descriptions lead with date and place before the source text (160 chars). Added `favicon.ico` (16/32/48, PNG-in-ICO from `icon.svg`) and `apple-icon.png`.
