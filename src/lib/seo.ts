@@ -14,11 +14,19 @@ export function absoluteUrl(path: string) { return new URL(path, siteUrl).href; 
 export function localeAlternates(path: string, values: Record<string, string | number | undefined> = {}) {
   return Object.fromEntries([...locales.map((locale) => [locale, absoluteUrl(localizedPath(path, locale, values))]), ["x-default", absoluteUrl(localizedPath(path, "ko", values))]]);
 }
+// Next.js writes sitemap URLs into the XML as given, and our URLs carry "&" (?event=…&lang=…).
+// An unescaped "&" makes the whole sitemap unreadable to search engines.
+export function sitemapUrl(url: string) { return url.replace(/&(?!amp;)/g, "&amp;"); }
+export function sitemapEntry(path: string, values: Record<string, string | number | undefined> = {}) {
+  return { url: sitemapUrl(absoluteUrl(localizedPath(path, "ko", values))), alternates: { languages: Object.fromEntries(Object.entries(localeAlternates(path, values)).map(([language, url]) => [language, sitemapUrl(String(url))])) } };
+}
+// The brand is added to titles unless it is already there as a word ("Festivals in Korea" does not count).
+const HAS_BRAND = /(^|[^a-z])festiva([^a-z]|$)/i;
 export function pageMetadata({ title, description, path, locale, values = {}, noindex = false, image = "/og" }: {
   title: string; description: string; path: string; locale: Locale; values?: Record<string, string | number | undefined>; noindex?: boolean; image?: string;
 }): Metadata {
   const url = absoluteUrl(localizedPath(path, locale, values));
-  return { title: title.toLowerCase().includes("festiva") ? { absolute: title } : title, description, alternates: { canonical: url, languages: localeAlternates(path, values) },
+  return { title: HAS_BRAND.test(title) ? { absolute: title } : title, description, alternates: { canonical: url, languages: localeAlternates(path, values) },
     robots: { index: searchIndexingEnabled && !noindex, follow: true, googleBot: { index: searchIndexingEnabled && !noindex, follow: true, "max-image-preview": "large" } },
     openGraph: { title: `${title} | festiva`, description, url, siteName: "festiva", type: "website", locale: locale === "ko" ? "ko_KR" : locale === "en" ? "en_US" : "zh_TW", images: [{ url: absoluteUrl(image), alt: title }] },
     twitter: { card: "summary_large_image", title, description, images: [absoluteUrl(image)] },

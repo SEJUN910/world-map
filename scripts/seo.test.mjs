@@ -14,7 +14,7 @@ const site = compile(await file("site"));
 const { resolveSiteUrl } = await import(site);
 let source = await file("seo");
 for (const [name, value] of [["./i18n",i18n],["./site",site],["./countries",countries],["./events",events]]) source = source.replace(JSON.stringify(name), JSON.stringify(value));
-const { pageMetadata, localizedPath, eventStructuredData, serializeJsonLd, collectionStructuredData } = await import(compile(source));
+const { pageMetadata, localizedPath, eventStructuredData, serializeJsonLd, collectionStructuredData, sitemapEntry, sitemapUrl } = await import(compile(source));
 test("canonical language/event/page URLs stay distinct and share reciprocal alternates", () => {
   const metadata = pageMetadata({ title:"Events",description:"Explore",path:"/korea",locale:"en",values:{page:2} });
   assert.equal(metadata.alternates.canonical,"https://festiva.test/korea?page=2&lang=en");
@@ -38,4 +38,18 @@ test("production canonical origins never inherit preview hosts or localhost conf
   assert.equal(resolveSiteUrl("http://localhost:3000","festiva.vercel.app"),"https://festiva.vercel.app");
   assert.equal(resolveSiteUrl("https://festiva.test/path?q=x","other.vercel.app"),"https://festiva.test");
   assert.equal(resolveSiteUrl("javascript:alert(1)"),"http://localhost:3000");
+});
+test("sitemap URLs are escaped for XML, once", () => {
+  const entry = sitemapEntry("/korea", { event: "abc" });
+  assert.equal(entry.url, "https://festiva.test/korea?event=abc&amp;lang=ko");
+  assert.equal(entry.alternates.languages["zh-TW"], "https://festiva.test/korea?event=abc&amp;lang=zh-TW");
+  assert.equal(entry.alternates.languages["x-default"], "https://festiva.test/korea?event=abc&amp;lang=ko");
+  assert.equal(sitemapEntry("/").url, "https://festiva.test/?lang=ko");
+  assert.equal(sitemapUrl("a?x=1&amp;y=2"), "a?x=1&amp;y=2");
+  for (const value of [entry.url, ...Object.values(entry.alternates.languages)]) assert.ok(!/&(?!amp;)/.test(value), value);
+});
+test("titles get the brand unless they already name it", () => {
+  assert.equal(pageMetadata({ title: "Festivals and local events in South Korea", description: "d", path: "/korea", locale: "en" }).title, "Festivals and local events in South Korea");
+  assert.deepEqual(pageMetadata({ title: "festiva — 지도로 만나는 우리 동네 행사", description: "d", path: "/", locale: "ko" }).title, { absolute: "festiva — 지도로 만나는 우리 동네 행사" });
+  assert.equal(pageMetadata({ title: "Festival Paris", description: "d", path: "/france", locale: "en" }).title, "Festival Paris");
 });
