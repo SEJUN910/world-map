@@ -11,6 +11,8 @@ import { EventListItem } from "./event-list-item";
 import { TrafficCounter } from "./traffic-counter";
 import { SourceNotice } from "./source-notice";
 import { TagChips } from "./tag-chips";
+import { QuickChips } from "./quick-chips";
+import { FeaturedStrip } from "./featured-strip";
 import type { EventTag } from "@/lib/event-tags";
 
 type Props = {
@@ -26,6 +28,8 @@ type Props = {
   onShowOnMap: (event: FestivalEvent) => void;
   // "Near me": heading for the selection and the distance of each row.
   selectionLabel?: string; distanceOf?: (id: string) => string | undefined;
+  // This weekend's picks, shown as a strip above the full list when nothing is filtered.
+  featured?: FestivalEvent[];
 };
 function TrackHeight({ onHeight }: { onHeight: Props["onHeight"] }) {
   const { yInverted } = Sheet.useContext();
@@ -39,7 +43,7 @@ function TrackHeight({ onHeight }: { onHeight: Props["onHeight"] }) {
 const SNAP_MIN = 84, SNAP_PREVIEW = 188, LIST = 4;
 
 export function MobileEventSheet(props: Props) {
-  const { country, events, total, page, regions, region, query, filters, pending, tagChips, selectedIds, selectedId, onSelect, onApply, onSelectionClear, pageHref, onHeight, view, onViewChange, sort, onSort, onShowOnMap, selectionLabel, distanceOf } = props;
+  const { country, events, total, page, regions, region, query, filters, pending, tagChips, selectedIds, selectedId, onSelect, onApply, onSelectionClear, pageHref, onHeight, view, onViewChange, sort, onSort, onShowOnMap, selectionLabel, distanceOf, featured = [] } = props;
   const { t } = useTranslations();
   const reduced = useReducedMotion();
   const sheet = useRef<SheetRef>(null);
@@ -99,7 +103,9 @@ export function MobileEventSheet(props: Props) {
   const items = selectedIds ? groupEvents : events;
   const levels = ["", t("지도 중심"), t("지도 중심"), t("지도와 목록"), t("목록 중심")];
   // Search, region, date or map area narrow the list; the reset chip clears those (category and tag have their own chips).
-  const narrowed = !!(region || query || filters.when !== "all" || filters.bounds);
+  const narrowed = !!(region || query || filters.when !== "all" || filters.bounds || filters.theme);
+  // Shown next to the count so a lowered sheet still says the list is filtered (the category has its own chips on top).
+  const filterCount = [region, query, filters.when !== "all", filters.bounds, filters.theme, filters.tag].filter(Boolean).length;
   function applyDate(value: DateChoice) {
     setCustom(value === "custom"); setFormError("");
     if (value !== "custom") onApply(region, query, { ...filters, when: value, from: "", to: "" });
@@ -132,7 +138,7 @@ export function MobileEventSheet(props: Props) {
         </Sheet.Header>
         <div className="event-sheet__fixed">
           <div className="event-sheet__heading"><strong>{selectedIds ? selectionLabel || t("선택한 위치") : t("행사 목록")}</strong>
-            <span>{t("총 {count}개", { count: selectedIds ? selectedIds.length : total })}</span>
+            <span>{t("총 {count}개", { count: selectedIds ? selectedIds.length : total })}{!selectedIds && filterCount > 0 && <em className="event-sheet__filtered"> · {t("필터 {count}", { count: filterCount })}</em>}</span>
             {/* Leaving a map selection or "near me": one chip here instead of a row of its own. */}
             {selectedIds && <button type="button" className="event-sheet__clear" onClick={onSelectionClear} aria-label={t("전체 목록")}><span aria-hidden="true">×</span> {t("전체")}</button>}
             {/* Map ⇄ list lives here, not floating over the map or the rows. */}
@@ -151,6 +157,7 @@ export function MobileEventSheet(props: Props) {
           </div>}
         </div>
         <Sheet.Content id="event-sheet-body" disableDrag disableScroll={snap <= 2} inert={snap <= 2} style={{ opacity: "var(--sheet-body-opacity, 0)" }} scrollRef={scroll} scrollClassName="event-sheet__scroll" scrollStyle={{ padding: "0 16px", paddingBottom: "calc(max(24px, env(safe-area-inset-bottom), var(--keyboard-inset-height, 0px)) + 24px)" }} aria-busy={pending || loading}>
+          <QuickChips filters={filters} disabled={pending} onChange={next => { if (next.when !== "custom") setCustom(false); onApply(region, query, next); }} />
           <div className="event-sheet__filters">
             <select aria-label={t("정렬")} value={sort} disabled={pending || !!selectedIds} onChange={event => onSort(event.target.value as EventSort)}>
               <option value="latest">{t("최신 등록순")}</option><option value="soon">{t("일정 빠른 순")}</option><option value="ending">{t("종료 임박순")}</option>
@@ -162,7 +169,7 @@ export function MobileEventSheet(props: Props) {
               <option value="">{t(country === "kr" ? "전국" : "전체")}</option>{regions.map(item => <option key={item.code} value={item.code}>{item.name}</option>)}
             </select>
             {filters.bounds && <button type="button" className="event-sheet__chip" onClick={() => onApply(region, query, { ...filters, bounds: "" })}>{t("현재 지도 영역")} <span aria-hidden="true">×</span><span className="visually-hidden">{t("영역 해제")}</span></button>}
-            {narrowed && <button type="button" className="event-sheet__chip" disabled={pending} onClick={() => { setCustom(false); onApply("", "", { when: "all", from: "", to: "", bounds: "", category: filters.category, tag: filters.tag }); }}>↺ {t("초기화")}</button>}
+            {narrowed && <button type="button" className="event-sheet__chip" disabled={pending} onClick={() => { setCustom(false); onApply("", "", { when: "all", from: "", to: "", bounds: "", category: filters.category, tag: filters.tag, theme: "" }); }}>↺ {t("초기화")}</button>}
           </div>
           {/* Picking "기간 선택" opens the two dates right here (there is no separate settings screen). */}
           {custom && <form className="event-sheet__dates" onSubmit={event => {
@@ -177,10 +184,11 @@ export function MobileEventSheet(props: Props) {
             {formError && <p role="alert">{formError}</p>}
           </form>}
           <TagChips tags={tagChips} value={filters.tag} disabled={pending} onChange={tag => onApply(region, query, { ...filters, tag })} />
+          {snap === LIST && !selectedIds && !narrowed && !filters.category && page === 1 && <FeaturedStrip events={featured} onShowOnMap={onShowOnMap} />}
           {loading ? <p className="event-sheet__notice" role="status">{t("불러오는 중…")}</p> : error ? <div className="event-sheet__notice" role="alert"><p>{t("행사를 불러오지 못했어요.")}</p><button type="button" onClick={() => setRetry(value => value + 1)}>{t("다시 시도")}</button></div> : items.length ? <div className="event-sheet__list">
             {items.map(event => <EventListItem key={event.id} event={event} selected={event.id === selectedId} onOpen={() => onSelect(event.id)} onShowOnMap={onShowOnMap} distance={distanceOf?.(event.id)} />)}
           </div> : <div className="event-sheet__empty"><span aria-hidden="true">✳</span><p>{t("아직 발견하지 못했어요.")}</p>
-            {(narrowed || filters.category) && <button type="button" className="button button-secondary" onClick={() => onApply("", "", { when: "all", from: "", to: "", bounds: "", category: "", tag: "" })}>{t("검색·필터 지우기")}</button>}</div>}
+            {(narrowed || filters.category) && <button type="button" className="button button-secondary" onClick={() => onApply("", "", { when: "all", from: "", to: "", bounds: "", category: "", tag: "", theme: "" })}>{t("검색·필터 지우기")}</button>}</div>}
           {!loading && !error && <nav className="event-sheet__pages" aria-label={t("행사 목록 페이지")}>
             {selectedIds ? <>
               {groupPage > 0 && <button type="button" onClick={() => setGroupPage(value => value - 1)}>{t("← 이전")}</button>}

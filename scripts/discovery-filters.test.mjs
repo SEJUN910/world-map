@@ -7,8 +7,10 @@ const file = name => readFile(new URL(`../src/lib/${name}.ts`, import.meta.url),
 const countries = compile(await file("countries"));
 const eventTags = compile(await file("event-tags"));
 const { selectVisibleTags, countTags } = await import(eventTags);
+const eventThemes = compile(await file("event-themes"));
+const { EVENT_THEMES, themeClause, isEventTheme } = await import(eventThemes);
 const events = compile((await file("events")).replace('"./countries"', JSON.stringify(countries)));
-const { normalizeDiscoveryFilters, discoveryDateRange, parseBounds, discoveryParams, applyDiscoveryFilters } = await import(compile((await file("discovery-filters")).replace('"./event-categories"', JSON.stringify(compile(await file("event-categories")))).replace('"./event-tags"', JSON.stringify(eventTags)).replace('"./events"', JSON.stringify(events))));
+const { normalizeDiscoveryFilters, discoveryDateRange, parseBounds, discoveryParams, applyDiscoveryFilters } = await import(compile((await file("discovery-filters")).replace('"./event-categories"', JSON.stringify(compile(await file("event-categories")))).replace('"./event-tags"', JSON.stringify(eventTags)).replace('"./event-themes"', JSON.stringify(eventThemes)).replace('"./events"', JSON.stringify(events))));
 const filter = when => normalizeDiscoveryFilters({ when });
 
 test("weekends include Sunday and cross year boundaries; month includes only remaining days", () => {
@@ -77,4 +79,27 @@ test("tag chips: labelled, at least 2 events, not on every event, top 8, two or 
   assert.deepEqual(selectVisibleTags({}, 0, "musical"), ["musical"]);
   assert.deepEqual(selectVisibleTags(korea, 555, "dance"), ["concert", "theater", "musical", "dance", "gugak"]);
   assert.deepEqual(countTags([{ tags: ["a", "b"] }, { tags: ["a", "a"] }, { tags: null }, {}]), { a: 2, b: 1 });
+});
+
+test("theme filter accepts only known themes, travels in URLs and adds one or-clause", () => {
+  assert.equal(normalizeDiscoveryFilters({ theme: "kids" }).theme, "kids");
+  for (const value of [undefined, "", "Kids", "couple", ["kids"], "__proto__", "constructor"]) assert.equal(normalizeDiscoveryFilters({ theme: value }).theme, "", String(value));
+  assert.deepEqual(discoveryParams(normalizeDiscoveryFilters({ theme: "date" })), { theme: "date" });
+  assert.deepEqual(discoveryParams(normalizeDiscoveryFilters({ category: "performance", theme: "kids" })), { category: "performance", theme: "kids" });
+  const calls = [];
+  const request = { lte: () => request, gte: () => request, eq: (...args) => (calls.push(["eq", ...args]), request), or: (...args) => (calls.push(["or", ...args]), request), contains: () => request };
+  applyDiscoveryFilters(request, normalizeDiscoveryFilters({ theme: "kids" }), "kr");
+  assert.equal(calls.length, 1);
+  assert.ok(calls[0][1].startsWith("tags.cs.{kids},tags.cs.{circus},title.ilike.*어린이*"), calls[0][1]);
+});
+
+test("every theme has a label, known tags and words that are safe inside a PostgREST filter", () => {
+  for (const [key, theme] of Object.entries(EVENT_THEMES)) {
+    assert.ok(isEventTheme(key) && theme.label && theme.tags.length + theme.words.length > 0, key);
+    for (const word of theme.words) assert.ok(!/[\\%_,()."'{}*:]/.test(word), `${key}: ${word}`);
+    const clause = themeClause(key);
+    assert.equal(clause.split(",").length, theme.tags.length + theme.words.length, key);
+    assert.ok(!/[()"']/.test(clause), clause);
+  }
+  assert.equal(isEventTheme("toString"), false);
 });

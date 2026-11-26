@@ -2578,7 +2578,7 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
 /* ── Mobile overhaul, stage 5: detail full screen with its own top bar; type and touch sizes. ── */
 @media (max-width: 700px) {
   .poster-modal__panel { inset: 0; width: 100vw; height: 100dvh; max-height: 100dvh; margin: 0; border-radius: 0; padding-bottom: env(safe-area-inset-bottom); }
-  /* Top bar: language left, close right (they used to float over the poster). */
+  /* Top bar behind the close button (it used to float over the poster). */
   .poster-modal__header { position: sticky; top: 0; right: auto; z-index: 3; display: flex; align-items: center; height: calc(52px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 60px 0 12px; border: 0; border-bottom: 1px solid #e5ecf5; border-radius: 0; background: #fff; }
   .poster-modal__close { top: calc(4px + env(safe-area-inset-top)); right: 6px; z-index: 4; width: 44px; height: 44px; background: transparent; }
   .poster-modal__image { padding: 12px 16px; }
@@ -2644,4 +2644,27 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
 @media (max-width: 700px) {
   .mobile-menu__panel { position: fixed; z-index: 20; top: calc(64px + env(safe-area-inset-top)); right: 12px; max-height: calc(100dvh - 80px - env(safe-area-inset-top)); overflow-y: auto; }
   .event-sheet__scroll .event-sheet__filters > button.event-sheet__chip { display: inline-flex; align-items: center; gap: 4px; }
+}
+
+/* Language is chosen on the home screen only: the detail dialog's top pill is empty on wide screens. */
+@media (min-width: 701px) { .poster-modal__header:empty { display: none; } }
+
+/* ── Quick filters (this weekend + themes) and the weekend picks strip. ── */
+.quick-chips { margin-top: 6px; }
+.split-panel__top .quick-chips { margin-top: -6px; }
+.featured-strip { display: none; }
+@media (max-width: 700px) {
+  .event-sheet__scroll .quick-chips { margin: 0 -16px 8px; padding: 0 16px; }
+  .event-sheet__scroll .quick-chips button { height: 34px; padding: 0 14px; border-radius: 17px; font-size: 13px; }
+  .event-sheet__filtered { color: #1f5fd1; font-style: normal; font-weight: 600; }
+  .featured-strip { display: block; margin: 4px -16px 6px; padding: 10px 0 12px; border-block: 1px solid #edf1f7; background: #f8fafd; }
+  .featured-strip h2 { margin: 0 16px 8px; color: #1d2b44; font-size: 14px; font-weight: 700; }
+  .featured-strip ul { display: flex; gap: 10px; margin: 0; padding: 0 16px; overflow-x: auto; list-style: none; scroll-snap-type: x proximity; scroll-padding-left: 16px; scrollbar-width: none; }
+  .featured-strip ul::-webkit-scrollbar { display: none; }
+  .featured-strip li { flex: 0 0 132px; min-width: 0; scroll-snap-align: start; }
+  .featured-strip a { display: grid; gap: 3px; min-width: 0; color: inherit; text-decoration: none; }
+  .featured-strip img { width: 132px; height: 84px; border-radius: 10px; background: #e8eef6; object-fit: cover; }
+  .featured-strip strong { display: -webkit-box; overflow: hidden; color: #1d2b44; font-size: 13px; font-weight: 600; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .featured-strip a > span { overflow: hidden; color: #6b7c96; font-size: 11px; letter-spacing: -.02em; text-overflow: ellipsis; white-space: nowrap; }
+  .featured-strip a:focus-visible { outline: 2px solid #1f5fd1; outline-offset: 2px; border-radius: 10px; }
 }

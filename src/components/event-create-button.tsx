@@ -7,7 +7,6 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { EventForm } from "./event-form";
 import type { CountryCode } from "@/lib/countries";
 import { eventPath } from "@/lib/events";
-import { LanguageSelect } from "./language-select";
 
 type SavedEvent = { countryCode: CountryCode; id: string; slug: string; publicationStatus: "draft" | "published" };
 
@@ -50,7 +49,6 @@ function EventCreateDialog({ opener, onClose, draftId }: {
       onClick={(event) => { if (event.target === event.currentTarget && !saving) onClose(); }}
     >
       <div className="create-dialog__header">
-        <LanguageSelect />
         <h2 id="create-dialog-title">{t("행사 올리기")}</h2>
         <button ref={closeButton} type="button" className="create-dialog__close" onClick={onClose} disabled={saving} aria-label={t("행사 올리기 닫기")}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">

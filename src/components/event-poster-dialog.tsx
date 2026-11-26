@@ -8,7 +8,6 @@ import { eventDate, type FestivalEvent } from "@/lib/events";
 import { ReportEvent } from "./event-controls";
 import { useRouter } from "next/navigation";
 import { RichTextView } from "./rich-text-view";
-import { LanguageSelect } from "./language-select";
 import { SaveEventButton, ShareEventButton } from "./saved-events";
 
 export function LinkedEventDialog({ event }: { event: FestivalEvent }) {
@@ -68,9 +67,7 @@ export function EventPosterDialog({ event, opener, onDismiss, initiallyOpen = fa
       onCancel={(e) => { e.preventDefault(); onDismiss(); }}
       onClick={(e) => { if (e.target === e.currentTarget) onDismiss(); }}>
       <div className="poster-modal__panel">
-            <div className="poster-modal__header">
-              <LanguageSelect />
-            </div>
+            <div className="poster-modal__header" />
             <div className="poster-modal__image">
               {event.poster ? <img src={event.poster} alt={`${event.title} ${isTourImage ? t("대표 이미지") : t("포스터")}`} width={480} height={680} /> : <p>{t("포스터 준비 중")}</p>}
               {event.sourceImageCredit && <p className="poster-modal__credit">{t("사진:")} {event.sourceImageCredit}</p>}

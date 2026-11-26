@@ -4,7 +4,6 @@ import { useTranslations } from "@/components/language-provider";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { FestivalEvent } from "@/lib/events";
 import { EventCard } from "./event-card";
-import { LanguageSelect } from "./language-select";
 
 const PAGE_SIZE = 24;
 
@@ -59,7 +58,6 @@ export function EventClusterDialog({ ids, onDismiss }: { ids: string[]; onDismis
       onCancel={(event) => { if (event.target !== event.currentTarget) return; event.preventDefault(); onDismiss(); }}
       onClick={(event) => { if (event.target === event.currentTarget) onDismiss(); }}>
       <header className="cluster-dialog__header">
-        <LanguageSelect />
         <div><h2 id="cluster-dialog-title">{t("이 위치의 행사")}</h2><p>{t("{count}개 행사", { count: ids.length })}</p></div>
         <button ref={close} type="button" className="cluster-dialog__close" aria-label={t("행사 목록 닫기")} onClick={onDismiss}>×</button>
       </header>

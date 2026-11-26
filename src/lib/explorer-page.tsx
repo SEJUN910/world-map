@@ -5,12 +5,12 @@ import { Explorer } from "@/components/explorer";
 import { StructuredData } from "@/components/structured-data";
 import { listEvents, listEventMapPoints, getRegions, getPublicEvent } from "./event-repository";
 import { countries, type CountryCode } from "./countries";
-import { todayInCountry } from "./events";
+import { todayInCountry, type FestivalEvent } from "./events";
 import { getLocale, getTranslations } from "./i18n/server";
 import { breadcrumbData, collectionStructuredData, eventDescription, eventStructuredData, pageMetadata } from "./seo";
-import { normalizeDiscoveryFilters, discoveryParams, normalizeSort, normalizeView, type EventSort } from "./discovery-filters";
+import { normalizeDiscoveryFilters, discoveryParams, emptyDiscoveryFilters, normalizeSort, normalizeView, type EventSort } from "./discovery-filters";
 import { countTags, selectVisibleTags, type EventTag } from "./event-tags";
-export type ExplorerParams = { q?: string; region?: string; page?: string; event?: string; lang?: string; when?: string; from?: string; to?: string; bounds?: string; category?: string; tag?: string; view?: string; sort?: string };
+export type ExplorerParams = { q?: string; region?: string; page?: string; event?: string; lang?: string; when?: string; from?: string; to?: string; bounds?: string; category?: string; tag?: string; theme?: string; view?: string; sort?: string };
 function normalized(params: ExplorerParams) {
   const text = (value: unknown) => typeof value === "string" ? value.slice(0, 100) : "";
   return { region: text(params.region), query: text(params.q).trim(), page: Math.max(1, Math.min(10000, Math.floor(Number(params.page) || 1))), eventId: text(params.event), filters: normalizeDiscoveryFilters(params), view: normalizeView(params.view), sort: normalizeSort(params.sort) };
@@ -20,21 +20,26 @@ const load = cache(async (country: CountryCode, region: string, query: string, p
   if (eventId) {
     const event = await getPublicEvent(eventId);
     if (!event || event.countryCode !== country) notFound();
-    return { result: { events: [event], total: 1 }, regions: [], mapPoints: [event], initialEvent: event, tagChips: [] as EventTag[] };
+    return { result: { events: [event], total: 1 }, regions: [], mapPoints: [event], initialEvent: event, tagChips: [] as EventTag[], featured: [] as FestivalEvent[] };
   }
   // Tag chips count the category's events under every filter except the tag
   // itself, so choosing one tag keeps the others. Without a tag that is the
   // marker query, so it is fetched once with tags and stripped.
   const tagScope = filters.category ? listEventMapPoints({ country, region, query, filters: { ...filters, tag: "" }, withTags: true }) : null;
-  const [result, regions, points, tagged] = await Promise.all([
+  // Picks for the phone list: this weekend's events that have a poster, soonest to end first.
+  // Only on the plain first page, so a filtered list is never mixed with other events.
+  const plain = !region && !query && page === 1 && sort === "latest" && !Object.keys(discoveryParams(filters)).length;
+  const picks = plain ? listEvents({ country, pageSize: 20, filters: { ...emptyDiscoveryFilters, when: "weekend" }, sort: "ending" }).catch(() => null) : null;
+  const [result, regions, points, tagged, weekend] = await Promise.all([
     listEvents({ country, region, query, page, filters, sort }), getRegions(country),
     tagScope && !filters.tag ? tagScope : listEventMapPoints({ country, region, query, filters }),
-    tagScope,
+    tagScope, picks,
   ]);
   if (page > 1 && !result.events.length) notFound();
   const tagChips = tagged ? selectVisibleTags(countTags(tagged), tagged.length, filters.tag) : [];
   const mapPoints = points.map(({ tags: _tags, ...point }) => point);
-  return { result, regions, mapPoints, initialEvent: null, tagChips };
+  const featured = (weekend?.events || []).filter((event) => event.poster).slice(0, 10);
+  return { result, regions, mapPoints, initialEvent: null, tagChips, featured };
 });
 async function context(country: CountryCode, params: ExplorerParams, regionPath?: string) {
   const value = normalized(params);
@@ -51,7 +56,7 @@ export async function explorerMetadata(country: CountryCode, params: ExplorerPar
   const ctx = await context(country, params, regionPath);
   const event = ctx.data.initialEvent;
   const expired = !!event?.endDate && event.endDate < todayInCountry(country);
-  return pageMetadata({ title: ctx.title, description: ctx.description, path: ctx.path, locale: ctx.locale, values: ctx.values, noindex: event ? expired : ctx.view === "list" || ctx.sort !== "latest" || !!ctx.query || ctx.filters.when !== "all" || !!ctx.filters.bounds || !!ctx.filters.category || !!ctx.filters.tag || !ctx.data.result.total || (!!params.region && !ctx.region), image: event?.poster ? `/images/events/${event.id}` : "/og" });
+  return pageMetadata({ title: ctx.title, description: ctx.description, path: ctx.path, locale: ctx.locale, values: ctx.values, noindex: event ? expired : ctx.view === "list" || ctx.sort !== "latest" || !!ctx.query || ctx.filters.when !== "all" || !!ctx.filters.bounds || !!ctx.filters.category || !!ctx.filters.tag || !!ctx.filters.theme || !ctx.data.result.total || (!!params.region && !ctx.region), image: event?.poster ? `/images/events/${event.id}` : "/og" });
 }
 export async function ExplorerPage({ country, params, regionPath }: { country: CountryCode; params: ExplorerParams; regionPath?: string }) {
   const ctx = await context(country, params, regionPath);
@@ -59,6 +64,6 @@ export async function ExplorerPage({ country, params, regionPath }: { country: C
   return <main id="main" className="country-entrance">
     <StructuredData value={data.initialEvent ? eventStructuredData(data.initialEvent, ctx.locale) : collectionStructuredData(ctx.title, ctx.path, data.result.events, ctx.locale, ctx.page, ctx.values)} />
     <StructuredData value={breadcrumbData(country, ctx.locale, ctx.region && ctx.path.startsWith("/regions/") ? { name: ctx.region.name, path: ctx.path } : undefined)} />
-    <Explorer country={country} regions={data.regions} key={country} filters={ctx.filters} events={data.result.events} initialEvent={data.initialEvent} mapPoints={data.mapPoints} total={data.result.total} initialRegion={data.initialEvent ? "" : ctx.region?.code || params.region || ""} initialQuery={data.initialEvent ? "" : ctx.query} page={data.initialEvent ? 1 : ctx.page} initialView={data.initialEvent ? "map" : ctx.view} sort={data.initialEvent ? "latest" : ctx.sort} tagChips={data.tagChips} />
+    <Explorer country={country} regions={data.regions} key={country} filters={ctx.filters} events={data.result.events} initialEvent={data.initialEvent} mapPoints={data.mapPoints} total={data.result.total} initialRegion={data.initialEvent ? "" : ctx.region?.code || params.region || ""} initialQuery={data.initialEvent ? "" : ctx.query} page={data.initialEvent ? 1 : ctx.page} initialView={data.initialEvent ? "map" : ctx.view} sort={data.initialEvent ? "latest" : ctx.sort} tagChips={data.tagChips} featured={data.featured} />
   </main>;
 }

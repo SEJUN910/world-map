@@ -67,6 +67,7 @@ export function EventMapPosters({ map, points, onOpenGroup, onHoverGroup, onLeav
       const close = map.getZoom() >= START_ZOOM;
       if (close !== wasClose) { wasClose = close; schedule(); }
     };
+    const hasPoster = (id: string) => { const cached = cache.current.get(id); return !!cached && cached.expires > Date.now() && !!cached.event.poster; };
     const refresh = async () => {
       const current = ++generation;
       request?.abort();
@@ -74,6 +75,7 @@ export function EventMapPosters({ map, points, onOpenGroup, onHoverGroup, onLeav
       const occupied: { x: number; y: number; id: string }[] = [];
       const candidates: EventMapPoint[] = [];
       const seen = new Set<string>();
+      const seenPosters = new Set<string>();
       const nextGroups = new Map<string, MapPosterGroup>();
       const nextAnchors = new Map<string, EventMapPoint>();
       const features = map.queryRenderedFeatures({ layers: ["event-clusters", "event-points"] });
@@ -88,12 +90,20 @@ export function EventMapPosters({ map, points, onOpenGroup, onHoverGroup, onLeav
         let titles = [String(feature.properties.title || "")];
         if (clustered) {
           const leaves = await (map.getSource("events") as GeoJSONSource).getClusterLeaves(clusterId, 5, 0).catch(() => []);
-          id = String(leaves[0]?.properties?.id || "");
+          // Zooming regroups the clusters. Keep a poster that is already on screen (or already loaded)
+          // as the group's face, so posters do not blink back to dots and reload on every zoom step.
+          const ids = leaves.map((leaf) => String(leaf.properties?.id || ""));
+          // Only an event known to have a poster may be kept; otherwise a group would stay a dot.
+          id = ids.find((leaf) => anchors.has(leaf) && hasPoster(leaf) && !seenPosters.has(leaf))
+            ?? ids.find((leaf) => hasPoster(leaf) && !seenPosters.has(leaf))
+            ?? ids.find((leaf) => !seenPosters.has(leaf)) ?? "";
           titles = leaves.map((leaf) => String(leaf.properties?.title || ""));
         }
         if (disposed || current !== generation) return;
         const event = byId.get(id);
-        if (!event) continue;
+        // One poster per event: the bookkeeping below is keyed by event id.
+        if (!event || seenPosters.has(id)) continue;
+        seenPosters.add(id);
         const anchor = { ...event, longitude: feature.geometry.coordinates[0], latitude: feature.geometry.coordinates[1] };
         const p = position(anchor);
         if (!p) continue;
@@ -135,7 +145,8 @@ export function EventMapPosters({ map, points, onOpenGroup, onHoverGroup, onLeav
         if (!response.ok) return;
         const data: FestivalEvent[] = await response.json();
         if (disposed || current !== generation) return;
-        for (const event of data) cache.current.set(event.id, { event, expires: Date.now() + 240_000 });
+        // Uploaded posters are 5-minute signed URLs; public hosts can be kept longer.
+        for (const event of data) cache.current.set(event.id, { event, expires: Date.now() + (event.poster?.includes("/object/sign/") ? 240_000 : 900_000) });
         // Keep browsing memory bounded even on long sessions.
         const visibleIds = new Set(candidates.map((event) => event.id));
         for (const id of cache.current.keys()) {

@@ -17,7 +17,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
     <>
       <AnalyticsTracker />
       {pathname === "/" && <TrafficCounter />}
-      {!isAtlas && <SiteTools />}
+      {!isAtlas && <SiteTools language={pathname === "/"} />}
       {!isHome && <Header />}
       {children}
       {!isHome && (

@@ -15,6 +15,7 @@ import { LinkedEventDialog } from "./event-poster-dialog";
 import { TrafficCounter } from "./traffic-counter";
 import { SiteTools } from "./site-tools";
 import { MobileMenu } from "./mobile-menu";
+import { QuickChips } from "./quick-chips";
 import { EventCreateButton } from "./event-create-button";
 import { useMobileAtlas } from "./mobile-atlas-controls";
 import { CountrySwitch } from "./country-switch";
@@ -26,10 +27,10 @@ import type { EventTag } from "@/lib/event-tags";
 import { APPROXIMATE_METERS, NO_DISTANCE_METERS, countryAt, formatDistance, handOffPosition, nearbyEvents, takeHandedOffPosition, zoomForAccuracy, type Position } from "@/lib/nearby";
 const MobileEventSheet = dynamic(() => import("./mobile-event-sheet").then(module => module.MobileEventSheet), { ssr: false });
 
-export function Explorer({ country = "kr", events, mapPoints, total, regions, initialRegion = "", initialQuery = "", page = 1, initialEvent = null, filters = emptyDiscoveryFilters, initialView = "map", sort = "latest", tagChips = [] }: {
+export function Explorer({ country = "kr", events, mapPoints, total, regions, initialRegion = "", initialQuery = "", page = 1, initialEvent = null, filters = emptyDiscoveryFilters, initialView = "map", sort = "latest", tagChips = [], featured = [] }: {
   country?: CountryCode; events: FestivalEvent[]; mapPoints: EventMapPoint[]; total: number;
   regions: { code: string; name: string }[]; initialRegion?: string; initialQuery?: string; page?: number;
-  initialEvent?: FestivalEvent | null; filters?: DiscoveryFilters; initialView?: ExplorerView; sort?: EventSort; tagChips?: EventTag[];
+  initialEvent?: FestivalEvent | null; filters?: DiscoveryFilters; initialView?: ExplorerView; sort?: EventSort; tagChips?: EventTag[]; featured?: FestivalEvent[];
 }) {
   const { t, locale } = useTranslations();
   const router = useRouter();
@@ -74,7 +75,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
     setSelectedIds(null); setSelectedId(""); setViewportDirty(false); setFocus(null);
     listRef.current?.scrollTo({ top: 0 });
     setFrom(filters.from || todayInCountry(country)); setTo(filters.to || todayInCountry(country));
-  }, [country, initialRegion, initialQuery, filters.when, filters.from, filters.to, filters.bounds, filters.category, filters.tag, page]);
+  }, [country, initialRegion, initialQuery, filters.when, filters.from, filters.to, filters.bounds, filters.category, filters.tag, filters.theme, page]);
   const changeView = useCallback((next: ExplorerView) => {
     if (viewRef.current === next) return;
     viewRef.current = next;
@@ -211,7 +212,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
     if (userChanged) setViewportDirty(true);
   }, []);
   // Anything narrowing the list (used to offer a way back from an empty result).
-  const filtered = !!(initialRegion || initialQuery || filters.when !== "all" || filters.bounds || filters.category);
+  const filtered = !!(initialRegion || initialQuery || filters.when !== "all" || filters.bounds || filters.category || filters.theme);
   function pathFor(region: string, text: string, nextFilters: DiscoveryFilters, targetPage = 1, nextSort: EventSort = sort) {
     const path = country === "kr" && region && !text.trim() ? `/regions/${encodeURIComponent(region)}` : countries[country].path;
     return localizedPath(path, locale, {
@@ -304,6 +305,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
           {searchForm}
           <CategoryChips value={filters.category} disabled={pending} onChange={category => apply(initialRegion, initialQuery, { ...filters, category, tag: "" })} />
           <TagChips tags={tagChips} value={filters.tag} disabled={pending} onChange={tag => apply(initialRegion, initialQuery, { ...filters, tag })} />
+          <QuickChips filters={filters} disabled={pending} onChange={next => { if (next.when !== "custom") setCustomDates(false); apply(initialRegion, initialQuery, next); }} />
           <div className="split-panel__filters">{dateFilter}{sortSelect}</div>
         </div>
         <div className={`split-panel__summary${selectedIds ? " is-selection" : ""}`}>
@@ -363,7 +365,7 @@ export function Explorer({ country = "kr", events, mapPoints, total, regions, in
       </div>
     </div>
     {isMobile ? <>
-      <MobileEventSheet country={country} events={events} total={total} page={page} regions={options} region={initialRegion} query={initialQuery} filters={filters} pending={pending} tagChips={tagChips}
+      <MobileEventSheet country={country} events={events} total={total} page={page} regions={options} region={initialRegion} query={initialQuery} filters={filters} pending={pending} tagChips={tagChips} featured={featured}
         selectedIds={selectedIds} selectedId={selectedId} onSelect={setSelectedId}
         selectionLabel={nearbyActive ? t("내 주변 {km}km", { km: nearby!.radiusKm }) : undefined}
         distanceOf={nearbyActive && nearby!.distances ? (id) => nearby!.distances!.get(id) : undefined} onSelectionClear={() => { setSelectedIds(null); setSelectedId(""); }}

@@ -1,5 +1,16 @@
 # Work Log
 
+## 2026-11-26 - Phone check round 2: language on home only, themes, weekend strip, steadier posters
+
+- User on the phone after the floating-top release: (1) posters seem to reload on zoom, (2) the language select follows everywhere — home only, (3) a horizontal "recommended/AD" strip above the list, (4) theme keywords such as "with kids", "weekend", "couples", (5) stronger list filters. Antigravity login had expired; the user chose "기획 없이 바로", so there is no plan file for this round.
+- Bugs from the screenshots (released first, d653b71): the ≡ menu panel sat under the list sheet (the page is `isolation: isolate`, the sheet is portaled to `<body>`) — the panel is now portaled to `<body>` too; the "현재 지도 영역 ×" chip wrapped onto two lines.
+- Language: `SiteTools` takes `language` (default off); `SiteChrome` turns it on for "/" only. Removed from the map menu, the desktop map tools, inner pages and the cluster / create / detail dialogs.
+- Posters on zoom (`event-map-posters.tsx`): no page reload happens; clusters regroup at each zoom step and the group's face used to switch to an uncached event, so posters dropped to dots and came back. A group now keeps a face that is already on screen or already loaded; poster cache 4 → 15 min. First visits to an area still load posters once.
+- Themes: `src/lib/event-themes.ts` (kids / date / tradition) — a theme matches any of its tags or any of its words in the title; `?theme=` works with or without a category, is ANDed with every other filter and makes the page noindex. Korean rows only carry genre tags, so the words matter there. Active events matched on 2026-11-26: KR kids 12 · date 98 · tradition 35 (of 769), FR 39 · 125 · 14 (of 395). "커플" has no data behind it; "데이트" is an editorial rule (musical, night, photo, painting + jazz/Christmas/lights words) — edit the table to tune it. No free-entry filter: there is no price field.
+- Quick chips (`quick-chips.tsx`): 이번 주말 (toggles `when=weekend`) + the themes, above the filter row in the phone sheet and under the tag chips in the desktop panel. The phone heading shows "· 필터 N" (region, search, date, area, theme, tag) so a lowered sheet still says it is filtered; "초기화" clears the theme as well.
+- Weekend strip (`featured-strip.tsx`): on the plain first page only (no region, search, filter or sort) the server also loads this weekend's events (soonest to end first) and keeps up to 10 with a poster; the phone list view shows them as a sideways strip (132×84 cards) between the filters and the list, hidden with fewer than 3. It is date-based, not paid placement — no AD slot was added because there are no advertisers.
+- Checks: `npm test` 73; `qa-m8.mjs` 25/25 (phone 360×664 + desktop 1366), `qa-m7.mjs` 8/8, `qa-m6.mjs` 21/21.
+
 ## 2026-11-26 - Mobile: floating top and four-snap sheet
 
 - User on a real phone (KakaoTalk in-app, 4 screenshots + a Naver Map reference): the top was a cluttered white block, the blue + far too prominent, the sheet would not go low enough, the settings button opened an empty screen. Planned by Antigravity (`.omc/plans/mobile-floating-top.md`), user chose "as planned".

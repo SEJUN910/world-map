@@ -492,4 +492,10 @@ export const messages: [string, string, string][] = [
   ["{country} 행사·지역·장소 검색", "Search {country} events, areas, venues", "搜尋{country}的活動、地區、場地"],
   ["내 주변 {km}km", "Near me · {km} km", "附近 {km} 公里"],
   ["선택한 위치", "Selected spot", "所選位置"],
+  ["빠른 필터", "Quick filters", "快速篩選"],
+  ["아이랑", "With kids", "親子同遊"],
+  ["데이트", "Date night", "約會"],
+  ["전통·역사", "Tradition & history", "傳統・歷史"],
+  ["필터 {count}", "Filters: {count}", "篩選 {count}"],
+  ["이번 주말 가볼 만한 행사", "Worth a visit this weekend", "本週末值得一去"],
 ];

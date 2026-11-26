@@ -7,7 +7,7 @@ import { CountrySwitch } from "./country-switch";
 import { SiteTools } from "./site-tools";
 
 // Phone menu inside the floating search bar: everything that is not searching
-// or filtering — switch country, post an event, saved events, account, language.
+// or filtering — switch country, post an event, saved events, account.
 export function MobileMenu({ country, onCreate }: { country: CountryCode; onCreate: () => void }) {
   const { t } = useTranslations();
   const [open, setOpen] = useState(false);
