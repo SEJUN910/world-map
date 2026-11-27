@@ -8,6 +8,8 @@
 - Review: hide timer moved to its own effect (StrictMode re-run left the toast up in dev); toast uses the trimmed name.
 - Address check: `lukemap.vercel.app` serves and the old domain 308-redirects (path and query kept), but canonical / og:url / sitemap / robots still said `world-map-imtc` after the owner's redeploy — `NEXT_PUBLIC_SITE_URL` not yet in effect; rechecked after this deploy.
 - Checks: `tsc` clean, `npm test` 76, build OK, avatar/menu/toast screenshots at 1280 and 390 (`qa-member.mjs`, markup swapped in since a Google session cannot be made headless).
+- After this deploy the new address took effect everywhere: canonical/og:url/robots/sitemap (1,139 URLs, 0 old) on `lukemap.vercel.app`; qa-m8 25/25.
+- Google Search Console: URL-prefix property `https://lukemap.vercel.app/`, HTML-tag method via `GOOGLE_SITE_VERIFICATION` (owner set it in Vercel; redeployed by pushing this entry). Naver postponed by the owner.
 
 ## 2026-11-26 - Map posters: smooth zoom (no reload look)
 
