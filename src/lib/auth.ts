@@ -8,6 +8,10 @@ export function safeAuthReturn(value: unknown) {
   } catch { return "/me/events"; }
 }
 export const handoffCookie = "festiva-account-handoff";
+/** Set by the OAuth callback, cleared by the client after the one-time greeting. */
+export const welcomeCookie = "festiva-welcome";
+/** First letter of a display name for the signed-in avatar ("" when there is no name). */
+export function nameInitial(name: string) { return (Array.from(name.trim())[0] || "").toUpperCase(); }
 // Public redirects always use the configured origin. Only a local development
 // Host may override it; forwarded host headers are never used.
 export function authOrigin(canonical: string, host: string | null, local: boolean) {

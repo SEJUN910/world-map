@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies, headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { authOrigin, handoffCookie, safeAuthReturn, isGoogleMember } from "@/lib/auth";
+import { authOrigin, handoffCookie, safeAuthReturn, isGoogleMember, welcomeCookie } from "@/lib/auth";
 import { siteUrl } from "@/lib/site";
 export const dynamic="force-dynamic";
 export async function GET(request:Request) {
@@ -20,6 +20,9 @@ export async function GET(request:Request) {
   const {data:{user}}=await client.auth.getUser(); if(!isGoogleMember(user)) return failure("callback");
   const token=(await cookies()).get(handoffCookie)?.value;
   if(token){const {error}=await client.rpc("complete_event_account_handoff",{p_token:token});if(error)return failure("handoff");(await cookies()).delete({name:handoffCookie,path:"/auth"});}
-  return NextResponse.redirect(new URL(safeAuthReturn(url.searchParams.get("next")),origin),{headers:responseHeaders});
+  const response=NextResponse.redirect(new URL(safeAuthReturn(url.searchParams.get("next")),origin),{headers:responseHeaders});
+  // One-shot flag read (and cleared) by AccountProvider to greet the member once.
+  response.cookies.set(welcomeCookie,"1",{path:"/",maxAge:120,sameSite:"lax",secure:origin.startsWith("https:")});
+  return response;
   } catch { return failure("callback"); }
 }

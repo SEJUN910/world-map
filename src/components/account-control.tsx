@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "./language-provider";
 import { useAccount } from "./account-provider";
 import { signOutAccount, startGoogleAuth } from "@/app/actions/auth";
-import { safeAuthReturn } from "@/lib/auth";
+import { nameInitial, safeAuthReturn } from "@/lib/auth";
 export function GoogleSubmit({disabled=false}:{disabled?:boolean}){
   const {t}=useTranslations();const {pending}=useFormStatus();
   return <button className="google-sign-in" type="submit" disabled={disabled||pending}>
@@ -28,7 +28,13 @@ export function AccountDialog({onClose,opener,next,intro}:{onClose:()=>void;open
 }
 export function AccountControl({compact=false}:{compact?:boolean}){
   const {t}=useTranslations();const {account}=useAccount();const opener=useRef<HTMLButtonElement>(null);const [open,setOpen]=useState(false);const [next,setNext]=useState("/me/events");const member=account&&!account.anonymous;
-  return <><button ref={opener} className={`account-control${compact ? " account-control--compact" : ""}`} type="button" aria-label={member?t("내 계정"):t("로그인")} title={member?t("내 계정"):t("로그인")} onClick={()=>{setNext(safeAuthReturn(location.pathname+location.search));setOpen(true);}}>
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2" stroke="currentColor" strokeWidth="1.4"/></svg>{!compact&&<span>{member?t("내 계정"):t("로그인")}</span>}</button>
+  // Signed in: the person icon becomes a filled circle with the name's first letter, and the label greets by name.
+  const name=member?account.name.trim():"";const initial=nameInitial(name);
+  const label=member?(name?t("{name}님",{name}):t("내 계정")):t("로그인");
+  const title=member&&name?`${label} · ${t("내 계정")}`:label;
+  return <><button ref={opener} className={`account-control${compact ? " account-control--compact" : ""}${member ? " is-member" : ""}`} type="button" aria-label={title} title={title} onClick={()=>{setNext(safeAuthReturn(location.pathname+location.search));setOpen(true);}}>
+    {member?<span className="account-avatar" aria-hidden="true">{initial||<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0Z"/></svg>}</span>
+      :<svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2" stroke="currentColor" strokeWidth="1.4"/></svg>}
+    {!compact&&<span>{label}</span>}</button>
     {open&&<AccountDialog opener={opener} next={next} onClose={()=>setOpen(false)}/>}</>;
 }

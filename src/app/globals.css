@@ -2053,6 +2053,9 @@ canvas:focus-visible {
 .no-script-countries { position: absolute; top: 110px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; }
 .account-control { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; height: 34px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
 .account-control:hover { color: #2869cc; border-color: #a6c5ed; }
+.account-avatar { display: grid; flex: none; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #2869cc; color: #fff; font-size: 13px; font-weight: 700; line-height: 1; }
+.account-avatar svg { width: 15px; height: 15px; color: inherit; }
+.account-control.is-member > span:not(.account-avatar) { overflow: hidden; min-width: 0; text-overflow: ellipsis; white-space: nowrap; }
 body:has(.site-header) .language-select--floating { top: auto; bottom: 16px; }
 .account-dialog { width: min(420px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 0; border: 1px solid #e0e9f7; border-radius: 22px; color: #233c61; background: white; }
 .account-dialog::backdrop { background: #152c5140; }
@@ -2678,6 +2681,8 @@ body:has(.site-header) .site-tools { top: auto; bottom: 16px; }
   .mobile-menu__panel .account-control:focus-visible { outline: 2px solid #1f5fd1; outline-offset: -2px; }
   .mobile-menu__panel .account-control { justify-content: flex-start; gap: 12px; width: 100%; height: auto; min-height: 48px; padding: 0 16px; border-radius: 0; color: #1d2b44; font-size: 15px; font-weight: 500; }
   .mobile-menu__panel .account-control svg { width: 20px; height: 20px; color: #5d7598; }
+  .mobile-menu__panel .account-avatar { width: 28px; height: 28px; margin-left: -4px; font-size: 14px; }
+  .mobile-menu__panel .account-avatar svg { width: 16px; height: 16px; color: inherit; }
   .mobile-menu__panel .account-control:hover { background: #f3f6fb; color: #1d2b44; }
   .mobile-menu__panel .mobile-menu__add { min-height: 48px; padding: 0 16px; border: 0; border-top: 1px solid #eef2f7; border-radius: 0; color: #1f5fd1; font-size: 15px; font-weight: 600; }
   .mobile-menu__panel .mobile-menu__add > svg:first-child { color: #1f5fd1; }

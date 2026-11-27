@@ -1,5 +1,14 @@
 # Work Log
 
+## 2026-11-27 - Signed-in state is visible
+
+- User: Google sign-in works on lukemap.vercel.app but "doesn't feel signed in" (the header icon and menu looked the same before and after). Picked "name initial + greeting".
+- Signed-in members: the person icon becomes a blue circle with the name's first letter (`nameInitial()` in `src/lib/auth.ts`, whole code points; no name → filled person glyph); the mobile menu row reads "{name}님" (ellipsis when long), title/aria-label "{name}님 · 내 계정". Guests and anonymous posters see the old icon.
+- Greeting once after sign-in: `/auth/callback` sets a 120 s `festiva-welcome` cookie on success only; `AccountProvider` reads and deletes it and shows "{name}님, 반가워요" (or "로그인했어요") for 3.5 s in the existing toast style.
+- Review: hide timer moved to its own effect (StrictMode re-run left the toast up in dev); toast uses the trimmed name.
+- Address check: `lukemap.vercel.app` serves and the old domain 308-redirects (path and query kept), but canonical / og:url / sitemap / robots still said `world-map-imtc` after the owner's redeploy — `NEXT_PUBLIC_SITE_URL` not yet in effect; rechecked after this deploy.
+- Checks: `tsc` clean, `npm test` 76, build OK, avatar/menu/toast screenshots at 1280 and 390 (`qa-member.mjs`, markup swapped in since a Google session cannot be made headless).
+
 ## 2026-11-26 - Map posters: smooth zoom (no reload look)
 
 - User: zooming still looks like a reload / blinks. Recorded on production (poster add/remove, image loads, 50 ms ticks): one zoom step removed and re-added up to 26 posters, up to 19 showed as empty circles while their images loaded, and posters came back 2–3 s after the zoom. Cause: cluster lookups ran one after another (~0.7 s), then faces were fetched and only then their images, and every refresh dropped posters before the replacements were ready.
