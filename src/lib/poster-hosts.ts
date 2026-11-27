@@ -3,7 +3,9 @@
 // Not listed on purpose: tong.visitkorea.or.kr (KOGL Type 3, no alteration, so
 // TourAPI images stay original) and Supabase (5-minute signed URLs would defeat
 // the optimizer cache). See .omc/plans/poster-images.md.
-export const RESIZABLE_POSTER_HOSTS = ["www.culture.go.kr", "cdn.paris.fr", "**.gov.tw", "**.taiwan.net.tw"] as const;
+// Taiwan city tourism sites outside gov.tw serve the activity feed's images (OGDL-1.0);
+// keep in step with TAIWAN_IMAGE_HOST in scripts/taiwan-feed-lib.mjs and the CSP.
+export const RESIZABLE_POSTER_HOSTS = ["www.culture.go.kr", "cdn.paris.fr", "**.gov.tw", "**.taiwan.net.tw", "kinmen.travel", "hualien.travel", "newtaipei.travel", "www.twtainan.net", "www.ali-nsa.net"] as const;
 
 // Reduced copies of official images that are too large for the optimizer
 // (Taiwan, OGDL-1.0 allows modification; see 202611250001_taiwan_local_poster.sql).

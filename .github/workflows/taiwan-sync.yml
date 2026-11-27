@@ -1,0 +1,49 @@
+name: Taiwan Sync
+
+on:
+  schedule:
+    # Every Monday 02:30 UTC (10:30 in Taipei); the feed refreshes daily
+    - cron: "30 2 * * 1"
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Write to database (omit for dry-run)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# A manual run and the Monday run must not write at the same time.
+concurrency:
+  group: taiwan-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - run: npm ci
+
+      # The Taiwan open data needs no key. Scheduled runs always apply; manual runs
+      # apply only when the box is checked.
+      - name: Run Taiwan import (dry-run)
+        if: ${{ github.event_name == 'workflow_dispatch' && !inputs.apply }}
+        run: node scripts/import-taiwan-feed.mjs
+
+      - name: Run Taiwan import (apply)
+        if: ${{ github.event_name == 'schedule' || inputs.apply }}
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_IMPORT_SERVICE_KEY: ${{ secrets.SUPABASE_IMPORT_SERVICE_KEY }}
+          SUPABASE_IMPORT_PROJECT_REF: ${{ secrets.SUPABASE_IMPORT_PROJECT_REF }}
+        run: node scripts/import-taiwan-feed.mjs --apply

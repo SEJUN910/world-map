@@ -14,7 +14,7 @@ const directive = (csp, name) => {
 test("default tiles, public posters and the same-origin MapLibre worker are allowed", () => {
   const csp = buildCsp({ supabaseUrl: "https://abc.supabase.co" });
   const img = directive(csp, "img-src");
-  for (const source of ["'self'", "data:", "blob:", "https://tile.openstreetmap.org", "https://*.tile.openstreetmap.org", "https://abc.supabase.co", "https://tong.visitkorea.or.kr", "https://*.gov.tw", "https://*.taiwan.net.tw", "https://cdn.paris.fr", "https://www.culture.go.kr"]) assert.ok(img.includes(source), source);
+  for (const source of ["'self'", "data:", "blob:", "https://tile.openstreetmap.org", "https://*.tile.openstreetmap.org", "https://abc.supabase.co", "https://tong.visitkorea.or.kr", "https://*.gov.tw", "https://*.taiwan.net.tw", "https://kinmen.travel", "https://www.twtainan.net", "https://cdn.paris.fr", "https://www.culture.go.kr"]) assert.ok(img.includes(source), source);
   const connect = directive(csp, "connect-src");
   assert.deepEqual(connect, ["'self'", "https://abc.supabase.co", "https://tile.openstreetmap.org", "https://*.tile.openstreetmap.org", "https://tiles.openfreemap.org"]);
   // The vector basemap needs no image or wildcard origin.

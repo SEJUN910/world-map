@@ -1,5 +1,13 @@
 # Work Log
 
+## 2026-11-27 - Taiwan: weekly import from the tourism activity feed
+
+- User picked "대만 행사 채우기": Taiwan had 3 current events (six hand-curated, half ended) against Korea 769 and France 395. The Taiwan Tourism Administration feed (`…/v2.0/Zh_tw/EventList.json`, OGDL-1.0, daily, no key) lists 134 current events, all with coordinates and images, Chinese only (no English feed). Owner chose original Chinese text (as Paris keeps French).
+- `scripts/import-taiwan-feed.mjs` (Paris pattern: dry run / `--sql` / `--apply`, MIN_EVENTS 20, MIN_KEPT_SHARE 0.7, public RLS check, leaving events hidden) + `scripts/taiwan-feed-lib.mjs` + `.github/workflows/taiwan-sync.yml` (Mondays 02:30 UTC). Filters: notices/apps/stamp-point campaigns/subsidies/shopping lotteries/tour packages/tentative listings/classes (title, and the first 120 chars of the description), > 200 days, unknown venue; same event from several agencies merged (title without year/punctuation, 台→臺, + region; already-published listing, then national listing, then lowest ID; images checked before choosing so a duplicate stands in); current curated entries and their other listings skipped. Dates: only the paired `T16:00:00` start / `T15:59:59` end (midnight stored as UTC) is shifted.
+- Images: city tourism hosts `kinmen.travel`, `hualien.travel`, `newtaipei.travel`, `www.twtainan.net`, `www.ali-nsa.net` allowed (migration `202611270001_taiwan_feed.sql`, `RESIZABLE_POSTER_HOSTS`, CSP); bare `gov.tw`/`taiwan.net.tw` apex no longer accepted. `khh.travel` (Kaohsiung) answers 403 outside Taiwan, so its ~18 events are skipped.
+- Review (opus): 3 medium (lone 4 pm starts shifted a day, a feed copy of the curated butterfly season, dedupe before the image check) and lows (APP matching "Happy", 台/臺, code-point slicing, apex hosts, campaigns via description) fixed.
+- Applied with the owner's approval: migration, then 54 rows via `--sql` → 57 current published Taiwan events (54 feed + 3 curated). By category: festival 28, other 19, exhibition 6, performance 1. `npm test` 83.
+
 ## 2026-11-27 - Signed-in state is visible
 
 - User: Google sign-in works on lukemap.vercel.app but "doesn't feel signed in" (the header icon and menu looked the same before and after). Picked "name initial + greeting".
